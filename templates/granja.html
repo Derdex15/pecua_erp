@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>👥 Mi Granja</h1>
+
+{% if not granja %}
+<!-- No tiene granja todavía -->
+<div class="card" style="text-align:center; padding:30px 20px;">
+    <div style="font-size:50px;">🏡</div>
+    <h3>Crea tu granja</h3>
+    <p style="color:gray;">Con una granja puedes agregar empleados o socios para que registren datos desde sus propios celulares.</p>
+</div>
+
+<div class="card">
+    <form method="POST" action="/crear_granja">
+        <div class="form-group">
+            <label>Nombre de tu granja</label>
+            <input class="form-control" name="nombre"
+                   placeholder="Ej: Granja El Paraíso, Finca San José" required>
+        </div>
+        <button class="btn-primary">🏡 Crear granja</button>
+    </form>
+</div>
+
+{% else %}
+<!-- Tiene granja -->
+<div class="card" style="background:linear-gradient(135deg,#27ae60,#1e8449); color:white; padding:20px;">
+    <h3 style="color:white; margin:0 0 5px 0;">🏡 {{ granja.nombre }}</h3>
+    <p style="color:rgba(255,255,255,0.85); margin:0; font-size:13px;">
+        Tu rol: <strong>{{ mi_rol | capitalize }}</strong>
+        &nbsp;|&nbsp; {{ miembros | length }} miembro{{ 's' if miembros | length != 1 else '' }}
+    </p>
+</div>
+
+<!-- Lista de miembros -->
+<div class="card">
+    <h3>👤 Miembros activos</h3>
+
+    {% for m in miembros %}
+    <div style="display:flex; justify-content:space-between; align-items:center;
+                padding:10px 0; border-bottom:1px solid #eee;">
+        <div>
+            <p style="margin:0; font-weight:bold;">{{ m.username }}</p>
+            <p style="margin:0; font-size:12px; color:gray;">
+                {% if m.rol == 'admin' %}👑 Administrador{% else %}🔧 Operador{% endif %}
+                {% if m.usuario_id == user_id %} <em>(tú)</em>{% endif %}
+            </p>
+        </div>
+
+        {% if mi_rol == 'admin' and m.usuario_id != user_id %}
+        <div style="display:flex; gap:6px;">
+            <!-- Cambiar rol -->
+            <form method="POST" action="/cambiar_rol/{{ m.id }}">
+                <select name="rol" onchange="this.form.submit()"
+                        class="form-control" style="padding:5px; font-size:12px; width:auto;">
+                    <option value="operador" {% if m.rol == 'operador' %}selected{% endif %}>Operador</option>
+                    <option value="admin"    {% if m.rol == 'admin'    %}selected{% endif %}>Admin</option>
+                </select>
+            </form>
+            <!-- Remover -->
+            <form method="POST" action="/remover_usuario/{{ m.id }}"
+                  onsubmit="return confirm('¿Remover a {{ m.username }} de la granja?')">
+                <button class="btn-peligro" style="padding:5px 10px; font-size:12px;">✕</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Invitar usuario — solo admin -->
+{% if mi_rol == 'admin' %}
+<div class="card">
+    <h3>➕ Agregar miembro</h3>
+    <p style="color:gray; font-size:13px;">El usuario debe tener cuenta creada en la app.</p>
+
+    <form method="POST" action="/invitar_usuario">
+
+        <div class="form-group">
+            <label>Nombre de usuario</label>
+            <input class="form-control" name="username"
+                   placeholder="Ej: juan_operador" required>
+        </div>
+
+        <div class="form-group">
+            <label>Rol</label>
+            <select class="form-control" name="rol">
+                <option value="operador">🔧 Operador — puede registrar datos, no puede borrar ni ver finanzas</option>
+                <option value="admin">👑 Administrador — acceso completo</option>
+            </select>
+        </div>
+
+        <button class="btn-primary">✅ Agregar miembro</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3 style="color:#e74c3c;">⚠️ Permisos por rol</h3>
+    <p style="font-size:13px; margin:4px 0;">
+        <strong>Operador:</strong> puede registrar ventas, gastos, sanitario y producción. No puede eliminar lotes ni ver reportes financieros.
+    </p>
+    <p style="font-size:13px; margin:4px 0;">
+        <strong>Admin:</strong> acceso completo igual al dueño.
+    </p>
+</div>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

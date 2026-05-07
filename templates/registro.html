@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>🐄 Crear cuenta</h2>
+
+<div class="card">
+
+    {% if error %}
+    <p style="color: red;">⚠️ {{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Nombre de usuario (mín. 3 caracteres)"
+               minlength="3" required
+               style="width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-size:max(16px,14px);">
+
+        <input type="password" name="password" placeholder="Contraseña (mín. 6 caracteres)"
+               minlength="6" required
+               style="width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-size:max(16px,14px);">
+
+        <input type="password" name="confirmar" placeholder="Confirmar contraseña"
+               minlength="6" required
+               style="width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; font-size:max(16px,14px);">
+
+        <!-- Aviso de privacidad antes del botón -->
+        <p style="font-size:12px; color:gray; text-align:center; margin:8px 0 12px 0; line-height:1.5;">
+            Al crear una cuenta aceptas nuestra
+            <a href="/privacidad" target="_blank" style="color:#27ae60;">Política de Privacidad</a>.
+        </p>
+
+        <button style="background:#27ae60; color:white; padding:10px; border:none; border-radius:6px; width:100%; font-size:15px;">
+            ✅ Crear cuenta
+        </button>
+    </form>
+
+    <p style="margin-top:15px; text-align:center;">
+        ¿Ya tienes cuenta? <a href="/login">Iniciar sesión</a>
+    </p>
+
+</div>
+
+{% endblock %}

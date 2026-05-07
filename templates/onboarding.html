@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bienvenido — ERP Pecuario</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1a6b38 0%, #27ae60 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px 25px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.progreso {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+.paso-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    transition: background 0.3s;
+}
+.paso-dot.activo  { background: #27ae60; }
+.paso-dot.hecho   { background: #1a6b38; }
+h2 { color: #2c3e50; margin: 0 0 8px 0; font-size: 22px; }
+p  { color: #7f8c8d; margin: 0 0 20px 0; font-size: 14px; line-height: 1.5; }
+.emoji-grande { font-size: 60px; text-align: center; margin-bottom: 15px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display:block; font-size:13px; color:#555; margin-bottom:4px; font-weight:bold; }
+.form-control {
+    width: 100%; padding: 10px; border-radius: 8px;
+    border: 1px solid #ddd; font-size: max(16px, 14px);
+}
+.form-control:focus { outline: none; border-color: #27ae60; }
+.btn-verde {
+    background: #27ae60; color: white; padding: 13px;
+    border: none; border-radius: 10px; font-size: 16px;
+    width: 100%; cursor: pointer; font-weight: bold; margin-top: 8px;
+}
+.btn-verde:active { background: #1e8449; }
+.btn-saltar {
+    background: none; border: none; color: #aaa;
+    font-size: 13px; cursor: pointer; width: 100%;
+    margin-top: 12px; padding: 8px;
+}
+.btn-saltar:hover { color: #777; }
+.beneficio {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+}
+.beneficio:last-child { border-bottom: none; }
+.beneficio-ico { font-size: 24px; min-width: 30px; text-align: center; }
+.beneficio p { margin: 0; color: #555; font-size: 13px; }
+.beneficio strong { color: #2c3e50; }
+.exito { text-align: center; }
+.exito .check { font-size: 70px; margin-bottom: 15px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Indicador de progreso -->
+    <div class="progreso">
+        <div class="paso-dot {% if paso >= 1 %}{{ 'hecho' if paso > 1 else 'activo' }}{% endif %}"></div>
+        <div class="paso-dot {% if paso >= 2 %}{{ 'hecho' if paso > 2 else 'activo' }}{% endif %}"></div>
+        <div class="paso-dot {% if paso >= 3 %}activo{% endif %}"></div>
+    </div>
+
+    <!-- PASO 1: Bienvenida -->
+    {% if paso == 1 %}
+    <div class="emoji-grande">🐄</div>
+    <h2>¡Hola, {{ username }}!</h2>
+    <p>Bienvenido a <strong>ERP Pecuario</strong>. En 2 pasos rápidos tendrás tu primera granja lista.</p>
+
+    <div style="margin-bottom: 20px;">
+        <div class="beneficio">
+            <div class="beneficio-ico">📦</div>
+            <p><strong>Lotes de animales</strong> — controla cuántos tienes y cuánto valen</p>
+        </div>
+        <div class="beneficio">
+            <div class="beneficio-ico">💰</div>
+            <p><strong>Ventas y gastos</strong> — sabe exactamente cuánto ganas por lote</p>
+        </div>
+        <div class="beneficio">
+            <div class="beneficio-ico">🏥</div>
+            <p><strong>Sanidad</strong> — alertas automáticas de vacunas y tratamientos</p>
+        </div>
+        <div class="beneficio">
+            <div class="beneficio-ico">📊</div>
+            <p><strong>Reportes</strong> — rentabilidad real de tu granja en un vistazo</p>
+        </div>
+    </div>
+
+    <a href="/onboarding?paso=2">
+        <button class="btn-verde">🚀 Empezar ahora</button>
+    </a>
+    <button class="btn-saltar" onclick="window.location='/onboarding/saltar'">
+        Saltar y explorar solo
+    </button>
+
+    <!-- PASO 2: Crear primer lote -->
+    {% elif paso == 2 %}
+    <h2>📦 Crea tu primer lote</h2>
+    <p>Un lote es un grupo de animales. Puedes tener varios lotes (cerdos, pollos, vacas…).</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for cat, msg in messages %}
+            <p style="color:#e74c3c;font-size:13px;background:#fdf2f2;padding:8px;border-radius:6px;">⚠️ {{ msg }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/onboarding/crear_lote">
+        <div class="form-group">
+            <label>¿Cómo llamarás a este lote? *</label>
+            <input class="form-control" name="nombre" placeholder="Ej: Cerdos engorde 2026" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Tipo de animal *</label>
+                <select class="form-control" name="tipo" id="tipo_ob" onchange="cargarRazas()" required>
+                    <option value="">Selecciona</option>
+                    <option value="cerdo">🐷 Cerdo</option>
+                    <option value="pollo">🐔 Pollo</option>
+                    <option value="vaca">🐄 Vaca</option>
+                    <option value="cabra">🐐 Cabra</option>
+                    <option value="oveja">🐑 Oveja</option>
+                    <option value="yegua">🐴 Yegua</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Raza *</label>
+                <select class="form-control" name="raza" id="raza_ob" required>
+                    <option value="">Primero tipo</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>¿Cuántos animales? *</label>
+                <input class="form-control" type="number" name="cantidad" placeholder="Ej: 20" min="1" required>
+            </div>
+            <div class="form-group">
+                <label>Costo total ($)</label>
+                <input class="form-control" type="number" step="0.01" name="costo" placeholder="0.00" min="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Fecha de inicio *</label>
+            <input class="form-control" type="date" name="fecha" required>
+        </div>
+        <button type="submit" class="btn-verde">💾 Crear mi primer lote →</button>
+    </form>
+    <button class="btn-saltar" onclick="window.location='/onboarding/saltar'">
+        Crear después
+    </button>
+
+    <!-- PASO 3: Éxito -->
+    {% elif paso == 3 %}
+    <div class="exito">
+        <div class="check">🎉</div>
+        <h2>¡Todo listo!</h2>
+        <p>Tu primer lote fue creado. Ahora puedes registrar ventas, gastos, sanidad y mucho más.</p>
+        <div style="margin: 20px 0; text-align:left;">
+            <div class="beneficio">
+                <div class="beneficio-ico">📱</div>
+                <p>Agrega esta app a tu pantalla de inicio para acceso rápido desde el campo.</p>
+            </div>
+            <div class="beneficio">
+                <div class="beneficio-ico">🔔</div>
+                <p>Activa las notificaciones en Ajustes para recibir alertas de vacunas.</p>
+            </div>
+            <div class="beneficio">
+                <div class="beneficio-ico">👥</div>
+                <p>Con el plan Premium puedes agregar operadores a tu granja.</p>
+            </div>
+        </div>
+        <a href="/"><button class="btn-verde">🚀 Ir al dashboard</button></a>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+const razasPorTipo = {
+    cerdo: ["Landrace","Duroc","Pietrain","Yorkshire","Criollo"],
+    pollo: ["Broiler","Ponedora","Criollo"],
+    vaca:  ["Holstein","Brahman","Jersey","Angus","Criolla"],
+    cabra: ["Boer","Saanen","Nubia","Criolla"],
+    oveja: ["Merino","Dorper","Pelibuey","Criolla"],
+    yegua: ["Cuarto de milla","Pura sangre","Criollo"],
+};
+function cargarRazas() {
+    const tipo = document.getElementById("tipo_ob")?.value;
+    const sel  = document.getElementById("raza_ob");
+    if (!sel) return;
+    sel.innerHTML = "<option value=''>Selecciona</option>";
+    (razasPorTipo[tipo] || []).forEach(r => {
+        const o = document.createElement("option");
+        o.text = o.value = r;
+        sel.add(o);
+    });
+}
+// Pre-llenar fecha de hoy
+window.addEventListener("DOMContentLoaded", () => {
+    const df = document.querySelector("input[name='fecha']");
+    if (df) df.value = new Date().toISOString().split("T")[0];
+});
+</script>
+</body>
+</html>

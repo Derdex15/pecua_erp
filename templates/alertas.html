@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>🔔 Alertas</h1>
+    {% if no_leidas > 0 %}
+    <form action="/leer_todas_alertas" method="POST">
+        <button class="btn-secundario" style="font-size:12px;">✅ Marcar todas leídas</button>
+    </form>
+    {% endif %}
+</div>
+
+{% if no_leidas > 0 %}
+<p style="color:#e74c3c; font-size:13px; margin:0 0 10px 0;">
+    {{ no_leidas }} alerta{{ 's' if no_leidas > 1 else '' }} sin leer
+</p>
+{% endif %}
+
+{% if alertas %}
+    {% for a in alertas %}
+    <div class="card {% if not a.leida %}{% if 'HOY' in a.mensaje or 'MAÑANA' in a.mensaje %}alerta-urgente{% else %}alerta-pronto{% endif %}{% else %}alerta-leida{% endif %}">
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div style="flex:1;">
+                <p style="margin:0 0 4px 0; font-size:14px;">{{ a.mensaje }}</p>
+                <p style="margin:0; font-size:12px; color:gray;">
+                    📅 {{ a.fecha_alerta }}
+                    {% if a.lote_nombre %} &nbsp;|&nbsp; 📦 {{ a.lote_nombre }}{% endif %}
+                </p>
+            </div>
+
+            {% if not a.leida %}
+            <form action="/leer_alerta/{{ a.id }}" method="POST">
+                <button class="btn-secundario" style="font-size:11px; padding:5px 8px; white-space:nowrap;">
+                    ✓ Leída
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center; padding:40px 20px;">
+        <div style="font-size:50px;">✅</div>
+        <h3>Todo en orden</h3>
+        <p style="color:gray;">No tienes alertas pendientes.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

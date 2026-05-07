@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>⚠️ Confirmar reinicio</h2>
+
+<div class="card">
+    <p><strong>¿Seguro que quieres eliminar TODOS los datos?</strong></p>
+    <p>Se creará un respaldo automático antes de borrar.</p>
+
+    <form action="/reset" method="POST">
+        <button class="btn-peligro">🗑 Sí, borrar todo</button>
+    </form>
+
+    <br>
+
+    <a href="/ajustes">
+        <button style="background:gray; color:white; padding:8px; border-radius:6px; border:none;">
+            ❌ Cancelar
+        </button>
+    </a>
+</div>
+
+{% endblock %}

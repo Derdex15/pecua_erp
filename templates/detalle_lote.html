@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📦 {{ lote.nombre }}</h2>
+
+<!-- Resumen financiero -->
+<div class="card">
+    <h3>💰 Resumen financiero</h3>
+    <p>💸 Inversión (compra): <strong>${{ "%.2f"|format(inversion) }}</strong></p>
+    <p>🌽 Total gastos: <strong>${{ "%.2f"|format(total_gastos) }}</strong></p>
+    <p>📈 Total ventas: <strong>${{ "%.2f"|format(total_ventas) }}</strong></p>
+    <hr>
+    <p style="font-size:18px; font-weight:bold;
+              color: {% if ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+        {% if ganancia >= 0 %}✅ Ganancia:{% else %}❌ Pérdida:{% endif %}
+        ${{ "%.2f"|format(ganancia) }}
+    </p>
+</div>
+
+<!-- Info del lote -->
+<div class="card">
+    <h3>📋 Datos del lote</h3>
+    <p>🐾 <strong>Tipo:</strong> {{ lote.tipo }} — {{ lote.raza }}</p>
+    <p>🔢 <strong>Inicial:</strong> {{ lote.cantidad_inicial }} &nbsp;|&nbsp;
+       <strong>Actual:</strong> {{ lote.cantidad_actual }}</p>
+    <p>📅 <strong>Fecha de compra:</strong> {{ lote.fecha }}</p>
+    <p>
+        {% if lote.activo %}
+        <span class="badge badge-activo">● Activo</span>
+        {% else %}
+        <span class="badge badge-inactivo">● Inactivo</span>
+        {% endif %}
+    </p>
+
+    <div class="card-actions">
+        <a href="/editar_lote/{{ lote.id }}" class="btn-warning">✏️ Editar lote</a>
+    </div>
+</div>
+
+<!-- Ventas del lote -->
+<div class="card">
+    <h3>🔴 Ventas ({{ ventas|length }})</h3>
+
+    {% if ventas %}
+        {% for v in ventas %}
+        <div style="border-bottom:1px solid #eee; padding:8px 0;">
+            <p style="margin:0;">📅 {{ v.fecha }} &nbsp;|&nbsp; 🐾 {{ v.cantidad }} animales &nbsp;|&nbsp; 💵 ${{ "%.2f"|format(v.total or 0) }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:gray;">Sin ventas registradas.</p>
+    {% endif %}
+</div>
+
+<!-- Gastos del lote -->
+<div class="card">
+    <h3>🟡 Gastos ({{ gastos|length }})</h3>
+
+    {% if gastos %}
+        {% for g in gastos %}
+        <div style="border-bottom:1px solid #eee; padding:8px 0;">
+            <p style="margin:0;">📅 {{ g.fecha }} &nbsp;|&nbsp; 🌽 {{ g.nombre }} — {{ g.cantidad }} &nbsp;|&nbsp; 💵 ${{ "%.2f"|format(g.costo or 0) }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:gray;">Sin gastos registrados.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

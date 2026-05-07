@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>🐖 Resumen</h2>
+
+<!-- KPIs principales -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+
+    <div class="card" style="text-align:center;">
+        <p style="color:gray; margin:0; font-size:13px;">Total animales</p>
+        <h1 style="margin:5px 0; color:#2c3e50;">{{ total_animales }}</h1>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="color:gray; margin:0; font-size:13px;">💸 Inversión</p>
+        <h2 style="margin:5px 0; color:#e67e22;">${{ "%.2f"|format(inversion) }}</h2>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="color:gray; margin:0; font-size:13px;">📈 Ventas</p>
+        <h2 style="margin:5px 0; color:#27ae60;">${{ "%.2f"|format(ventas) }}</h2>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="color:gray; margin:0; font-size:13px;">💰 Ganancia</p>
+        <h2 style="margin:5px 0; color:{% if ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+            ${{ "%.2f"|format(ganancia) }}
+        </h2>
+    </div>
+
+</div>
+
+<!-- Detalle por tipo/raza — punto 16 visual -->
+{% if detalle %}
+<div class="card">
+    <h3>📊 Animales activos</h3>
+    {% for tipo, razas in detalle.items() %}
+        <p style="margin:8px 0 4px 0;"><strong>{{ tipo | capitalize }}</strong></p>
+        {% for raza, cantidad in razas.items() %}
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-size:13px; min-width:100px;">{{ raza }}</span>
+            <div style="flex:1; background:#f0f0f0; border-radius:6px; height:18px; overflow:hidden;">
+                <div style="width:{{ [cantidad * 10, 100] | min }}%; background:#27ae60; height:100%; border-radius:6px;"></div>
+            </div>
+            <span style="font-size:13px; font-weight:bold; min-width:30px;">{{ cantidad }}</span>
+        </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <p style="color:gray;">No tienes animales activos. <a href="/inventario">Crea un lote</a>.</p>
+</div>
+{% endif %}
+
+{% endblock %}

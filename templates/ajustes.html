@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>⚙️ Ajustes</h2>
+
+<div class="card">
+    <h3>👤 Cuenta</h3>
+    <div class="card-actions">
+        <a href="/cambiar_password" class="btn-secundario">🔑 Cambiar contraseña</a>
+        <a href="/privacidad" class="btn-secundario">🔒 Privacidad</a>
+    </div>
+</div>
+
+{% if mi_rol == 'admin' %}
+<div class="card" style="border: 2px solid #f39c12;">
+    <h3 style="color:#e67e22;">🌟 Plan Premium</h3>
+    <p style="color:gray; font-size:13px; margin:0 0 10px 0;">
+        Control sanitario, alertas, producción, múltiples usuarios y más.
+    </p>
+    <a href="/planes" class="btn-premium"
+       style="display:block; text-align:center; text-decoration:none; padding:10px; border-radius:8px; font-weight:bold;">
+        Ver planes y activar Premium
+    </a>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>⭐ Funciones Premium</h3>
+    <div class="card-actions" style="flex-direction:column; gap:8px;">
+        <a href="/sanitario"  class="btn-secundario" style="width:100%; text-align:center;">🏥 Control Sanitario</a>
+        <a href="/produccion" class="btn-secundario" style="width:100%; text-align:center;">📈 Registro de Producción</a>
+        {% if mi_rol == 'admin' %}
+        <a href="/granja"     class="btn-secundario" style="width:100%; text-align:center;">👥 Gestionar Miembros</a>
+        <a href="/alertas"    class="btn-secundario" style="width:100%; text-align:center;">🔔 Ver Alertas</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>🌍 Moneda y unidades</h3>
+    <p style="color:gray; font-size:13px;">Se guarda en este dispositivo.</p>
+    <div class="form-group">
+        <label>Moneda</label>
+        <select class="form-control" id="sel_moneda" onchange="guardarPreferencias()">
+            <option value="$">$ Dólar (USD)</option>
+            <option value="S/.">S/. Sol (PEN)</option>
+            <option value="COP">COP Peso colombiano</option>
+            <option value="MXN">MXN Peso mexicano</option>
+            <option value="ARS">ARS Peso argentino</option>
+            <option value="BRL">R$ Real (BRL)</option>
+            <option value="CLP">CLP Peso chileno</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Unidad de peso</label>
+        <select class="form-control" id="sel_peso" onchange="guardarPreferencias()">
+            <option value="kg">Kilogramos (kg)</option>
+            <option value="lb">Libras (lb)</option>
+            <option value="g">Gramos (g)</option>
+        </select>
+    </div>
+    <p id="pref_guardado" style="color:#27ae60; font-size:13px; display:none;">✅ Preferencias guardadas</p>
+</div>
+
+{% if mi_rol == 'admin' %}
+<div class="card">
+    <h3>📊 Reportes y exportación</h3>
+    <div class="card-actions">
+        <a href="/reportes"     class="btn-secundario">📊 Reportes por lote</a>
+        <a href="/historial"    class="btn-secundario">📜 Historial</a>
+        <a href="/exportar_csv" class="btn-secundario">⬇️ Exportar CSV</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>💾 Datos</h3>
+    <form action="/backup" method="POST">
+        <div class="form-group">
+            <label>Etiqueta del respaldo <span style="color:gray; font-weight:normal;">(opcional)</span></label>
+            <input class="form-control" name="etiqueta" placeholder="Ej: Fin de mes">
+        </div>
+        <button class="btn-secundario">📦 Hacer respaldo ahora</button>
+    </form>
+    <br>
+    <a href="/backups" class="btn-secundario">♻️ Ver y restaurar respaldos</a>
+    <br><br>
+    <form action="/reset" method="POST"
+          onsubmit="return confirm('⚠️ ¿Borrar TODOS los datos? Se hará un respaldo antes.');">
+        <button class="btn-peligro" style="width:auto;">🗑 Reiniciar todos los datos</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <form action="/logout" method="GET">
+        <button type="submit" class="btn-secundario">🚪 Cerrar sesión</button>
+    </form>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const moneda = localStorage.getItem('erp_moneda') || '$';
+    const peso   = localStorage.getItem('erp_peso')   || 'kg';
+    document.getElementById('sel_moneda').value = moneda;
+    document.getElementById('sel_peso').value   = peso;
+});
+function guardarPreferencias() {
+    localStorage.setItem('erp_moneda', document.getElementById('sel_moneda').value);
+    localStorage.setItem('erp_peso',   document.getElementById('sel_peso').value);
+    const msg = document.getElementById('pref_guardado');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 2000);
+}
+</script>
+
+{% endblock %}

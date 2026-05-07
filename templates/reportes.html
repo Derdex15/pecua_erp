@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>📊 Reportes por Lote</h1>
+
+<!-- Exportar CSV — punto 13 -->
+<div style="text-align:right; margin-bottom:5px;">
+    <a href="/exportar_csv" class="btn-secundario">
+        ⬇️ Exportar historial CSV
+    </a>
+</div>
+
+{% if lotes %}
+
+    <!-- Gráfico resumen general — punto 16 -->
+    {% set total_inv = lotes | sum(attribute='inversion') %}
+    {% set total_gas = lotes | sum(attribute='gastos') %}
+    {% set total_ven = lotes | sum(attribute='ventas') %}
+    {% set total_gan = total_ven - (total_inv + total_gas) %}
+
+    <div class="card">
+        <h3>📈 Resumen global</h3>
+        {% set max_val = [total_inv + total_gas, total_ven, 1] | max %}
+
+        <div style="margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <span style="font-size:13px; min-width:80px;">💸 Inversión</span>
+                <div style="flex:1; background:#f0f0f0; border-radius:6px; height:20px; overflow:hidden;">
+                    <div style="width:{{ [(((total_inv + total_gas) / max_val) * 100) | round | int, 100] | min }}%; background:#e67e22; height:100%; border-radius:6px;"></div>
+                </div>
+                <span style="font-size:13px; font-weight:bold; min-width:70px; text-align:right;">${{ "%.2f"|format(total_inv + total_gas) }}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <span style="font-size:13px; min-width:80px;">📈 Ventas</span>
+                <div style="flex:1; background:#f0f0f0; border-radius:6px; height:20px; overflow:hidden;">
+                    <div style="width:{{ [(((total_ven) / max_val) * 100) | round | int, 100] | min }}%; background:#27ae60; height:100%; border-radius:6px;"></div>
+                </div>
+                <span style="font-size:13px; font-weight:bold; min-width:70px; text-align:right;">${{ "%.2f"|format(total_ven) }}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:13px; min-width:80px;">💰 Ganancia</span>
+                <div style="flex:1; background:#f0f0f0; border-radius:6px; height:20px; overflow:hidden;">
+                    {% if total_gan >= 0 %}
+                    <div style="width:{{ [(((total_gan) / max_val) * 100) | round | int, 100] | min }}%; background:#2ecc71; height:100%; border-radius:6px;"></div>
+                    {% else %}
+                    <div style="width:{{ [(((-total_gan) / max_val) * 100) | round | int, 100] | min }}%; background:#e74c3c; height:100%; border-radius:6px;"></div>
+                    {% endif %}
+                </div>
+                <span style="font-size:13px; font-weight:bold; min-width:70px; text-align:right;
+                             color:{% if total_gan >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+                    ${{ "%.2f"|format(total_gan) }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detalle por lote -->
+    {% for l in lotes %}
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;">📦 {{ l.nombre }}</h3>
+            <span class="badge {% if l.activo %}badge-activo{% else %}badge-inactivo{% endif %}">
+                {% if l.activo %}Activo{% else %}Inactivo{% endif %}
+            </span>
+        </div>
+        <p style="color:gray; font-size:13px; margin:4px 0 10px 0;">{{ l.tipo }} — {{ l.raza }}</p>
+
+        <p>💸 Compra: <strong>${{ "%.2f"|format(l.inversion) }}</strong></p>
+        <p>🌽 Gastos: <strong>${{ "%.2f"|format(l.gastos) }}</strong></p>
+        <p>📈 Ventas: <strong>${{ "%.2f"|format(l.ventas) }}</strong></p>
+        <hr style="border:none; border-top:1px solid #eee; margin:8px 0;">
+        <p style="font-size:16px; font-weight:bold; margin:0;
+                  color:{% if l.ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+            {% if l.ganancia >= 0 %}✅ Ganancia:{% else %}❌ Pérdida:{% endif %}
+            ${{ "%.2f"|format(l.ganancia) }}
+        </p>
+
+        <div class="card-actions" style="margin-top:10px;">
+            <a href="/detalle_lote/{{ l.id }}" class="btn-secundario">📋 Ver detalle</a>
+        </div>
+    </div>
+    {% endfor %}
+
+{% else %}
+    <div class="card">
+        <p style="color:gray;">No hay datos todavía. <a href="/inventario">Crea un lote</a>.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

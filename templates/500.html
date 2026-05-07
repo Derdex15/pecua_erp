@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card" style="text-align:center; padding:40px 20px;">
+    <div style="font-size:60px;">⚠️</div>
+    <h2>Algo salió mal</h2>
+    <p style="color:gray;">Hubo un error en el servidor. Puede ser una falla temporal de conexión con Supabase.</p>
+    <p style="color:gray; font-size:13px;">Espera unos segundos e intenta de nuevo.</p>
+    <a href="/" class="btn-primary" style="display:inline-block; width:auto; padding:10px 30px; text-decoration:none; border-radius:8px;">
+        🏠 Volver al inicio
+    </a>
+</div>
+
+{% endblock %}

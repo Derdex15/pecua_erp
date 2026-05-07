@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📜 Lotes antiguos</h2>
+
+{% if lotes %}
+
+    {% for l in lotes %}
+    <div class="card">
+        <h3>📦 {{ l.get('nombre', 'Sin nombre') }}</h3>
+
+        <p>🐾 Tipo: {{ l.get('tipo', 'N/A') }}</p>
+        <p>🧬 Raza: {{ l.get('raza', 'N/A') }}</p>
+        <p>🔢 Inicial: {{ l.get('cantidad_inicial', 0) }}</p>
+
+        <p style="color: gray; font-size: 12px;">
+            Este lote ya no está activo
+        </p>
+    </div>
+    {% endfor %}
+
+{% else %}
+
+<div class="card">
+    <p>No tienes lotes antiguos</p>
+</div>
+
+{% endif %}
+
+{% endblock %}

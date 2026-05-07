@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>App Pecuaria</title>
+
+<!-- PWA: manifest y meta tags necesarios para instalación y Play Store -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#27ae60">
+<meta name="description" content="Control de ganado, producción y gastos para tu granja">
+
+<!-- iOS / Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pecuario">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+<!-- Android Chrome legacy -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="ERP Pecuario">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512.png">
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.content {
+    padding: 15px;
+    padding-bottom: 80px;
+}
+
+/* TARJETAS */
+.card {
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* FLASH MESSAGES */
+.flash {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin: 8px 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.flash.success { background: #d4edda; color: #155724; border-left: 4px solid #27ae60; }
+.flash.error   { background: #f8d7da; color: #721c24; border-left: 4px solid #e74c3c; }
+.flash.info    { background: #d1ecf1; color: #0c5460; border-left: 4px solid #3498db; }
+
+/* FORMULARIOS */
+.form-group { margin-bottom: 12px; }
+.form-group label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: max(16px, 14px);   /* evita zoom automático en iOS */
+    transition: border-color 0.2s;
+}
+.form-control:focus {
+    outline: none;
+    border-color: #27ae60;
+    box-shadow: 0 0 0 2px rgba(39,174,96,0.15);
+}
+
+/* BOTONES */
+.btn-primary {
+    background: #27ae60;
+    color: white;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: bold;
+}
+.btn-primary:active { background: #1e8449; }
+.btn-secundario {
+    background: #ecf0f1;
+    color: #2c3e50;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-peligro {
+    background: #e74c3c;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+}
+.btn-warning {
+    background: #f39c12;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-premium {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* ACCIONES */
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* BADGES */
+.badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold; }
+.badge-activo   { background:#d4edda; color:#155724; }
+.badge-inactivo { background:#f8d7da; color:#721c24; }
+.badge-premium  { background:linear-gradient(135deg,#f39c12,#e67e22); color:white; }
+.badge-alerta   { background:#e74c3c; color:white; border-radius:50%; width:18px; height:18px;
+                  display:inline-flex; align-items:center; justify-content:center;
+                  font-size:10px; font-weight:bold; }
+
+/* CARD PREMIUM */
+.card-premium {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 12px;
+}
+.card-premium h3, .card-premium p { color: white; margin: 5px 0; }
+
+/* SANITARIO — tipo badges */
+.tipo-vacuna          { background:#d4edda; color:#155724; }
+.tipo-desparasitacion { background:#d1ecf1; color:#0c5460; }
+.tipo-tratamiento     { background:#fff3cd; color:#856404; }
+
+/* ALERTAS */
+.alerta-urgente { border-left: 4px solid #e74c3c; }
+.alerta-pronto  { border-left: 4px solid #f39c12; }
+.alerta-leida   { opacity: 0.5; }
+
+/* NAV INFERIOR */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid #ddd;
+    height: 60px;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.bottom-nav a {
+    text-decoration: none;
+    color: gray;
+    font-size: 9px;          /* un poco más pequeño para caber 6 ítems */
+    text-align: center;
+    flex: 1;
+    padding-top: 6px;
+    position: relative;
+}
+.bottom-nav i { display:block; font-size:17px; margin-bottom:2px; }
+.bottom-nav a.active { color: #27ae60; font-weight: bold; }
+
+/* Badge de alertas sobre el ícono de campana */
+.nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 50%;
+    transform: translateX(8px);
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* TOP BAR */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 99;
+}
+.top-bar h3 { margin:0; font-size:16px; }
+.top-bar a  { text-decoration:none; font-size:20px; color:#2c3e50; }
+.back-btn   { font-size:20px; color:#2c3e50; text-decoration:none; }
+
+/* MODAL */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+}
+.modal-overlay.active { display:flex; }
+.modal-box {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px;
+    width: 100%;
+    max-width: 380px;
+}
+.modal-box h3 { margin-top:0; }
+.modal-actions { display:flex; gap:10px; margin-top:15px; }
+.modal-actions button { flex:1; padding:10px; border-radius:8px; border:none; font-size:14px; cursor:pointer; }
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+    {% if request.path != '/' %}
+    <a href="javascript:history.back()" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+    {% else %}
+    <span style="width:24px;"></span>
+    {% endif %}
+
+    <h3>🐄 App Pecuaria</h3>
+
+    <div style="display:flex; gap:14px; align-items:center;">
+        <!-- Campana con badge de alertas no leídas -->
+        <a href="/alertas" style="position:relative; font-size:20px; color:#2c3e50; text-decoration:none;"
+           aria-label="Alertas">
+            <i class="fas fa-bell"></i>
+            <span id="badge-alertas" style="display:none;" class="nav-badge">0</span>
+        </a>
+        <a href="/ajustes" aria-label="Ajustes"><i class="fas fa-cog" style="font-size:20px; color:#2c3e50;"></i></a>
+    </div>
+</div>
+
+<div class="content">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}" role="alert">
+                {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                {% elif category == 'error' %}<i class="fas fa-exclamation-circle"></i>
+                {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<!-- BARRA INFERIOR: Inicio · Lotes · Ventas · Gastos · Salud · Bajas -->
+<!-- Reportes movido a Ajustes (es solo para admins y se usa menos) -->
+<div class="bottom-nav" role="navigation" aria-label="Navegación principal">
+    <a href="/" class="{% if request.path == '/' %}active{% endif %}" aria-label="Inicio">
+        <i class="fas fa-home"></i>Inicio
+    </a>
+    <a href="/inventario" class="{% if request.path == '/inventario' %}active{% endif %}" aria-label="Lotes">
+        <i class="fas fa-box"></i>Lotes
+    </a>
+    <a href="/movimientos" class="{% if request.path == '/movimientos' %}active{% endif %}" aria-label="Ventas">
+        <i class="fas fa-dollar-sign"></i>Ventas
+    </a>
+    <a href="/gastos" class="{% if request.path == '/gastos' %}active{% endif %}" aria-label="Gastos">
+        <i class="fas fa-seedling"></i>Gastos
+    </a>
+    <a href="/sanitario" class="{% if request.path == '/sanitario' %}active{% endif %}" aria-label="Salud">
+        <i class="fas fa-syringe"></i>Salud
+    </a>
+    <a href="/bajas" class="{% if request.path == '/bajas' %}active{% endif %}" aria-label="Bajas"
+       style="{% if request.path == '/bajas' %}color:#e74c3c;{% endif %}">
+        <i class="fas fa-skull-crossbones"></i>Bajas
+    </a>
+</div>
+
+<!-- Banner sin conexión -->
+<div id="banner-offline"
+     role="alert"
+     style="display:none; position:fixed; top:0; left:0; width:100%; background:#e74c3c;
+            color:white; padding:8px 15px; font-size:13px; z-index:999;
+            align-items:center; gap:8px; justify-content:center;">
+    📡 Sin conexión — mostrando datos guardados
+</div>
+
+<script>
+// ── Badge de alertas no leídas ────────────────────────────────
+async function cargarBadgeAlertas() {
+    try {
+        const r    = await fetch("/api/alertas_count");
+        const data = await r.json();
+        const badge = document.getElementById("badge-alertas");
+        if (data.count > 0) {
+            badge.textContent  = data.count > 9 ? "9+" : data.count;
+            badge.style.display = "flex";
+        } else {
+            badge.style.display = "none";
+        }
+    } catch (e) { /* sin internet: no mostrar badge */ }
+}
+
+// ── Símbolo de moneda guardado en localStorage ────────────────
+window.addEventListener("DOMContentLoaded", () => {
+    cargarBadgeAlertas();
+    const m = localStorage.getItem("erp_moneda") || "$";
+    document.querySelectorAll(".moneda-sym").forEach(el => el.textContent = m);
+});
+
+// ── Banner offline/online ─────────────────────────────────────
+window.addEventListener("online",  () => {
+    document.getElementById("banner-offline").style.display = "none";
+});
+window.addEventListener("offline", () => {
+    document.getElementById("banner-offline").style.display = "flex";
+});
+
+// ── Registrar Service Worker ──────────────────────────────────
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" })
+            .then(reg => console.log("SW registrado, scope:", reg.scope))
+            .catch(err => console.warn("SW error:", err));
+    });
+}
+
+const FIREBASE_WEB_CONFIG = {
+    apiKey:            "AIzaSyDlBKhe6U8L6N1S02GdO45b-TrnhcP-U4c",
+    authDomain:        "erp-pecuario1.firebaseapp.com",
+    projectId:         "erp-pecuario1",
+    storageBucket:     "erp-pecuario1.firebasestorage.app",
+    messagingSenderId: "652944128899",
+    appId:             "1:652944128899:web:d7dac33a4af90c6e1d94b6",
+    vapidKey:          "TU_VAPID_KEY_AQUI", 
+};
+
+// Carga de SDKs de Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+
+const app = initializeApp(FIREBASE_WEB_CONFIG);
+const messaging = getMessaging(app);
+
+// Solicitar permiso para notificaciones
+async function solicitarPermiso() {
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+        const token = await getToken(messaging, { vapidKey: FIREBASE_WEB_CONFIG.vapidKey });
+        if (token) {
+            // Aquí enviarías el token a tu base de datos mediante un fetch
+            console.log("Token obtenido:", token);
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>

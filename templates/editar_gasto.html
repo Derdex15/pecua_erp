@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>✏️ Editar Gasto</h2>
+
+<div class="card">
+    <form method="POST" action="/guardar_gasto/{{ gasto.id }}">
+
+        <div class="form-group">
+            <label>Lote</label>
+            <select class="form-control" disabled style="background:#f4f6f9;">
+                {% for l in lotes %}
+                <option {% if l.id == gasto.lote_id %}selected{% endif %}>{{ l.nombre }}</option>
+                {% endfor %}
+            </select>
+            <small style="color:gray;">El lote no se puede cambiar.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Nombre del insumo</label>
+            <input class="form-control" name="nombre" value="{{ gasto.nombre }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad</label>
+            <input class="form-control" name="cantidad" value="{{ gasto.cantidad }}">
+        </div>
+
+        <div class="form-group">
+            <label>Costo ($)</label>
+            <input class="form-control" type="number" step="0.01" name="costo"
+                   value="{{ gasto.costo }}" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label>Fecha</label>
+            <input class="form-control" type="date" name="fecha" value="{{ gasto.fecha }}" required>
+        </div>
+
+        <button class="btn-primary">💾 Guardar cambios</button>
+    </form>
+</div>
+
+{% endblock %}

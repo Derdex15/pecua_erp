@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>💀 Bajas de Animales</h1>
+
+<!-- KPI de mortalidad -->
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:4px;">
+    <div class="card" style="text-align:center;">
+        <p style="color:gray; margin:0; font-size:12px;">Total bajas registradas</p>
+        <h2 style="margin:5px 0; color:#e74c3c;">{{ bajas|length }}</h2>
+        <p style="margin:0; font-size:11px; color:gray;">animales</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <p style="color:gray; margin:0; font-size:12px;">Mortalidad total</p>
+        <h2 style="margin:5px 0; color:{% if pct_mortalidad > 5 %}#e74c3c{% elif pct_mortalidad > 2 %}#e67e22{% else %}#27ae60{% endif %};">
+            {{ pct_mortalidad }}%
+        </h2>
+        <p style="margin:0; font-size:11px; color:gray;">{{ total_muertes }} muertes</p>
+    </div>
+</div>
+
+<!-- Formulario de registro -->
+<div class="card">
+    <h3>➕ Registrar baja</h3>
+    <p style="color:gray; font-size:13px; margin-top:0;">
+        Usa esto cuando un animal muere, es robado, descartado o donado — sin generar ingreso de venta.
+    </p>
+
+    <form method="POST" action="/registrar_baja">
+
+        <div class="form-group">
+            <label>Lote</label>
+            <select class="form-control" name="lote_id" required>
+                <option value="">Selecciona un lote</option>
+                {% for l in lotes %}
+                <option value="{{ l.id }}">
+                    {{ l.nombre }} ({{ l.cantidad_actual }} disponibles)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de baja</label>
+            <select class="form-control" name="tipo" id="sel_tipo" onchange="actualizarCausa()" required>
+                <option value="">Selecciona el tipo</option>
+                {% for clave, info in tipos.items() %}
+                <option value="{{ clave }}">{{ info.emoji }} {{ info.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad de animales</label>
+            <input class="form-control" type="number" name="cantidad"
+                   placeholder="Ej: 2" min="1" required>
+        </div>
+
+        <div class="form-group" id="grupo_causa">
+            <label id="lbl_causa">Causa</label>
+            <input class="form-control" name="causa" id="inp_causa"
+                   placeholder="Ej: Neumonía, sin identificar...">
+        </div>
+
+        <div class="form-group">
+            <label>Fecha</label>
+            <input class="form-control" type="date" name="fecha" required>
+        </div>
+
+        <div class="form-group">
+            <label>Notas <span style="color:gray; font-weight:normal;">(opcional)</span></label>
+            <textarea class="form-control" name="notas" rows="2"
+                      placeholder="Ej: Revisado por Dr. Pérez, vacunación al día"
+                      style="resize:vertical;"></textarea>
+        </div>
+
+        <button class="btn-primary" style="background:#e74c3c;">
+            💀 Registrar baja
+        </button>
+    </form>
+</div>
+
+<!-- Historial de bajas -->
+<h2>📋 Historial de bajas</h2>
+
+{% if bajas %}
+    {% for b in bajas %}
+    <div class="card" style="border-left: 4px solid {{ b.tipo_info.color }};">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="flex:1;">
+                <p style="margin:0 0 4px 0;">
+                    <span style="font-size:18px;">{{ b.tipo_info.emoji }}</span>
+                    <strong style="color:{{ b.tipo_info.color }};">{{ b.tipo_info.label }}</strong>
+                    &nbsp;—&nbsp;
+                    <strong>{{ b.cantidad }} animales</strong>
+                </p>
+                <p style="margin:2px 0; font-size:13px; color:gray;">
+                    📦 {{ b.lote_nombre }} &nbsp;|&nbsp; 📅 {{ b.fecha }}
+                </p>
+                {% if b.causa %}
+                <p style="margin:4px 0; font-size:13px; color:#555;">
+                    📋 Causa: {{ b.causa }}
+                </p>
+                {% endif %}
+                {% if b.notas %}
+                <p style="margin:4px 0; font-size:12px; color:#777; background:#f8f9fa;
+                          padding:6px 8px; border-radius:6px;">
+                    📝 {{ b.notas }}
+                </p>
+                {% endif %}
+            </div>
+
+            {% if mi_rol == 'admin' %}
+            <div style="margin-left:10px;">
+                <button class="btn-peligro" style="width:auto; font-size:12px; padding:5px 8px;"
+                    onclick="confirmarEliminar('{{ b.id }}', {{ b.cantidad }}, '{{ b.tipo_info.label }}')">
+                    🗑
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center; padding:30px 20px;">
+        <div style="font-size:50px;">✅</div>
+        <h3>Sin bajas registradas</h3>
+        <p style="color:gray;">No hay muertes, robos ni descartes en tu historial.</p>
+    </div>
+{% endif %}
+
+<!-- Modal confirmación eliminación -->
+<div class="modal-overlay" id="modalEliminar">
+    <div class="modal-box">
+        <h3>⚠️ Eliminar registro de baja</h3>
+        <p id="modalTexto"></p>
+        <p style="color:#27ae60; font-size:13px;">
+            Los animales serán devueltos al inventario del lote.
+        </p>
+        <div class="modal-actions">
+            <button onclick="cerrarModal()" style="background:#ecf0f1;">❌ Cancelar</button>
+            <form id="formEliminar" method="POST" style="flex:1;">
+                <button type="submit" style="background:#e74c3c; color:white; width:100%;">
+                    🗑 Eliminar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Ajustar placeholder de "causa" según el tipo seleccionado
+const causasPorTipo = {
+    muerte:   "Ej: Neumonía, diarrea, parto complicado, sin identificar",
+    robo:     "Ej: Robo nocturno, extravío en potrero",
+    descarte: "Ej: Enfermedad crónica, mal conformado, orden veterinaria",
+    donacion: "Ej: Donado a vecino, entregado a programa gubernamental",
+};
+
+function actualizarCausa() {
+    const tipo = document.getElementById("sel_tipo").value;
+    const inp  = document.getElementById("inp_causa");
+    const lbl  = document.getElementById("lbl_causa");
+
+    if (tipo === "muerte") {
+        lbl.textContent = "Causa de muerte";
+        inp.setAttribute("required", "");
+    } else {
+        lbl.textContent = "Motivo / Observación";
+        inp.removeAttribute("required");
+    }
+    inp.placeholder = causasPorTipo[tipo] || "Describe el motivo";
+}
+
+function confirmarEliminar(id, cantidad, tipo) {
+    document.getElementById("modalTexto").textContent =
+        `¿Eliminar la baja de ${cantidad} animales (${tipo})? Se devolverán al inventario del lote.`;
+    document.getElementById("formEliminar").action = `/eliminar_baja/${id}`;
+    document.getElementById("modalEliminar").classList.add("active");
+}
+
+function cerrarModal() {
+    document.getElementById("modalEliminar").classList.remove("active");
+}
+</script>
+
+{% endblock %}

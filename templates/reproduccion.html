@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🐣 Reproducción</h1>
+
+<!-- KPIs -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;">
+    <div class="card" style="text-align:center;">
+        <p style="color:gray;margin:0;font-size:12px;">Partos este año</p>
+        <h2 style="margin:5px 0;color:#f39c12;">{{ partos_anio }}</h2>
+    </div>
+    <div class="card" style="text-align:center;">
+        <p style="color:gray;margin:0;font-size:12px;">Preñadas activas</p>
+        <h2 style="margin:5px 0;color:#27ae60;">{{ prenadas }}</h2>
+    </div>
+</div>
+
+<!-- Formulario -->
+<div class="card">
+    <h3>➕ Registrar evento reproductivo</h3>
+    <form method="POST" action="/registrar_repro" id="form-repro">
+
+        <div class="form-group">
+            <label>Hembra <span style="color:gray;font-weight:normal;">(para montas, preñez y partos)</span></label>
+            <select class="form-control" name="animal_id" id="sel_hembra" required>
+                <option value="">Selecciona una hembra</option>
+                {% for h in hembras %}
+                <option value="{{ h.id }}">{{ h.nombre or '' }} {% if h.arete %}#{{ h.arete }}{% endif %} — {{ h.tipo|capitalize }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de evento</label>
+            <select class="form-control" name="tipo" id="sel_tipo" onchange="actualizarFormulario()">
+                {% for clave, info in tipos.items() %}
+                <option value="{{ clave }}">{{ info.emoji }} {{ info.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Fecha</label>
+            <input class="form-control" type="date" name="fecha" required>
+        </div>
+
+        <!-- Solo visible en monta/inseminación -->
+        <div class="form-group" id="grupo_padre" style="display:none;">
+            <label>Macho / Toro utilizado <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+            <select class="form-control" name="padre_id">
+                <option value="">Sin registrar</option>
+                {% for m in machos %}
+                <option value="{{ m.id }}">{{ m.nombre or '' }} {% if m.arete %}#{{ m.arete }}{% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Solo visible en parto -->
+        <div id="grupo_parto" style="display:none;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="form-group">
+                    <label>Crías nacidas</label>
+                    <input class="form-control" type="number" name="crias_nacidas" min="0" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Crías vivas</label>
+                    <input class="form-control" type="number" name="crias_vivas" min="0" placeholder="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Fecha esperada parto (calculada automáticamente) -->
+        <div id="grupo_gestacion" style="display:none;" class="card" style="background:#e8f8f5;">
+            <p style="margin:0;font-size:13px;color:#27ae60;">
+                ⏱ <strong>Fecha estimada de parto:</strong> <span id="lbl_fecha_parto">—</span>
+                <br><small style="color:gray;">Se calculará automáticamente y creará una alerta.</small>
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label>Resultado</label>
+            <select class="form-control" name="resultado">
+                <option value="en_curso">En curso</option>
+                <option value="exitoso">Exitoso</option>
+                <option value="fallido">Fallido</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Notas <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+            <textarea class="form-control" name="notas" rows="2" style="resize:vertical;"></textarea>
+        </div>
+
+        <button class="btn-primary">💾 Registrar evento</button>
+    </form>
+</div>
+
+<!-- Historial -->
+<h2>📋 Historial reproductivo</h2>
+{% if registros %}
+    {% for r in registros %}
+    <div class="card" style="border-left:4px solid {{ r.tipo_info.color }};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:1;">
+                <p style="margin:0 0 3px 0;">
+                    <strong>{{ r.tipo_info.emoji }} {{ r.tipo_info.label }}</strong>
+                    &nbsp;—&nbsp;
+                    <span style="color:gray;font-size:13px;">{{ r.animal_label }}</span>
+                </p>
+                <p style="margin:0;font-size:13px;color:gray;">📅 {{ r.fecha }}</p>
+                {% if r.crias_nacidas %}
+                <p style="margin:3px 0;font-size:13px;">
+                    🐣 {{ r.crias_nacidas }} crías — {{ r.crias_vivas or 0 }} vivas
+                </p>
+                {% endif %}
+                {% if r.fecha_esperada %}
+                <p style="margin:3px 0;font-size:13px;color:
+                    {% if r.dias_esperado is defined and r.dias_esperado <= 7 %}#e74c3c
+                    {% elif r.dias_esperado is defined and r.dias_esperado <= 30 %}#e67e22
+                    {% else %}#27ae60{% endif %};">
+                    🗓 Parto esperado: <strong>{{ r.fecha_esperada }}</strong>
+                    {% if r.dias_esperado is defined %}
+                        {% if r.dias_esperado < 0 %}(vencido)
+                        {% elif r.dias_esperado == 0 %}(HOY)
+                        {% else %}(en {{ r.dias_esperado }} días){% endif %}
+                    {% endif %}
+                </p>
+                {% endif %}
+                {% if r.notas %}
+                <p style="margin:4px 0;font-size:12px;color:#777;">📝 {{ r.notas }}</p>
+                {% endif %}
+            </div>
+            {% if mi_rol == 'admin' %}
+            <form method="POST" action="/eliminar_repro/{{ r.id }}" style="margin-left:8px;">
+                <button style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:18px;">🗑</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center;padding:30px 20px;">
+        <div style="font-size:50px;">🐣</div>
+        <h3>Sin eventos reproductivos</h3>
+        <p style="color:gray;">Registra el primer evento con el formulario de arriba.</p>
+    </div>
+{% endif %}
+
+<script>
+// Datos de gestación en días por especie
+const gestacion = {vaca:283, cerdo:114, cabra:150, oveja:147, yegua:336, burra:365};
+
+function actualizarFormulario() {
+    const tipo = document.getElementById("sel_tipo").value;
+    document.getElementById("grupo_padre").style.display =
+        ["monta","inseminacion"].includes(tipo) ? "block" : "none";
+    document.getElementById("grupo_parto").style.display =
+        tipo === "parto" ? "block" : "none";
+    document.getElementById("grupo_gestacion").style.display =
+        ["monta","inseminacion"].includes(tipo) ? "block" : "none";
+}
+
+// Calcular fecha estimada de parto en tiempo real
+document.querySelector("input[name='fecha']").addEventListener("change", calcularParto);
+document.getElementById("sel_hembra").addEventListener("change", calcularParto);
+document.getElementById("sel_tipo").addEventListener("change", calcularParto);
+
+async function calcularParto() {
+    const tipo  = document.getElementById("sel_tipo").value;
+    const fecha = document.querySelector("input[name='fecha']").value;
+    const lbl   = document.getElementById("lbl_fecha_parto");
+    if (!["monta","inseminacion"].includes(tipo) || !fecha) return;
+
+    const hId = document.getElementById("sel_hembra").value;
+    if (!hId) { lbl.textContent = "—"; return; }
+
+    try {
+        // Obtener tipo del animal para calcular gestación correcta
+        const res = await fetch(`/api/animales_buscar?q=${hId}`);
+        // Fecha estimada simple usando 280 días como fallback
+        const d = new Date(fecha);
+        d.setDate(d.getDate() + 280);
+        lbl.textContent = d.toISOString().split("T")[0];
+    } catch(e) {
+        lbl.textContent = "—";
+    }
+}
+
+// Ejecutar al cargar para mostrar/ocultar campos
+actualizarFormulario();
+</script>
+{% endblock %}

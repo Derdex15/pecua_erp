@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Cabecera del animal -->
+<div class="card" style="border-left:4px solid {{ animal.estado_info.color }};">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+            <h2 style="margin:0 0 4px 0;">
+                {{ animal.estado_info.emoji }}
+                {{ animal.nombre or '' }}
+                {% if animal.arete %}<span style="color:gray;font-size:15px;">#{{ animal.arete }}</span>{% endif %}
+            </h2>
+            <p style="margin:2px 0;color:gray;font-size:13px;">
+                {{ animal.tipo|capitalize }}{% if animal.raza %} · {{ animal.raza }}{% endif %} ·
+                {% if animal.sexo == 'hembra' %}♀ Hembra
+                {% elif animal.sexo == 'macho' %}♂ Macho
+                {% else %}~ Desconocido{% endif %}
+            </p>
+            {% if animal.edad_texto != '—' %}
+            <p style="margin:2px 0;font-size:13px;">🎂 {{ animal.edad_texto }}</p>
+            {% endif %}
+            <p style="margin:2px 0;font-size:13px;">📦 {{ animal.lote_nombre }}</p>
+            {% if animal.madre_nombre != '—' %}<p style="margin:2px 0;font-size:12px;color:#555;">♀ Madre: {{ animal.madre_nombre }}</p>{% endif %}
+            {% if animal.padre_nombre != '—' %}<p style="margin:2px 0;font-size:12px;color:#555;">♂ Padre: {{ animal.padre_nombre }}</p>{% endif %}
+        </div>
+        <span style="background:{{ animal.estado_info.color }};color:white;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold;">
+            {{ animal.estado_info.label }}
+        </span>
+    </div>
+    {% if animal.notas %}
+    <p style="margin:8px 0 0 0;font-size:13px;color:#555;background:#f8f9fa;padding:8px;border-radius:6px;">
+        📝 {{ animal.notas }}
+    </p>
+    {% endif %}
+</div>
+
+{% if mi_rol == 'admin' %}
+<!-- Editar animal -->
+<details class="card">
+    <summary style="cursor:pointer;font-weight:bold;padding:4px 0;">✏️ Editar datos</summary>
+    <br>
+    <form method="POST" action="/editar_animal/{{ animal.id }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Arete</label>
+                <input class="form-control" name="arete" value="{{ animal.arete or '' }}">
+            </div>
+            <div class="form-group">
+                <label>Nombre</label>
+                <input class="form-control" name="nombre" value="{{ animal.nombre or '' }}">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Estado</label>
+                <select class="form-control" name="estado">
+                    {% for clave, info in estados.items() %}
+                    <option value="{{ clave }}" {% if animal.estado == clave %}selected{% endif %}>
+                        {{ info.emoji }} {{ info.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Lote</label>
+                <select class="form-control" name="lote_id">
+                    <option value="">Sin lote</option>
+                    {% for l in lotes %}
+                    <option value="{{ l.id }}" {% if animal.lote_id == l.id %}selected{% endif %}>{{ l.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Madre</label>
+                <select class="form-control" name="madre_id">
+                    <option value="">Sin registrar</option>
+                    {% for h in hembras %}
+                    <option value="{{ h.id }}" {% if animal.madre_id == h.id %}selected{% endif %}>
+                        {{ h.nombre or h.arete or h.id }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Padre</label>
+                <select class="form-control" name="padre_id">
+                    <option value="">Sin registrar</option>
+                    {% for m in machos %}
+                    <option value="{{ m.id }}" {% if animal.padre_id == m.id %}selected{% endif %}>
+                        {{ m.nombre or m.arete or m.id }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea class="form-control" name="notas" rows="2" style="resize:vertical;">{{ animal.notas or '' }}</textarea>
+        </div>
+        <button class="btn-primary">💾 Guardar cambios</button>
+    </form>
+</details>
+{% endif %}
+
+<!-- Pesajes y GDP -->
+<div class="card">
+    <h3>⚖️ Pesajes
+        {% if gdp is not none %}
+        <span style="font-size:13px;font-weight:normal;color:{% if gdp > 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+            — GDP: {{ gdp }} kg/día
+        </span>
+        {% endif %}
+    </h3>
+
+    <form method="POST" action="/registrar_pesaje" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <input type="hidden" name="tipo_ref" value="animal">
+        <input type="hidden" name="ref_id" value="{{ animal.id }}">
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:12px;">Peso (kg)</label>
+            <input class="form-control" type="number" step="0.1" name="peso_kg" placeholder="0.0" required>
+        </div>
+        <div class="form-group" style="margin:0;">
+            <label style="font-size:12px;">Fecha</label>
+            <input class="form-control" type="date" name="fecha" required>
+        </div>
+        <div class="form-group" style="margin:0;grid-column:1/-1;">
+            <button class="btn-primary" style="padding:8px;">➕ Registrar pesaje</button>
+        </div>
+    </form>
+
+    {% if pesajes %}
+        <!-- Mini gráfico de barras -->
+        {% set max_peso = pesajes | map(attribute='peso_kg') | map('float') | max %}
+        {% for p in pesajes %}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <span style="font-size:11px;color:gray;min-width:80px;">{{ p.fecha }}</span>
+            <div style="flex:1;background:#f0f0f0;border-radius:4px;height:20px;">
+                <div style="width:{{ ((p.peso_kg|float / max_peso) * 100)|round|int }}%;background:#27ae60;height:100%;border-radius:4px;"></div>
+            </div>
+            <span style="font-size:12px;font-weight:bold;min-width:50px;text-align:right;">{{ "%.1f"|format(p.peso_kg|float) }} kg</span>
+            {% if mi_rol == 'admin' %}
+            <form method="POST" action="/eliminar_pesaje/{{ p.id }}" style="margin:0;">
+                <button style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;">🗑</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:gray;font-size:13px;">Sin pesajes registrados.</p>
+    {% endif %}
+</div>
+
+<!-- Historial reproductivo (solo hembras y machos activos) -->
+{% if animal.sexo in ('hembra', 'macho') %}
+<div class="card">
+    <h3>🐣 Historial reproductivo</h3>
+    {% if repro %}
+        {% for r in repro %}
+        <div style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
+            <p style="margin:0;font-size:13px;">
+                <strong>{{ r.fecha }}</strong> —
+                {% if r.tipo == 'celo' %}🔴 Celo
+                {% elif r.tipo == 'monta' %}🐄 Monta
+                {% elif r.tipo == 'inseminacion' %}💉 Inseminación
+                {% elif r.tipo == 'prenez_confirmada' %}✅ Preñez confirmada
+                {% elif r.tipo == 'aborto' %}⚠️ Aborto
+                {% elif r.tipo == 'parto' %}🐣 Parto
+                {% endif %}
+                {% if r.crias_nacidas %} · {{ r.crias_nacidas }} crías ({{ r.crias_vivas or 0 }} vivas){% endif %}
+                {% if r.fecha_esperada %}<span style="color:#27ae60;font-size:12px;"> · Parto est: {{ r.fecha_esperada }}</span>{% endif %}
+            </p>
+            {% if r.notas %}<p style="margin:2px 0;font-size:12px;color:#777;">{{ r.notas }}</p>{% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:gray;font-size:13px;">Sin eventos reproductivos registrados.</p>
+        <a href="/reproduccion" class="btn-secundario" style="font-size:13px;">➕ Registrar evento</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Crías -->
+{% if crias %}
+<div class="card">
+    <h3>👶 Crías / descendencia ({{ crias|length }})</h3>
+    {% for c in crias %}
+    <a href="/animal/{{ c.id }}" style="text-decoration:none;color:inherit;">
+        <div style="padding:6px 0;border-bottom:1px solid #f5f5f5;">
+            <p style="margin:0;font-size:13px;">
+                {{ c.nombre or '' }} {% if c.arete %}#{{ c.arete }}{% endif %}
+                <span style="color:gray;"> · {{ c.tipo|capitalize }}
+                {% if c.sexo == 'hembra' %}♀{% elif c.sexo == 'macho' %}♂{% endif %}
+                </span>
+            </p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if mi_rol == 'admin' %}
+<!-- Eliminar -->
+<div class="card">
+    <button class="btn-peligro" style="width:auto;"
+        onclick="if(confirm('¿Eliminar este animal y todos sus registros?')) document.getElementById('form-eliminar').submit();">
+        🗑 Eliminar animal
+    </button>
+    <form id="form-eliminar" method="POST" action="/eliminar_animal/{{ animal.id }}"></form>
+</div>
+{% endif %}
+
+{% endblock %}

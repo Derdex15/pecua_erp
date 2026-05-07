@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>⭐ Plan Premium</h2>
+
+{% if es_premium %}
+<!-- Usuario con plan activo -->
+<div class="card-premium card">
+    <h3>🌟 Plan Premium Activo</h3>
+    <p>Tu plan vence en <strong>{{ dias_restantes }} días</strong></p>
+    {% if suscripcion %}
+    <p style="font-size:13px;">Hasta: {{ suscripcion.fecha_fin }}</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Extender plan</h3>
+    <form action="/activar_premium" method="POST">
+        <div class="form-group">
+            <label>Meses adicionales</label>
+            <select class="form-control" name="meses">
+                <option value="1">1 mes — $5.00</option>
+                <option value="3">3 meses — $13.50 (10% descuento)</option>
+                <option value="6">6 meses — $24.00 (20% descuento)</option>
+                <option value="12">12 meses — $42.00 (30% descuento)</option>
+            </select>
+        </div>
+        <button class="btn-premium">💳 Extender plan</button>
+    </form>
+</div>
+
+<div class="card">
+    <form action="/cancelar_premium" method="POST"
+          onsubmit="return confirm('¿Cancelar el plan premium? Perderás acceso a las funciones Pro.')">
+        <button class="btn-peligro" style="width:auto;">Cancelar plan</button>
+    </form>
+</div>
+
+{% else %}
+<!-- Usuario free — mostrar propuesta de valor -->
+<div class="card" style="background:linear-gradient(135deg,#667eea,#764ba2); color:white; text-align:center; padding:25px;">
+    <div style="font-size:50px; margin-bottom:10px;">🌟</div>
+    <h2 style="color:white; margin:0 0 5px 0;">ERP Pecuario Pro</h2>
+    <p style="color:rgba(255,255,255,0.9); margin:0; font-size:14px;">
+        Todo lo que necesitas para gestionar tu granja como un profesional
+    </p>
+</div>
+
+<!-- Beneficios -->
+<div class="card">
+    <h3>✅ Incluye todo del plan gratuito, más:</h3>
+
+    <div style="margin:10px 0;">
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
+            <span style="font-size:28px;">🏥</span>
+            <div>
+                <strong>Control Sanitario completo</strong>
+                <p style="margin:3px 0; color:gray; font-size:13px;">
+                    Registra vacunas, desparasitaciones y tratamientos por lote. Historial médico siempre a mano.
+                </p>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
+            <span style="font-size:28px;">🔔</span>
+            <div>
+                <strong>Alertas automáticas</strong>
+                <p style="margin:3px 0; color:gray; font-size:13px;">
+                    La app te avisa antes de que venza una vacuna, cuando un lote tiene poco stock, y más. Nunca más olvides nada.
+                </p>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
+            <span style="font-size:28px;">📊</span>
+            <div>
+                <strong>Reportes PDF descargables</strong>
+                <p style="margin:3px 0; color:gray; font-size:13px;">
+                    Genera reportes profesionales para presentar al banco, socio o contador. <span style="color:#e67e22;">Próximamente.</span>
+                </p>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
+            <span style="font-size:28px;">👥</span>
+            <div>
+                <strong>Múltiples usuarios por granja</strong>
+                <p style="margin:3px 0; color:gray; font-size:13px;">
+                    Agrega a tu empleado o socio con acceso controlado. <span style="color:#e67e22;">Próximamente.</span>
+                </p>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+            <span style="font-size:28px;">💾</span>
+            <div>
+                <strong>Backups ilimitados</strong>
+                <p style="margin:3px 0; color:gray; font-size:13px;">
+                    Historial completo de respaldos con etiquetas. Tus datos siempre seguros.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Precio -->
+<div class="card" style="text-align:center; border: 2px solid #27ae60;">
+    <p style="color:gray; margin:0; font-size:13px;">Precio especial de lanzamiento</p>
+    <h1 style="margin:5px 0; color:#27ae60;">$5 <span style="font-size:18px; font-weight:normal;">/ mes</span></h1>
+    <p style="color:gray; font-size:13px; margin:0;">Cancela cuando quieras. Sin compromisos.</p>
+</div>
+
+<!-- Formulario de activación -->
+<div class="card">
+    <form action="/activar_premium" method="POST">
+        <div class="form-group">
+            <label>Elige tu plan</label>
+            <select class="form-control" name="meses">
+                <option value="1">1 mes — $5.00</option>
+                <option value="3">3 meses — $13.50 (ahorra $1.50)</option>
+                <option value="6">6 meses — $24.00 (ahorra $6.00)</option>
+                <option value="12">12 meses — $42.00 (ahorra $18.00)</option>
+            </select>
+        </div>
+        <button class="btn-premium">🌟 Activar Premium ahora</button>
+    </form>
+    <p style="text-align:center; color:gray; font-size:12px; margin-top:10px;">
+        🔒 Pago seguro · Cancela cuando quieras
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

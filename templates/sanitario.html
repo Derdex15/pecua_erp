@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>🏥 Control Sanitario</h1>
+
+<!-- Formulario nuevo registro -->
+<div class="card">
+    <h3>➕ Registrar tratamiento</h3>
+
+    <form method="POST" action="/agregar_sanitario">
+
+        <div class="form-group">
+            <label>Lote</label>
+            <select class="form-control" name="lote_id" required>
+                <option value="">Selecciona un lote</option>
+                {% for l in lotes %}
+                <option value="{{ l.id }}">{{ l.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo</label>
+            <select class="form-control" name="tipo" required>
+                <option value="">Selecciona un tipo</option>
+                <option value="vacuna">💉 Vacuna</option>
+                <option value="desparasitacion">🪱 Desparasitación</option>
+                <option value="tratamiento">💊 Tratamiento médico</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Nombre del producto / procedimiento</label>
+            <input class="form-control" name="nombre"
+                   placeholder="Ej: Vacuna aftosa, Ivermectina, Antibiótico" required>
+        </div>
+
+        <div class="form-group">
+            <label>Fecha de aplicación</label>
+            <input class="form-control" type="date" name="fecha" required>
+        </div>
+
+        <div class="form-group">
+            <label>Próxima dosis <span style="color:gray; font-weight:normal;">(opcional)</span></label>
+            <input class="form-control" type="date" name="proxima_dosis">
+            <small style="color:#e67e22;">⚡ Si ingresas esta fecha, recibirás una alerta 7 días antes.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Costo (<span class="moneda-sym">$</span>)</label>
+            <input class="form-control" type="number" step="0.01" name="costo"
+                   placeholder="0.00" min="0">
+        </div>
+
+        <div class="form-group">
+            <label>Notas <span style="color:gray; font-weight:normal;">(opcional)</span></label>
+            <textarea class="form-control" name="notas" rows="2"
+                      placeholder="Ej: Dosis 5ml por animal, aplicado por veterinario Dr. López"
+                      style="resize:vertical;"></textarea>
+        </div>
+
+        <button class="btn-primary">💾 Guardar registro</button>
+    </form>
+</div>
+
+<!-- Lista de registros -->
+<h2>📋 Historial sanitario</h2>
+
+{% if registros %}
+    {% for r in registros %}
+    <div class="card {% if r.dias_proxima is not none and r.dias_proxima <= 1 %}alerta-urgente
+                     {% elif r.dias_proxima is not none and r.dias_proxima <= 7 %}alerta-pronto
+                     {% endif %}">
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <span class="badge tipo-{{ r.tipo }}">
+                    {% if r.tipo == 'vacuna' %}💉 Vacuna
+                    {% elif r.tipo == 'desparasitacion' %}🪱 Desparasitación
+                    {% else %}💊 Tratamiento{% endif %}
+                </span>
+                <h3 style="margin:6px 0 4px 0;">{{ r.nombre }}</h3>
+            </div>
+        </div>
+
+        <p style="margin:3px 0; color:gray; font-size:13px;">📦 {{ r.lote_nombre }}</p>
+        <p style="margin:3px 0;">📅 Aplicado: <strong>{{ r.fecha }}</strong></p>
+
+        {% if r.proxima_dosis %}
+        <p style="margin:3px 0; color:
+            {% if r.dias_proxima is not none and r.dias_proxima <= 1 %}#e74c3c
+            {% elif r.dias_proxima is not none and r.dias_proxima <= 7 %}#e67e22
+            {% else %}#27ae60{% endif %};">
+            ⏰ Próxima dosis: <strong>{{ r.proxima_dosis }}</strong>
+            {% if r.dias_proxima is not none %}
+                {% if r.dias_proxima < 0 %}
+                    <span style="color:#e74c3c;">(VENCIDA)</span>
+                {% elif r.dias_proxima == 0 %}
+                    <span style="color:#e74c3c;">(HOY)</span>
+                {% elif r.dias_proxima == 1 %}
+                    <span style="color:#e74c3c;">(MAÑANA)</span>
+                {% else %}
+                    <span>(en {{ r.dias_proxima }} días)</span>
+                {% endif %}
+            {% endif %}
+        </p>
+        {% endif %}
+
+        {% if r.costo > 0 %}
+        <p style="margin:3px 0;">💵 Costo: ${{ "%.2f"|format(r.costo) }}</p>
+        {% endif %}
+
+        {% if r.notas %}
+        <p style="margin:6px 0 0 0; font-size:13px; color:#555; background:#f8f9fa;
+                  padding:8px; border-radius:6px;">
+            📝 {{ r.notas }}
+        </p>
+        {% endif %}
+
+        {% if mi_rol == 'admin' %}
+        <div class="card-actions">
+            <a href="/editar_sanitario/{{ r.id }}" class="btn-warning">✏️ Editar</a>
+            <button class="btn-peligro" style="width:auto;"
+                onclick="confirmarEliminar('{{ r.id }}', '{{ r.nombre }}')">
+                🗑 Eliminar
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p style="color:gray;">No hay registros sanitarios aún. Agrega el primero arriba.</p>
+    </div>
+{% endif %}
+
+<!-- Modal confirmación (solo visible si admin) -->
+<div class="modal-overlay" id="modalEliminar">
+    <div class="modal-box">
+        <h3>⚠️ Eliminar registro</h3>
+        <p id="modalTexto"></p>
+        <div class="modal-actions">
+            <button onclick="cerrarModal()" style="background:#ecf0f1;">❌ Cancelar</button>
+            <form id="formEliminar" method="POST" style="flex:1;">
+                <button type="submit" style="background:#e74c3c; color:white; width:100%;">🗑 Eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminar(id, nombre) {
+    document.getElementById("modalTexto").textContent = `¿Eliminar el registro "${nombre}"?`;
+    document.getElementById("formEliminar").action = `/eliminar_sanitario/${id}`;
+    document.getElementById("modalEliminar").classList.add("active");
+}
+function cerrarModal() {
+    document.getElementById("modalEliminar").classList.remove("active");
+}
+</script>
+
+{% endblock %}

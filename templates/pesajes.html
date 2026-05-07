@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>⚖️ Pesajes</h1>
+
+<!-- Selector de referencia -->
+<div class="card">
+    <h3>➕ Registrar pesaje</h3>
+
+    <!-- Tabs: Lote o Animal individual -->
+    <div style="display:flex;gap:0;margin-bottom:12px;border-radius:8px;overflow:hidden;border:1px solid #ddd;">
+        <button id="tab-lote" onclick="cambiarTipo('lote')"
+            style="flex:1;padding:10px;border:none;cursor:pointer;font-size:13px;font-weight:bold;
+                   background:{% if filtro_tipo == 'lote' %}#27ae60; color:white{% else %}white; color:#555{% endif %};">
+            📦 Por lote
+        </button>
+        <button id="tab-animal" onclick="cambiarTipo('animal')"
+            style="flex:1;padding:10px;border:none;cursor:pointer;font-size:13px;font-weight:bold;
+                   background:{% if filtro_tipo == 'animal' %}#27ae60; color:white{% else %}white; color:#555{% endif %};">
+            🐄 Animal individual
+        </button>
+    </div>
+
+    <form method="POST" action="/registrar_pesaje">
+        <input type="hidden" name="tipo_ref" id="tipo_ref" value="{{ filtro_tipo or 'lote' }}">
+
+        <div id="sel-lote" style="display:{% if filtro_tipo == 'animal' %}none{% else %}block{% endif %};">
+            <div class="form-group">
+                <label>Lote</label>
+                <select class="form-control" name="ref_id" id="ref_lote"
+                        onchange="actualizarHistorial('lote', this.value)">
+                    <option value="">Selecciona un lote</option>
+                    {% for l in lotes %}
+                    <option value="{{ l.id }}" {% if filtro_tipo == 'lote' and filtro_id == l.id|string %}selected{% endif %}>
+                        {{ l.nombre }} ({{ l.cantidad_actual }} animales)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <p style="font-size:12px;color:gray;margin:0 0 8px 0;">💡 Para lotes, ingresa el peso promedio del grupo.</p>
+        </div>
+
+        <div id="sel-animal" style="display:{% if filtro_tipo == 'animal' %}block{% else %}none{% endif %};">
+            <div class="form-group">
+                <label>Animal</label>
+                <select class="form-control" id="ref_animal"
+                        onchange="actualizarHistorial('animal', this.value)">
+                    <option value="">Selecciona un animal</option>
+                    {% for a in animales %}
+                    <option value="{{ a.id }}" {% if filtro_tipo == 'animal' and filtro_id == a.id|string %}selected{% endif %}>
+                        {{ a.nombre or '' }} {% if a.arete %}#{{ a.arete }}{% endif %} — {{ a.tipo|capitalize }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Peso (kg)</label>
+                <input class="form-control" type="number" step="0.1" name="peso_kg"
+                       placeholder="0.0" min="0.1" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha</label>
+                <input class="form-control" type="date" name="fecha" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Notas <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+            <input class="form-control" name="notas" placeholder="Ej: Ayuno previo de 12h">
+        </div>
+
+        <button class="btn-primary">💾 Registrar pesaje</button>
+    </form>
+</div>
+
+<!-- GDP de la selección actual -->
+{% if gdp_actual is not none %}
+<div class="card" style="background:{% if gdp_actual > 0 %}#e8f8f5{% else %}#fdf2f2{% endif %};text-align:center;">
+    <p style="margin:0;font-size:13px;color:gray;">Ganancia Diaria de Peso (GDP)</p>
+    <h2 style="margin:5px 0;color:{% if gdp_actual > 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+        {{ gdp_actual }} kg/día
+    </h2>
+    <p style="margin:0;font-size:12px;color:gray;">
+        {% if gdp_actual > 0 %}📈 Crecimiento positivo
+        {% else %}📉 Revisar alimentación y sanidad{% endif %}
+    </p>
+</div>
+{% endif %}
+
+<!-- Historial de pesajes -->
+<h2>📋 Pesajes registrados</h2>
+{% if pesajes %}
+    {% set max_peso = pesajes | map(attribute='peso_kg') | map('float') | max %}
+    {% for p in pesajes %}
+    <div class="card" style="padding:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div style="min-width:90px;">
+                <p style="margin:0;font-size:12px;font-weight:bold;">{{ p.fecha }}</p>
+                <p style="margin:0;font-size:11px;color:gray;">
+                    {{ "🐄" if p.tipo_ref == "animal" else "📦" }} {{ p.referencia }}
+                </p>
+            </div>
+            <div style="flex:1;background:#f0f0f0;border-radius:4px;height:24px;">
+                <div style="width:{{ ((p.peso_kg / max_peso) * 100)|round|int }}%;
+                            background:#27ae60;height:100%;border-radius:4px;
+                            display:flex;align-items:center;justify-content:flex-end;padding-right:6px;">
+                </div>
+            </div>
+            <strong style="min-width:60px;text-align:right;">{{ "%.1f"|format(p.peso_kg) }} kg</strong>
+            {% if mi_rol == 'admin' %}
+            <form method="POST" action="/eliminar_pesaje/{{ p.id }}" style="margin:0;">
+                <button style="background:none;border:none;color:#e74c3c;cursor:pointer;">🗑</button>
+            </form>
+            {% endif %}
+        </div>
+        {% if p.notas %}
+        <p style="margin:4px 0 0 0;font-size:12px;color:#777;">📝 {{ p.notas }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center;padding:30px 20px;">
+        <div style="font-size:50px;">⚖️</div>
+        <h3>Sin pesajes registrados</h3>
+        <p style="color:gray;">Selecciona un lote o animal y registra el primer pesaje.</p>
+    </div>
+{% endif %}
+
+<script>
+function cambiarTipo(tipo) {
+    document.getElementById("tipo_ref").value = tipo;
+    document.getElementById("sel-lote").style.display   = tipo === "lote"   ? "block" : "none";
+    document.getElementById("sel-animal").style.display = tipo === "animal" ? "block" : "none";
+    document.getElementById("tab-lote").style.background   = tipo === "lote"   ? "#27ae60" : "white";
+    document.getElementById("tab-lote").style.color        = tipo === "lote"   ? "white"   : "#555";
+    document.getElementById("tab-animal").style.background = tipo === "animal" ? "#27ae60" : "white";
+    document.getElementById("tab-animal").style.color      = tipo === "animal" ? "white"   : "#555";
+    // Sincronizar el campo ref_id oculto con el selector correcto
+    actualizarRefId(tipo);
+}
+
+function actualizarRefId(tipo) {
+    // El formulario necesita un solo campo ref_id — usamos el selector correcto
+    const lote   = document.getElementById("ref_lote");
+    const animal = document.getElementById("ref_animal");
+    if (tipo === "lote" && lote) {
+        if (!document.querySelector("select[name='ref_id']")) {
+            lote.setAttribute("name", "ref_id");
+            if (animal) animal.removeAttribute("name");
+        }
+    } else if (animal) {
+        animal.setAttribute("name", "ref_id");
+        if (lote) lote.removeAttribute("name");
+    }
+}
+
+function actualizarHistorial(tipo, id) {
+    if (id) window.location.href = `/pesajes?tipo=${tipo}&ref_id=${id}`;
+}
+
+// Inicializar al cargar
+window.addEventListener("DOMContentLoaded", () => {
+    actualizarRefId("{{ filtro_tipo or 'lote' }}");
+});
+</script>
+{% endblock %}

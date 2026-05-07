@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🐄 Animales</h1>
+
+<!-- KPIs -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px;">
+    <div class="card" style="text-align:center;padding:10px;">
+        <p style="color:gray;margin:0;font-size:11px;">Activos</p>
+        <h2 style="margin:4px 0;color:#27ae60;">{{ total_activos }}</h2>
+    </div>
+    <div class="card" style="text-align:center;padding:10px;">
+        <p style="color:gray;margin:0;font-size:11px;">Hembras</p>
+        <h2 style="margin:4px 0;color:#e91e8c;">{{ total_hembras }}</h2>
+    </div>
+    <div class="card" style="text-align:center;padding:10px;">
+        <p style="color:gray;margin:0;font-size:11px;">Machos</p>
+        <h2 style="margin:4px 0;color:#3498db;">{{ total_machos }}</h2>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="padding:10px;">
+    <form method="GET" action="/animales" style="display:flex;flex-direction:column;gap:8px;">
+        <input class="form-control" name="q" value="{{ filtro_texto }}" placeholder="🔍 Buscar por arete o nombre">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <select class="form-control" name="estado" onchange="this.form.submit()">
+                <option value="">Todos los estados</option>
+                {% for clave, info in estados.items() %}
+                <option value="{{ clave }}" {% if filtro_estado == clave %}selected{% endif %}>
+                    {{ info.emoji }} {{ info.label }}
+                </option>
+                {% endfor %}
+            </select>
+            <select class="form-control" name="lote_id" onchange="this.form.submit()">
+                <option value="">Todos los lotes</option>
+                {% for l in lotes %}
+                <option value="{{ l.id }}" {% if filtro_lote == l.id|string %}selected{% endif %}>
+                    {{ l.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn-primary" style="padding:8px;">Filtrar</button>
+    </form>
+</div>
+
+{% if mi_rol == 'admin' %}
+<!-- Formulario nuevo animal -->
+<details class="card">
+    <summary style="cursor:pointer;font-weight:bold;padding:4px 0;">➕ Registrar animal individual</summary>
+    <br>
+    <form method="POST" action="/crear_animal">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Arete / Chip</label>
+                <input class="form-control" name="arete" placeholder="Ej: 0042">
+            </div>
+            <div class="form-group">
+                <label>Nombre <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+                <input class="form-control" name="nombre" placeholder="Ej: Canela">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Tipo *</label>
+                <select class="form-control" name="tipo" id="tipo_sel" onchange="cargarRazas()" required>
+                    <option value="">Selecciona</option>
+                    <option value="vaca">Vaca</option>
+                    <option value="cerdo">Cerdo</option>
+                    <option value="pollo">Pollo</option>
+                    <option value="cabra">Cabra</option>
+                    <option value="oveja">Oveja</option>
+                    <option value="yegua">Yegua</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sexo</label>
+                <select class="form-control" name="sexo">
+                    <option value="hembra">Hembra</option>
+                    <option value="macho">Macho</option>
+                    <option value="desconocido">Desconocido</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Raza</label>
+                <select class="form-control" name="raza" id="raza_sel">
+                    <option value="">Primero elige tipo</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Lote <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+                <select class="form-control" name="lote_id">
+                    <option value="">Sin lote</option>
+                    {% for l in lotes %}<option value="{{ l.id }}">{{ l.nombre }}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Fecha nacimiento</label>
+                <input class="form-control" type="date" name="fecha_nacimiento">
+            </div>
+            <div class="form-group">
+                <label>Peso inicial (kg)</label>
+                <input class="form-control" type="number" step="0.1" name="peso_inicial" placeholder="0.0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea class="form-control" name="notas" rows="2" style="resize:vertical;" placeholder="Observaciones adicionales"></textarea>
+        </div>
+        <button class="btn-primary">💾 Guardar animal</button>
+    </form>
+</details>
+{% endif %}
+
+<!-- Lista de animales -->
+<h2>📋 Lista ({{ animales|length }})</h2>
+{% if animales %}
+    {% for a in animales %}
+    <a href="/animal/{{ a.id }}" style="text-decoration:none;color:inherit;">
+    <div class="card" style="border-left:4px solid {{ a.estado_info.color }};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <p style="margin:0 0 2px 0;font-weight:bold;">
+                    {{ a.estado_info.emoji }}
+                    {% if a.nombre %}{{ a.nombre }}{% endif %}
+                    {% if a.arete %}<span style="color:gray;font-size:13px;">#{{ a.arete }}</span>{% endif %}
+                </p>
+                <p style="margin:0;font-size:12px;color:gray;">
+                    {{ a.tipo|capitalize }}{% if a.raza %} · {{ a.raza }}{% endif %} ·
+                    {% if a.sexo == 'hembra' %}♀ Hembra
+                    {% elif a.sexo == 'macho' %}♂ Macho
+                    {% else %}~ Desconocido{% endif %}
+                </p>
+                {% if a.edad_texto != '—' %}
+                <p style="margin:2px 0;font-size:12px;color:#555;">🎂 {{ a.edad_texto }}</p>
+                {% endif %}
+                <p style="margin:2px 0;font-size:12px;color:#777;">📦 {{ a.lote_nombre }}</p>
+            </div>
+            <span style="font-size:12px;color:{{ a.estado_info.color }};font-weight:bold;white-space:nowrap;">
+                {{ a.estado_info.label }}
+            </span>
+        </div>
+    </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center;padding:30px 20px;">
+        <div style="font-size:50px;">🐄</div>
+        <h3>Sin animales registrados</h3>
+        <p style="color:gray;">Registra tu primer animal con el formulario de arriba.</p>
+    </div>
+{% endif %}
+
+<script>
+const razasPorTipo = {
+    vaca:  ["Holstein","Brahman","Jersey","Angus","Simmental","Criolla"],
+    cerdo: ["Landrace","Duroc","Pietrain","Yorkshire","Criollo"],
+    pollo: ["Broiler","Ponedora","Criollo"],
+    cabra: ["Boer","Saanen","Nubia","Criolla"],
+    oveja: ["Merino","Dorper","Pelibuey","Criolla"],
+    yegua: ["Cuarto de milla","Pura sangre","Criollo"],
+};
+function cargarRazas() {
+    const tipo = document.getElementById("tipo_sel").value;
+    const sel  = document.getElementById("raza_sel");
+    sel.innerHTML = "<option value=''>Selecciona una raza</option>";
+    (razasPorTipo[tipo] || []).forEach(r => {
+        const o = document.createElement("option");
+        o.text = o.value = r;
+        sel.add(o);
+    });
+}
+</script>
+{% endblock %}

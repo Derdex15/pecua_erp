@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>♻️ Respaldos</h2>
+
+{% if not es_premium %}
+<div class="flash info">
+    <i class="fas fa-info-circle"></i>
+    Plan gratuito: mostrando los últimos 3 respaldos de {{ total }} totales.
+    <a href="/planes" style="color:#0c5460; font-weight:bold;">Activa Premium</a> para ver todos.
+</div>
+{% endif %}
+
+{% if backups %}
+    {% for b in backups %}
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div style="flex:1;">
+                <p style="margin:0 0 3px 0; font-weight:bold;">
+                    {% if b.automatico %}🤖 Automático{% else %}📦 Manual{% endif %}
+                    {% if b.etiqueta %}
+                    — <span style="color:#27ae60;">{{ b.etiqueta }}</span>
+                    {% endif %}
+                </p>
+                <p style="margin:0; font-size:12px; color:gray;">📅 {{ b.fecha }}</p>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+                <a href="/restaurar/{{ b.id }}" class="btn-secundario"
+                   style="font-size:12px; padding:5px 10px;"
+                   onclick="return confirm('¿Restaurar este backup? Se perderán los datos actuales.');">
+                    ↩️ Restaurar
+                </a>
+                {% if es_premium %}
+                <form method="POST" action="/eliminar_backup/{{ b.id }}"
+                      onsubmit="return confirm('¿Eliminar este backup permanentemente?')">
+                    <button class="btn-peligro" style="font-size:12px; padding:5px 10px; width:auto;">
+                        🗑 Eliminar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p>No hay respaldos disponibles.</p>
+    </div>
+{% endif %}
+
+<div class="card">
+    <h3>📦 Crear respaldo ahora</h3>
+    <form action="/backup" method="POST">
+        <div class="form-group">
+            <label>Etiqueta <span style="color:gray; font-weight:normal;">(opcional)</span></label>
+            <input class="form-control" name="etiqueta"
+                   placeholder="Ej: Antes de la feria, Fin de mes enero">
+        </div>
+        <button class="btn-secundario">📦 Guardar respaldo</button>
+    </form>
+</div>
+
+{% endblock %}

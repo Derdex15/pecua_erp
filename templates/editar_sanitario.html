@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>✏️ Editar registro sanitario</h2>
+
+<div class="card">
+    <form method="POST" action="/guardar_sanitario/{{ registro.id }}">
+
+        <div class="form-group">
+            <label>Lote</label>
+            <select class="form-control" disabled style="background:#f4f6f9;">
+                {% for l in lotes %}
+                <option {% if l.id == registro.lote_id %}selected{% endif %}>{{ l.nombre }}</option>
+                {% endfor %}
+            </select>
+            <small style="color:gray;">El lote no se puede cambiar.</small>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo</label>
+            <input class="form-control" value="
+                {%- if registro.tipo == 'vacuna' %}💉 Vacuna
+                {%- elif registro.tipo == 'desparasitacion' %}🪱 Desparasitación
+                {%- else %}💊 Tratamiento{%- endif %}"
+                disabled style="background:#f4f6f9;">
+        </div>
+
+        <div class="form-group">
+            <label>Nombre del producto / procedimiento</label>
+            <input class="form-control" name="nombre" value="{{ registro.nombre }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Fecha de aplicación</label>
+            <input class="form-control" type="date" name="fecha" value="{{ registro.fecha }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Próxima dosis</label>
+            <input class="form-control" type="date" name="proxima_dosis"
+                   value="{{ registro.proxima_dosis or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label>Costo ($)</label>
+            <input class="form-control" type="number" step="0.01" name="costo"
+                   value="{{ registro.costo or 0 }}" min="0">
+        </div>
+
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea class="form-control" name="notas" rows="2"
+                      style="resize:vertical;">{{ registro.notas or '' }}</textarea>
+        </div>
+
+        <button class="btn-primary">💾 Guardar cambios</button>
+    </form>
+</div>
+
+{% endblock %}

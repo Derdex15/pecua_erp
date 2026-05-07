@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card" style="text-align:center; padding:30px 20px;">
+    <div style="font-size:60px; margin-bottom:10px;">🔒</div>
+    <h2>Función Premium</h2>
+    <p style="color:gray;">
+        <strong>{{ funcion }}</strong> está disponible en el plan Premium.
+    </p>
+</div>
+
+<div class="card" style="border:2px solid #f39c12;">
+    <h3 style="color:#e67e22;">¿Por qué vale la pena?</h3>
+
+    <p style="font-size:14px;">Un ganadero que pierde una vacuna puede perder animales que valen 10 veces el precio mensual del plan.</p>
+
+    <p style="font-size:14px;">Con Premium, la app te avisa automáticamente antes de que eso pase.</p>
+
+    <div style="background:#fff3cd; padding:12px; border-radius:8px; margin:10px 0;">
+        <strong>🌟 Solo $5/mes</strong>
+        <p style="margin:4px 0 0 0; font-size:13px; color:#555;">
+            Menos de lo que cuesta una dosis de vacuna.
+        </p>
+    </div>
+</div>
+
+<a href="/planes" class="btn-premium" style="display:block; text-align:center; text-decoration:none; padding:14px; border-radius:8px; font-weight:bold; font-size:15px; margin-top:10px;">
+    🌟 Ver planes Premium
+</a>
+
+<a href="/" class="btn-secundario" style="display:block; text-align:center; margin-top:10px;">
+    Volver al inicio
+</a>
+
+{% endblock %}

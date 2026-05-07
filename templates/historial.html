@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📋 Historial completo</h2>
+
+<!-- Filtros -->
+<div class="card">
+    <form method="GET" action="/historial">
+
+        <div class="form-group">
+            <label>Tipo de movimiento</label>
+            <select class="form-control" name="tipo">
+                <option value="">Todos los tipos</option>
+                <option value="Compra" {% if filtro_tipo == 'Compra' %}selected{% endif %}>🟢 Compra</option>
+                <option value="Venta"  {% if filtro_tipo == 'Venta'  %}selected{% endif %}>🔴 Venta</option>
+                <option value="Gasto"  {% if filtro_tipo == 'Gasto'  %}selected{% endif %}>🟡 Gasto</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Lote</label>
+            <select class="form-control" name="lote">
+                <option value="">Todos los lotes</option>
+                {% for nombre in nombres_lotes %}
+                <option value="{{ nombre }}"
+                    {% if filtro_lote == nombre %}selected{% endif %}>
+                    {{ nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+                <label>Desde</label>
+                <input class="form-control" type="date" name="desde"
+                       value="{{ filtro_desde }}">
+            </div>
+            <div class="form-group">
+                <label>Hasta</label>
+                <input class="form-control" type="date" name="hasta"
+                       value="{{ filtro_hasta }}">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+            <button type="submit" class="btn-primary" style="flex:2;">
+                🔍 Filtrar
+            </button>
+            <a href="/historial"
+               class="btn-secundario"
+               style="flex:1; text-align:center; padding:11px 0; display:inline-block;">
+                ✕ Limpiar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Contador de resultados -->
+{% if historial %}
+<p style="color:gray; font-size:13px; margin:5px 5px 0 5px;">
+    {{ historial|length }} registro{{ 's' if historial|length != 1 else '' }}
+    {% if filtro_tipo or filtro_lote or filtro_desde or filtro_hasta %}
+        <span style="color:#e67e22;">(filtrado)</span>
+    {% endif %}
+</p>
+{% endif %}
+
+<!-- Lista de movimientos -->
+{% if historial %}
+    {% for h in historial %}
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="flex:1;">
+                <p style="margin:0 0 4px 0;">
+                    <strong>📅 {{ h.fecha }}</strong>
+                    &nbsp;
+                    {% if h.tipo == "Compra" %}
+                        <span class="badge" style="background:#d4edda; color:#155724;">🟢 Compra</span>
+                    {% elif h.tipo == "Venta" %}
+                        <span class="badge" style="background:#f8d7da; color:#721c24;">🔴 Venta</span>
+                    {% elif h.tipo == "Gasto" %}
+                        <span class="badge" style="background:#fff3cd; color:#856404;">🟡 Gasto</span>
+                    {% endif %}
+                </p>
+                <p style="margin:2px 0; font-size:13px; color:#555;">
+                    📦 {{ h.lote }}
+                </p>
+                <p style="margin:2px 0; font-size:13px; color:#777;">
+                    {{ h.detalle }}
+                </p>
+            </div>
+            <div style="text-align:right; white-space:nowrap;">
+                <span style="font-weight:bold; font-size:15px;
+                    color:{% if h.tipo == 'Venta' %}#27ae60{% elif h.tipo == 'Gasto' %}#e67e22{% else %}#2c3e50{% endif %};">
+                    ${{ "%.2f"|format(h.valor) }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+{% else %}
+    <div class="card" style="text-align:center; padding:30px 20px;">
+        <p style="color:gray; font-size:15px;">
+            {% if filtro_tipo or filtro_lote or filtro_desde or filtro_hasta %}
+                No hay registros que coincidan con los filtros aplicados.
+            {% else %}
+                No hay movimientos registrados aún.
+            {% endif %}
+        </p>
+    </div>
+{% endif %}
+
+<!-- Exportar CSV al final -->
+<div style="text-align:center; margin:10px 0 20px 0;">
+    <a href="/exportar_csv" class="btn-secundario">
+        ⬇️ Exportar todo como CSV
+    </a>
+</div>
+
+{% endblock %}

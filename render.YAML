@@ -1,0 +1,35 @@
+# render.yaml
+# Deploy automático en Render.com
+# Sube este archivo a la raíz de tu repositorio.
+# Documentación: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: erp-pecuario
+    env: python
+    region: oregon          # más cercano a América Latina; también puedes usar frankfurt
+    plan: free              # cambia a "starter" ($7/mes) para que no hiberne
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --timeout 30 --bind 0.0.0.0:$PORT
+
+    # Variables de entorno — se configuran en el dashboard de Render
+    # NUNCA pongas los valores reales aquí, solo los nombres.
+    envVars:
+      - key: SUPABASE_KEY
+        sync: false          # Render te pedirá el valor en el dashboard
+
+      - key: SECRET_KEY
+        generateValue: true  # Render genera una clave aleatoria segura automáticamente
+
+      - key: ENV
+        value: production
+
+      - key: TWA_PACKAGE_NAME
+        value: app.erpecuario.twa   # Ajusta con el package name real de tu TWA
+
+      - key: TWA_SHA256_CERT
+        sync: false          # Lo obtienes de Bubblewrap después de generar el keystore
+
+    # Health check — Render reinicia el servicio si falla
+    healthCheckPath: /

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>✏️ Editar Lote</h2>
+
+<div class="card">
+    <p style="color:gray; font-size:13px;">Solo puedes editar el nombre, costo y fecha. El tipo y raza no se modifican para mantener la trazabilidad.</p>
+
+    <form method="POST" action="/guardar_lote/{{ lote.id }}">
+
+        <div class="form-group">
+            <label>Nombre del lote</label>
+            <input class="form-control" name="nombre" value="{{ lote.nombre }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Tipo</label>
+            <input class="form-control" value="{{ lote.tipo }}" disabled style="background:#f4f6f9;">
+        </div>
+
+        <div class="form-group">
+            <label>Raza</label>
+            <input class="form-control" value="{{ lote.raza }}" disabled style="background:#f4f6f9;">
+        </div>
+
+        <div class="form-group">
+            <label>Cantidad inicial (solo lectura)</label>
+            <input class="form-control" value="{{ lote.cantidad_inicial }}" disabled style="background:#f4f6f9;">
+        </div>
+
+        <div class="form-group">
+            <label>Costo total del lote ($)</label>
+            <input class="form-control" type="number" step="0.01" name="costo"
+                   value="{{ lote.costo_compra }}" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label>Fecha de compra</label>
+            <input class="form-control" type="date" name="fecha" value="{{ lote.fecha }}" required>
+        </div>
+
+        <button class="btn-primary">💾 Guardar cambios</button>
+    </form>
+</div>
+
+{% endblock %}
