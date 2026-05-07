@@ -338,75 +338,92 @@ body {
     📡 Sin conexión — mostrando datos guardados
 </div>
 
-<script>
-// ── Badge de alertas no leídas ────────────────────────────────
-async function cargarBadgeAlertas() {
-    try {
-        const r    = await fetch("/api/alertas_count");
-        const data = await r.json();
-        const badge = document.getElementById("badge-alertas");
-        if (data.count > 0) {
-            badge.textContent  = data.count > 9 ? "9+" : data.count;
-            badge.style.display = "flex";
-        } else {
-            badge.style.display = "none";
-        }
-    } catch (e) { /* sin internet: no mostrar badge */ }
-}
+<script type="module">
+    // ── Badge de alertas no leídas ────────────────────────────────
+    async function cargarBadgeAlertas() {
+        try {
+            const r = await fetch("/api/alertas_count");
+            const data = await r.json();
+            const badge = document.getElementById("badge-alertas");
+            if (data.count > 0) {
+                badge.textContent = data.count > 9 ? "9+" : data.count;
+                badge.style.display = "flex";
+            } else {
+                badge.style.display = "none";
+            }
+        } catch (e) { /* sin internet: no mostrar badge */ }
+    }
 
-// ── Símbolo de moneda guardado en localStorage ────────────────
-window.addEventListener("DOMContentLoaded", () => {
-    cargarBadgeAlertas();
-    const m = localStorage.getItem("erp_moneda") || "$";
-    document.querySelectorAll(".moneda-sym").forEach(el => el.textContent = m);
-});
-
-// ── Banner offline/online ─────────────────────────────────────
-window.addEventListener("online",  () => {
-    document.getElementById("banner-offline").style.display = "none";
-});
-window.addEventListener("offline", () => {
-    document.getElementById("banner-offline").style.display = "flex";
-});
-
-// ── Registrar Service Worker ──────────────────────────────────
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js", { scope: "/" })
-            .then(reg => console.log("SW registrado, scope:", reg.scope))
-            .catch(err => console.warn("SW error:", err));
+    // ── Símbolo de moneda y carga inicial ────────────────────────
+    window.addEventListener("DOMContentLoaded", () => {
+        cargarBadgeAlertas();
+        const m = localStorage.getItem("erp_moneda") || "$";
+        document.querySelectorAll(".moneda-sym").forEach(el => el.textContent = m);
+        
+        // Ejecutar solicitud de permiso al cargar la app
+        solicitarPermiso();
     });
-}
 
-const FIREBASE_WEB_CONFIG = {
-    apiKey:            "AIzaSyDlBKhe6U8L6N1S02GdO45b-TrnhcP-U4c",
-    authDomain:        "erp-pecuario1.firebaseapp.com",
-    projectId:         "erp-pecuario1",
-    storageBucket:     "erp-pecuario1.firebasestorage.app",
-    messagingSenderId: "652944128899",
-    appId:             "1:652944128899:web:d7dac33a4af90c6e1d94b6",
-    vapidKey:          "TU_VAPID_KEY_AQUI", 
-};
+    // ── Banner offline/online ─────────────────────────────────────
+    window.addEventListener("online", () => {
+        document.getElementById("banner-offline").style.display = "none";
+    });
+    window.addEventListener("offline", () => {
+        document.getElementById("banner-offline").style.display = "flex";
+    });
 
-// Carga de SDKs de Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+    // ── Registrar Service Worker ──────────────────────────────────
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js", { scope: "/" })
+                .then(reg => console.log("SW registrado, scope:", reg.scope))
+                .catch(err => console.warn("SW error:", err));
+        });
+    }
 
-const app = initializeApp(FIREBASE_WEB_CONFIG);
-const messaging = getMessaging(app);
+    // ── CONFIGURACIÓN FIREBASE (PASO 8) ───────────────────────────
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
-// Solicitar permiso para notificaciones
-async function solicitarPermiso() {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-        const token = await getToken(messaging, { vapidKey: FIREBASE_WEB_CONFIG.vapidKey });
-        if (token) {
-            // Aquí enviarías el token a tu base de datos mediante un fetch
-            console.log("Token obtenido:", token);
+    const FIREBASE_WEB_CONFIG = {
+        apiKey: "AIzaSyDlBKhe6U8L6N1S02GdO45b-TrnhcP-U4c",
+        authDomain: "erp-pecuario1.firebaseapp.com",
+        projectId: "erp-pecuario1",
+        storageBucket: "erp-pecuario1.firebasestorage.app",
+        messagingSenderId: "652944128899",
+        appId: "1:652944128899:web:d7dac33a4af90c6e1d94b6",
+        vapidKey: "BA-WCXQQ4QlFQElXpPmPpuFD6hmn9KNAdJWieCcIaKypSfJ5wI9yORFdF3ecbP7iB6L5C926DnMhB_5vzOqKuAs", 
+    };
+
+    const app = initializeApp(FIREBASE_WEB_CONFIG);
+    const messaging = getMessaging(app);
+
+    async function solicitarPermiso() {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                const token = await getToken(messaging, { vapidKey: FIREBASE_WEB_CONFIG.vapidKey });
+                if (token) {
+                    // ENVIAR TOKEN AL SERVIDOR
+                    await fetch("/api/save_token", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token: token })
+                    });
+                    console.log("Token actualizado en el servidor");
+                }
+            }
+        } catch (error) {
+            console.error("Error en notificaciones:", error);
         }
     }
-}
 
+    // Escuchar mensajes cuando la app está abierta (Primer Plano)
+    onMessage(messaging, (payload) => {
+        console.log("Mensaje recibido en primer plano:", payload);
+        // Opcional: Mostrar una alerta visual o actualizar el badge
+        cargarBadgeAlertas();
+    });
 </script>
 
 </body>

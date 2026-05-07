@@ -1,6 +1,6 @@
 """
 ERP Pecuario — Punto de entrada principal
-Flask + Supabase | Fase completa
+Flask + Supabase + Firebase FCM
 """
 import os
 import json
@@ -40,38 +40,46 @@ def create_app():
     from routes.produccion     import bp as produccion_bp
     from routes.granja         import bp as granja_bp
     from routes.bajas          import bp as bajas_bp
-    from routes.animales       import bp as animales_bp        # ← NUEVO
-    from routes.reproduccion   import bp as reproduccion_bp    # ← NUEVO
-    from routes.pesajes        import bp as pesajes_bp         # ← NUEVO
-    from routes.onboarding     import bp as onboarding_bp      # ← NUEVO
-    from routes.notificaciones import bp as notificaciones_bp  # ← NUEVO
+    from routes.animales       import bp as animales_bp
+    from routes.reproduccion   import bp as reproduccion_bp
+    from routes.pesajes        import bp as pesajes_bp
+    from routes.onboarding     import bp as onboarding_bp
+    from routes.notificaciones import bp as notificaciones_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(inventario_bp)
-    app.register_blueprint(ventas_bp)
-    app.register_blueprint(gastos_bp)
-    app.register_blueprint(reportes_bp)
-    app.register_blueprint(ajustes_bp)
-    app.register_blueprint(sanitario_bp)
-    app.register_blueprint(suscripciones_bp)
-    app.register_blueprint(produccion_bp)
-    app.register_blueprint(granja_bp)
-    app.register_blueprint(bajas_bp)
-    app.register_blueprint(animales_bp)        # ← NUEVO
-    app.register_blueprint(reproduccion_bp)    # ← NUEVO
-    app.register_blueprint(pesajes_bp)         # ← NUEVO
-    app.register_blueprint(onboarding_bp)      # ← NUEVO
-    app.register_blueprint(notificaciones_bp)  # ← NUEVO
+    for blueprint in [
+        auth_bp, inventario_bp, ventas_bp, gastos_bp,
+        reportes_bp, ajustes_bp, sanitario_bp, suscripciones_bp,
+        produccion_bp, granja_bp, bajas_bp, animales_bp,
+        reproduccion_bp, pesajes_bp, onboarding_bp, notificaciones_bp,
+    ]:
+        app.register_blueprint(blueprint)
 
-    # ── PWA ─────────────────────────────────────────────────────
+    # ── Archivos estáticos de la PWA ─────────────────────────────
+
     @app.route("/sw.js")
     def service_worker():
-        response = send_from_directory(
+        """Service Worker principal (caché offline)."""
+        r = send_from_directory(
             os.path.join(app.root_path, "static"), "sw.js",
             mimetype="application/javascript",
         )
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-        return response
+        r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return r
+
+    @app.route("/firebase-messaging-sw.js")
+    def firebase_messaging_sw():
+        """
+        Service Worker dedicado a FCM (notificaciones push en background).
+        Firebase EXIGE que este archivo esté en la raíz del dominio.
+        Archivo físico: static/firebase-messaging-sw.js
+        """
+        r = send_from_directory(
+            os.path.join(app.root_path, "static"),
+            "firebase-messaging-sw.js",
+            mimetype="application/javascript",
+        )
+        r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        return r
 
     @app.route("/manifest.json")
     def manifest():
@@ -86,8 +94,8 @@ def create_app():
         links = [{
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
-                "namespace":              "android_app",
-                "package_name":           os.getenv("TWA_PACKAGE_NAME", "app.erpecuario.twa"),
+                "namespace":               "android_app",
+                "package_name":            os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.app"),
                 "sha256_cert_fingerprints": [
                     os.getenv("TWA_SHA256_CERT", "REEMPLAZAR_CON_SHA256_DE_BUBBLEWRAP")
                 ],

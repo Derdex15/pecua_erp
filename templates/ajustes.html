@@ -7,7 +7,7 @@
     <h3>👤 Cuenta</h3>
     <div class="card-actions">
         <a href="/cambiar_password" class="btn-secundario">🔑 Cambiar contraseña</a>
-        <a href="/privacidad" class="btn-secundario">🔒 Privacidad</a>
+        <a href="/privacidad"       class="btn-secundario">🔒 Privacidad</a>
     </div>
 </div>
 
@@ -18,11 +18,22 @@
         Control sanitario, alertas, producción, múltiples usuarios y más.
     </p>
     <a href="/planes" class="btn-premium"
-       style="display:block; text-align:center; text-decoration:none; padding:10px; border-radius:8px; font-weight:bold;">
+       style="display:block; text-align:center; text-decoration:none;
+              padding:10px; border-radius:8px; font-weight:bold;">
         Ver planes y activar Premium
     </a>
 </div>
 {% endif %}
+
+<!-- ── Módulos del ERP ──────────────────────────────────────── -->
+<div class="card">
+    <h3>🐄 Gestión de animales</h3>
+    <div class="card-actions" style="flex-direction:column; gap:8px;">
+        <a href="/animales"      class="btn-secundario" style="width:100%; text-align:center;">🐄 Registro individual de animales</a>
+        <a href="/reproduccion" class="btn-secundario" style="width:100%; text-align:center;">🐣 Control reproductivo</a>
+        <a href="/pesajes"      class="btn-secundario" style="width:100%; text-align:center;">⚖️ Pesajes y GDP</a>
+    </div>
+</div>
 
 <div class="card">
     <h3>⭐ Funciones Premium</h3>

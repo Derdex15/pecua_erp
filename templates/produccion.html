@@ -3,16 +3,18 @@
 
 <h1>📈 Producción</h1>
 
-<!-- Formulario nuevo registro -->
+<!-- ── FORMULARIO DE REGISTRO ────────────────────────────────
+     CORRECCIÓN: el selector de lote ya NO tiene onchange="this.form.submit()".
+     El filtro del gráfico es un enlace separado, no parte de este formulario.
+──────────────────────────────────────────────────────────── -->
 <div class="card">
     <h3>➕ Registrar producción</h3>
 
-    <form method="POST" action="/agregar_produccion">
+    <form method="POST" action="/agregar_produccion" id="form-registro">
 
         <div class="form-group">
             <label>Lote</label>
-            <select class="form-control" name="lote_id" id="sel_lote"
-                    onchange="this.form.submit()" required>
+            <select class="form-control" name="lote_id" id="sel_lote" required>
                 <option value="">Selecciona un lote</option>
                 {% for l in lotes %}
                 <option value="{{ l.id }}" {% if lote_sel == l.id|string %}selected{% endif %}>
@@ -48,70 +50,86 @@
             <input class="form-control" name="notas" placeholder="Ej: Después del cambio de dieta">
         </div>
 
-        <button class="btn-primary">💾 Guardar</button>
+        <button type="submit" class="btn-primary">💾 Guardar</button>
     </form>
 </div>
 
-<!-- Gráfico de evolución -->
-{% if lote_sel and grafico_datos %}
+<!-- ── FILTRO DEL GRÁFICO (formulario GET independiente) ─────
+     Este es un formulario separado que solo recarga la página
+     con ?lote_id=X para mostrar el gráfico. No interfiere
+     con el formulario de registro de arriba.
+──────────────────────────────────────────────────────────── -->
 <div class="card">
     <h3>📊 Evolución del lote</h3>
-
-    <div class="form-group">
-        <label>Tipo a graficar</label>
-        <select class="form-control" id="sel_tipo_grafico" onchange="actualizarGrafico()">
-            {% for tipo in grafico_datos.keys() %}
-            <option value="{{ tipo }}">
-                {% if tipo == 'peso_promedio' %}⚖️ Peso promedio
-                {% elif tipo == 'leche_litros' %}🥛 Litros de leche
-                {% elif tipo == 'huevos_unidades' %}🥚 Huevos
-                {% else %}{{ tipo }}{% endif %}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div id="contenedor-grafico" style="margin-top:10px;">
-        {% for tipo, puntos in grafico_datos.items() %}
-        <div class="grafico-tipo" data-tipo="{{ tipo }}" style="display:none;">
-            {% if puntos %}
-                {% set max_val = puntos | map(attribute='valor') | max %}
-                {% for p in puntos %}
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
-                    <span style="font-size:11px; color:gray; min-width:80px;">{{ p.fecha }}</span>
-                    <div style="flex:1; background:#f0f0f0; border-radius:4px; height:22px; overflow:hidden;">
-                        <div style="width:{% if max_val > 0 %}{{ ((p.valor / max_val) * 100) | round | int }}{% else %}0{% endif %}%;
-                                    background:#27ae60; height:100%; border-radius:4px;">
-                        </div>
-                    </div>
-                    <span style="font-size:12px; font-weight:bold; min-width:45px; text-align:right;">
-                        {{ "%.1f"|format(p.valor) }}
-                    </span>
-                </div>
+    <form method="GET" action="/produccion" style="display:flex; gap:8px; align-items:flex-end;">
+        <div class="form-group" style="flex:1; margin:0;">
+            <label style="font-size:13px;">Ver gráfico de:</label>
+            <select class="form-control" name="lote_id" id="sel_grafico">
+                <option value="">Selecciona un lote</option>
+                {% for l in lotes %}
+                <option value="{{ l.id }}" {% if lote_sel == l.id|string %}selected{% endif %}>
+                    {{ l.nombre }}
+                </option>
                 {% endfor %}
-            {% else %}
-                <p style="color:gray;">Sin datos para este tipo.</p>
-            {% endif %}
+            </select>
         </div>
-        {% endfor %}
+        <button type="submit" class="btn-secundario" style="white-space:nowrap; margin-bottom:0;">
+            📊 Ver
+        </button>
+    </form>
+
+    {% if lote_sel and grafico_datos %}
+    <div style="margin-top:14px;">
+        <div class="form-group">
+            <label style="font-size:13px;">Tipo a graficar</label>
+            <select class="form-control" id="sel_tipo_grafico" onchange="actualizarGrafico()">
+                {% for tipo in grafico_datos.keys() %}
+                <option value="{{ tipo }}">
+                    {% if tipo == 'peso_promedio' %}⚖️ Peso promedio
+                    {% elif tipo == 'leche_litros' %}🥛 Litros de leche
+                    {% elif tipo == 'huevos_unidades' %}🥚 Huevos
+                    {% else %}{{ tipo }}{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="contenedor-grafico" style="margin-top:10px;">
+            {% for tipo, puntos in grafico_datos.items() %}
+            <div class="grafico-tipo" data-tipo="{{ tipo }}" style="display:none;">
+                {% if puntos %}
+                    {% set max_val = puntos | map(attribute='valor') | map('float') | max %}
+                    {% for p in puntos %}
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                        <span style="font-size:11px; color:gray; min-width:80px;">{{ p.fecha }}</span>
+                        <div style="flex:1; background:#f0f0f0; border-radius:4px; height:22px; overflow:hidden;">
+                            <div style="width:{% if max_val > 0 %}{{ ((p.valor|float / max_val) * 100)|round|int }}{% else %}0{% endif %}%;
+                                        background:#27ae60; height:100%; border-radius:4px;"></div>
+                        </div>
+                        <span style="font-size:12px; font-weight:bold; min-width:45px; text-align:right;">
+                            {{ "%.1f"|format(p.valor|float) }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color:gray; font-size:13px;">Sin datos para este tipo.</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
     </div>
+    {% elif lote_sel %}
+    <p style="color:gray; font-size:13px; margin-top:10px;">
+        Sin registros aún para este lote. Agrega el primero con el formulario de arriba.
+    </p>
+    {% else %}
+    <p style="color:gray; font-size:13px; margin-top:10px;">
+        Selecciona un lote y pulsa "Ver" para visualizar su evolución.
+    </p>
+    {% endif %}
 </div>
 
-<script>
-function actualizarGrafico() {
-    const tipo = document.getElementById('sel_tipo_grafico').value;
-    document.querySelectorAll('.grafico-tipo').forEach(el => {
-        el.style.display = el.dataset.tipo === tipo ? 'block' : 'none';
-    });
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const primero = document.querySelector('.grafico-tipo');
-    if (primero) primero.style.display = 'block';
-});
-</script>
-{% endif %}
-
-<!-- Historial de registros -->
+<!-- ── HISTORIAL DE REGISTROS ─────────────────────────────── -->
 <h2>📋 Registros recientes</h2>
 
 {% if registros %}
@@ -125,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
             {% elif r.tipo == 'leche_litros' %}🥛 Leche:
             {% elif r.tipo == 'huevos_unidades' %}🥚 Huevos:
             {% else %}📊{% endif %}
-            <strong>{{ "%.2f"|format(r.valor) }}</strong>
+            <strong>{{ "%.2f"|format(r.valor|float) }}</strong>
             {% if r.tipo == 'peso_promedio' %}kg
             {% elif r.tipo == 'leche_litros' %}L
             {% elif r.tipo == 'huevos_unidades' %}unidades
@@ -151,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 {% endif %}
 
-<!-- Modal confirmación -->
+<!-- Modal confirmación eliminación -->
 <div class="modal-overlay" id="modalEliminar">
     <div class="modal-box">
         <h3>⚠️ Eliminar registro</h3>
@@ -166,6 +184,19 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <script>
+function actualizarGrafico() {
+    const tipo = document.getElementById('sel_tipo_grafico').value;
+    document.querySelectorAll('.grafico-tipo').forEach(el => {
+        el.style.display = el.dataset.tipo === tipo ? 'block' : 'none';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Mostrar el primer tipo de gráfico disponible
+    const primero = document.querySelector('.grafico-tipo');
+    if (primero) primero.style.display = 'block';
+});
+
 function confirmarEliminar(id) {
     document.getElementById("formEliminar").action = `/eliminar_produccion/${id}`;
     document.getElementById("modalEliminar").classList.add("active");
