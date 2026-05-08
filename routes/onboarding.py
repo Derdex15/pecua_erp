@@ -1,9 +1,4 @@
 # routes/onboarding.py
-"""
-Onboarding — ERP Pecuario
-Flujo de 3 pasos que guía al usuario nuevo a crear su primer lote en 60 segundos.
-Solo se muestra si el usuario no tiene lotes aún.
-"""
 from flask import Blueprint, render_template, redirect, session, request, flash
 from config import sb_get, sb_post
 from routes.permisos import get_granja_info
@@ -17,13 +12,20 @@ def onboarding():
         return redirect("/login")
 
     owner_id, _ = get_granja_info(session["user_id"])
+    paso = int(request.args.get("paso", 1))
 
-    # Si ya tiene lotes, no mostrar onboarding — ir al dashboard
+    # CORRECCIÓN: el paso=3 es la pantalla de éxito DESPUÉS de crear el lote.
+    # Si llegamos aquí con paso=3, siempre mostrarlo aunque ya haya lotes.
+    if paso == 3:
+        return render_template("onboarding.html",
+                               paso=3,
+                               username=session.get("username", ""))
+
+    # Pasos 1 y 2: solo si el usuario aún no tiene lotes
     lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}")
     if lotes:
         return redirect("/")
 
-    paso = int(request.args.get("paso", 1))
     return render_template("onboarding.html",
                            paso=paso,
                            username=session.get("username", ""))
@@ -31,7 +33,6 @@ def onboarding():
 
 @bp.route("/onboarding/crear_lote", methods=["POST"])
 def onboarding_crear_lote():
-    """Crea el primer lote desde el onboarding y redirige al paso 3."""
     if "user_id" not in session:
         return redirect("/login")
 
@@ -50,11 +51,11 @@ def onboarding_crear_lote():
 
     try:
         cantidad = int(cantidad)
-        costo    = round(float(costo), 2)
+        costo    = round(float(costo or 0), 2)
         if cantidad <= 0 or costo < 0:
             raise ValueError
     except ValueError:
-        flash("Cantidad debe ser un número entero y el costo un número válido.", "error")
+        flash("Cantidad debe ser entero positivo y el costo un número válido.", "error")
         return redirect("/onboarding?paso=2")
 
     sb_post("lotes", {
@@ -69,10 +70,10 @@ def onboarding_crear_lote():
         "activo":           True,
     })
 
+    # Redirige a paso=3 — la ruta ahora siempre lo muestra sin importar si hay lotes
     return redirect("/onboarding?paso=3")
 
 
 @bp.route("/onboarding/saltar")
 def onboarding_saltar():
-    """Permite al usuario saltarse el onboarding e ir directo al dashboard."""
     return redirect("/")

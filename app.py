@@ -5,7 +5,7 @@ Flask + Supabase + Firebase FCM
 import os
 import json
 from datetime import timedelta
-from flask import Flask, render_template, send_from_directory, jsonify
+from flask import Flask, render_template, send_from_directory
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,39 +45,32 @@ def create_app():
     from routes.pesajes        import bp as pesajes_bp
     from routes.onboarding     import bp as onboarding_bp
     from routes.notificaciones import bp as notificaciones_bp
+    from routes.insumos        import bp as insumos_bp        # ← NUEVO
 
     for blueprint in [
         auth_bp, inventario_bp, ventas_bp, gastos_bp,
         reportes_bp, ajustes_bp, sanitario_bp, suscripciones_bp,
         produccion_bp, granja_bp, bajas_bp, animales_bp,
-        reproduccion_bp, pesajes_bp, onboarding_bp, notificaciones_bp,
+        reproduccion_bp, pesajes_bp, onboarding_bp,
+        notificaciones_bp, insumos_bp,
     ]:
         app.register_blueprint(blueprint)
 
-    # ── Archivos estáticos de la PWA ─────────────────────────────
-
+    # ── PWA ─────────────────────────────────────────────────────
     @app.route("/sw.js")
     def service_worker():
-        """Service Worker principal (caché offline)."""
         r = send_from_directory(
             os.path.join(app.root_path, "static"), "sw.js",
-            mimetype="application/javascript",
-        )
+            mimetype="application/javascript")
         r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         return r
 
     @app.route("/firebase-messaging-sw.js")
     def firebase_messaging_sw():
-        """
-        Service Worker dedicado a FCM (notificaciones push en background).
-        Firebase EXIGE que este archivo esté en la raíz del dominio.
-        Archivo físico: static/firebase-messaging-sw.js
-        """
         r = send_from_directory(
             os.path.join(app.root_path, "static"),
             "firebase-messaging-sw.js",
-            mimetype="application/javascript",
-        )
+            mimetype="application/javascript")
         r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         return r
 
@@ -85,34 +78,27 @@ def create_app():
     def manifest():
         return send_from_directory(
             os.path.join(app.root_path, "static"), "manifest.json",
-            mimetype="application/manifest+json",
-        )
+            mimetype="application/manifest+json")
 
-    # ── TWA: Digital Asset Links ─────────────────────────────────
+    # ── TWA ──────────────────────────────────────────────────────
     @app.route("/.well-known/assetlinks.json")
     def assetlinks():
-        links = [{
-            "relation": ["delegate_permission/common.handle_all_urls"],
-            "target": {
-                "namespace":               "android_app",
-                "package_name":            os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.app"),
-                "sha256_cert_fingerprints": [
-                    os.getenv("TWA_SHA256_CERT", "REEMPLAZAR_CON_SHA256_DE_BUBBLEWRAP")
-                ],
-            },
-        }]
+        links = [{"relation": ["delegate_permission/common.handle_all_urls"],
+                  "target": {
+                      "namespace": "android_app",
+                      "package_name": os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.app"),
+                      "sha256_cert_fingerprints": [
+                          os.getenv("TWA_SHA256_CERT", "REEMPLAZAR")],
+                  }}]
         r = app.response_class(
-            response=json.dumps(links), status=200, mimetype="application/json"
-        )
+            response=json.dumps(links), status=200, mimetype="application/json")
         r.headers["Cache-Control"] = "no-cache"
         return r
 
-    # ── Páginas estáticas ────────────────────────────────────────
     @app.route("/privacidad")
     def privacidad():
         return render_template("privacidad.html")
 
-    # ── Errores ──────────────────────────────────────────────────
     @app.errorhandler(404)
     def not_found(e):
         return render_template("404.html"), 404

@@ -3,54 +3,159 @@
 
 <h2>🐖 Resumen</h2>
 
-<!-- KPIs principales -->
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+<!-- ── KPIs financieros principales ──────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
 
     <div class="card" style="text-align:center;">
-        <p style="color:gray; margin:0; font-size:13px;">Total animales</p>
-        <h1 style="margin:5px 0; color:#2c3e50;">{{ total_animales }}</h1>
+        <p style="color:gray;margin:0;font-size:12px;">Animales activos</p>
+        <h1 style="margin:5px 0;color:#2c3e50;">{{ total_animales }}</h1>
     </div>
 
     <div class="card" style="text-align:center;">
-        <p style="color:gray; margin:0; font-size:13px;">💸 Inversión</p>
-        <h2 style="margin:5px 0; color:#e67e22;">${{ "%.2f"|format(inversion) }}</h2>
+        <p style="color:gray;margin:0;font-size:12px;">💰 Ganancia total</p>
+        <h2 style="margin:5px 0;color:{% if ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(ganancia) }}
+        </h2>
     </div>
 
     <div class="card" style="text-align:center;">
-        <p style="color:gray; margin:0; font-size:13px;">📈 Ventas</p>
-        <h2 style="margin:5px 0; color:#27ae60;">${{ "%.2f"|format(ventas) }}</h2>
+        <p style="color:gray;margin:0;font-size:12px;">💸 Inversión total</p>
+        <h2 style="margin:5px 0;color:#e67e22;">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(inversion) }}
+        </h2>
     </div>
 
     <div class="card" style="text-align:center;">
-        <p style="color:gray; margin:0; font-size:13px;">💰 Ganancia</p>
-        <h2 style="margin:5px 0; color:{% if ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
-            ${{ "%.2f"|format(ganancia) }}
+        <p style="color:gray;margin:0;font-size:12px;">📈 Ventas totales</p>
+        <h2 style="margin:5px 0;color:#3498db;">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(total_ventas) }}
         </h2>
     </div>
 
 </div>
 
-<!-- Detalle por tipo/raza — punto 16 visual -->
+<!-- ── KPIs ganaderos (ítem 13) ──────────────────────────── -->
+<div class="card">
+    <h3>📊 Indicadores de la granja</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+        <!-- ROI -->
+        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:gray;">ROI</p>
+            <p style="margin:4px 0;font-size:22px;font-weight:bold;
+                color:{% if roi >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+                {{ roi }}%
+            </p>
+            <p style="margin:0;font-size:11px;color:gray;">retorno inversión</p>
+        </div>
+
+        <!-- Mortalidad -->
+        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:gray;">Mortalidad</p>
+            <p style="margin:4px 0;font-size:22px;font-weight:bold;
+                color:{% if pct_mortalidad > 5 %}#e74c3c{% elif pct_mortalidad > 2 %}#e67e22{% else %}#27ae60{% endif %};">
+                {{ pct_mortalidad }}%
+            </p>
+            <p style="margin:0;font-size:11px;color:gray;">{{ total_muertes }} muertes</p>
+        </div>
+
+        <!-- Precio promedio venta -->
+        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:gray;">Precio prom. venta</p>
+            <p style="margin:4px 0;font-size:20px;font-weight:bold;color:#3498db;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(precio_prom_venta) }}
+            </p>
+            <p style="margin:0;font-size:11px;color:gray;">por animal</p>
+        </div>
+
+        <!-- Total bajas -->
+        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:gray;">Total bajas</p>
+            <p style="margin:4px 0;font-size:22px;font-weight:bold;
+                color:{% if total_bajas > 0 %}#e67e22{% else %}#27ae60{% endif %};">
+                {{ total_bajas }}
+            </p>
+            <p style="margin:0;font-size:11px;color:gray;">animales dados de baja</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Resumen del mes ────────────────────────────────────── -->
+<div class="card">
+    <h3>📅 Este mes</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="text-align:center;">
+            <p style="margin:0;font-size:12px;color:gray;">Ingresos</p>
+            <h3 style="margin:4px 0;color:#27ae60;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(ventas_mes) }}
+            </h3>
+        </div>
+        <div style="text-align:center;">
+            <p style="margin:0;font-size:12px;color:gray;">Gastos</p>
+            <h3 style="margin:4px 0;color:#e74c3c;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(gastos_mes) }}
+            </h3>
+        </div>
+    </div>
+</div>
+
+<!-- ── Alerta de insumos bajos ────────────────────────────── -->
+{% if insumos_criticos > 0 %}
+<a href="/insumos" style="text-decoration:none;">
+    <div class="card" style="background:#fff3cd;border-left:4px solid #f39c12;">
+        <p style="margin:0;color:#856404;font-size:14px;">
+            ⚠️ <strong>{{ insumos_criticos }} insumo(s)</strong> con stock bajo en el almacén.
+            Toca para ver cuáles.
+        </p>
+    </div>
+</a>
+{% endif %}
+
+<!-- ── Desglose por especie ───────────────────────────────── -->
 {% if detalle %}
 <div class="card">
-    <h3>📊 Animales activos</h3>
+    <h3>🐄 Animales activos por especie</h3>
+    {% set total_todos = total_animales if total_animales > 0 else 1 %}
     {% for tipo, razas in detalle.items() %}
-        <p style="margin:8px 0 4px 0;"><strong>{{ tipo | capitalize }}</strong></p>
+        <p style="margin:10px 0 4px 0;font-size:13px;font-weight:bold;color:#2c3e50;">
+            {{ tipo | capitalize }}
+        </p>
         {% for raza, cantidad in razas.items() %}
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-            <span style="font-size:13px; min-width:100px;">{{ raza }}</span>
-            <div style="flex:1; background:#f0f0f0; border-radius:6px; height:18px; overflow:hidden;">
-                <div style="width:{{ [cantidad * 10, 100] | min }}%; background:#27ae60; height:100%; border-radius:6px;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:13px;min-width:90px;color:#555;">{{ raza }}</span>
+            <div style="flex:1;background:#f0f0f0;border-radius:6px;height:18px;overflow:hidden;">
+                <div style="width:{{ [(cantidad / total_todos * 100)|round|int, 100]|min }}%;
+                            background:#27ae60;height:100%;border-radius:6px;"></div>
             </div>
-            <span style="font-size:13px; font-weight:bold; min-width:30px;">{{ cantidad }}</span>
+            <span style="font-size:13px;font-weight:bold;min-width:30px;text-align:right;">
+                {{ cantidad }}
+            </span>
         </div>
         {% endfor %}
     {% endfor %}
 </div>
 {% else %}
 <div class="card">
-    <p style="color:gray;">No tienes animales activos. <a href="/inventario">Crea un lote</a>.</p>
+    <p style="color:gray;">No tienes animales activos.
+        <a href="/inventario" style="color:#27ae60;">Crea un lote</a>.
+    </p>
 </div>
 {% endif %}
+
+<!-- Accesos rápidos a módulos -->
+<div class="card">
+    <h3>⚡ Accesos rápidos</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <a href="/bajas"       class="btn-secundario" style="text-align:center;">💀 Registrar baja</a>
+        <a href="/sanitario"   class="btn-secundario" style="text-align:center;">🏥 Sanidad</a>
+        <a href="/animales"    class="btn-secundario" style="text-align:center;">🐄 Animales</a>
+        <a href="/insumos"     class="btn-secundario" style="text-align:center;">🌽 Insumos</a>
+        {% if mi_rol == 'admin' %}
+        <a href="/reportes"    class="btn-secundario" style="text-align:center;">📊 Reportes</a>
+        <a href="/reproduccion" class="btn-secundario" style="text-align:center;">🐣 Reproducción</a>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock %}

@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🌽 Inventario de Insumos</h1>
+
+<!-- KPIs -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;">
+    <div class="card" style="text-align:center;">
+        <p style="color:gray;margin:0;font-size:12px;">Total insumos</p>
+        <h2 style="margin:5px 0;color:#2c3e50;">{{ total_items }}</h2>
+    </div>
+    <div class="card" style="text-align:center;background:{% if items_bajo_stk > 0 %}#fdf2f2{% else %}#eafaf1{% endif %};">
+        <p style="color:gray;margin:0;font-size:12px;">Stock bajo</p>
+        <h2 style="margin:5px 0;color:{% if items_bajo_stk > 0 %}#e74c3c{% else %}#27ae60{% endif %};">
+            {{ items_bajo_stk }}
+        </h2>
+    </div>
+</div>
+
+<!-- Filtro por categoría -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+    <a href="/insumos" class="btn-secundario" style="font-size:12px;{% if not filtro_cat %}background:#27ae60;color:white;{% endif %}">
+        Todos
+    </a>
+    {% for clave, info in categorias.items() %}
+    <a href="/insumos?categoria={{ clave }}" class="btn-secundario"
+       style="font-size:12px;{% if filtro_cat == clave %}background:#27ae60;color:white;{% endif %}">
+        {{ info.emoji }} {{ info.label }}
+    </a>
+    {% endfor %}
+</div>
+
+{% if mi_rol == 'admin' %}
+<!-- Formulario nuevo insumo -->
+<details class="card">
+    <summary style="cursor:pointer;font-weight:bold;padding:4px 0;">➕ Agregar insumo al almacén</summary>
+    <br>
+    <form method="POST" action="/crear_insumo">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input class="form-control" name="nombre" placeholder="Ej: Balanceado, Ivermectina" required>
+            </div>
+            <div class="form-group">
+                <label>Categoría *</label>
+                <select class="form-control" name="categoria" required>
+                    {% for clave, info in categorias.items() %}
+                    <option value="{{ clave }}">{{ info.emoji }} {{ info.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Cantidad *</label>
+                <input class="form-control" type="number" step="0.01" name="cantidad" placeholder="0" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Unidad *</label>
+                <input class="form-control" name="unidad" placeholder="kg, L, dosis, saco…" required>
+            </div>
+            <div class="form-group">
+                <label>Stock mínimo</label>
+                <input class="form-control" type="number" step="0.01" name="stock_min" placeholder="0" min="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Proveedor <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+            <input class="form-control" name="proveedor" placeholder="Nombre o teléfono del proveedor">
+        </div>
+        <div class="form-group">
+            <label>Notas <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+            <input class="form-control" name="notas" placeholder="Ej: Refrigerar, vence en 6 meses">
+        </div>
+        <button class="btn-primary">💾 Agregar al inventario</button>
+    </form>
+</details>
+{% endif %}
+
+<!-- Lista de insumos -->
+<h2>📦 Almacén</h2>
+{% if insumos %}
+    {% for ins in insumos %}
+    <div class="card" style="border-left:4px solid {{ ins.categoria_info.color }};{% if ins.bajo_stock %}background:#fff9f9;{% endif %}">
+
+        <!-- Encabezado -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div>
+                <p style="margin:0;font-weight:bold;font-size:15px;">
+                    {{ ins.categoria_info.emoji }} {{ ins.nombre }}
+                    {% if ins.bajo_stock %}
+                    <span style="background:#e74c3c;color:white;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:6px;">
+                        ⚠️ STOCK BAJO
+                    </span>
+                    {% endif %}
+                </p>
+                <p style="margin:2px 0;font-size:12px;color:gray;">
+                    {{ ins.categoria_info.label }}
+                    {% if ins.proveedor %} · 📞 {{ ins.proveedor }}{% endif %}
+                </p>
+            </div>
+            <div style="text-align:right;">
+                <p style="margin:0;font-size:20px;font-weight:bold;
+                    color:{% if ins.bajo_stock %}#e74c3c{% else %}#27ae60{% endif %};">
+                    {{ ins.cantidad }}
+                </p>
+                <p style="margin:0;font-size:12px;color:gray;">{{ ins.unidad }}</p>
+            </div>
+        </div>
+
+        {% if ins.stock_min > 0 %}
+        <!-- Barra de nivel de stock -->
+        {% set pct = [[((ins.cantidad / ins.stock_min) * 50)|round|int, 0]|max, 100]|min if ins.stock_min > 0 else 100 %}
+        <div style="background:#f0f0f0;border-radius:4px;height:6px;margin-bottom:8px;">
+            <div style="width:{{ pct }}%;background:{% if ins.bajo_stock %}#e74c3c{% elif pct < 60 %}#f39c12{% else %}#27ae60{% endif %};height:100%;border-radius:4px;"></div>
+        </div>
+        <p style="font-size:11px;color:gray;margin:0 0 8px 0;">
+            Mínimo: {{ ins.stock_min }} {{ ins.unidad }}
+        </p>
+        {% endif %}
+
+        <!-- Ajuste de stock (entrada/salida) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <form method="POST" action="/ajustar_insumo/{{ ins.id }}" style="display:flex;gap:4px;">
+                <input type="hidden" name="operacion" value="+">
+                <input class="form-control" type="number" step="0.01" name="ajuste"
+                       placeholder="cantidad" min="0.01" style="font-size:13px;">
+                <button class="btn-primary" style="padding:8px 10px;white-space:nowrap;">➕ Entrada</button>
+            </form>
+            <form method="POST" action="/ajustar_insumo/{{ ins.id }}" style="display:flex;gap:4px;">
+                <input type="hidden" name="operacion" value="-">
+                <input class="form-control" type="number" step="0.01" name="ajuste"
+                       placeholder="cantidad" min="0.01" style="font-size:13px;">
+                <button class="btn-peligro" style="padding:8px 10px;white-space:nowrap;">➖ Uso</button>
+            </form>
+        </div>
+
+        {% if ins.notas %}
+        <p style="margin:8px 0 0 0;font-size:12px;color:#777;background:#f8f9fa;padding:6px 8px;border-radius:6px;">
+            📝 {{ ins.notas }}
+        </p>
+        {% endif %}
+
+        {% if mi_rol == 'admin' %}
+        <!-- Editar (desplegable inline) -->
+        <details style="margin-top:8px;">
+            <summary style="font-size:12px;color:#3498db;cursor:pointer;">✏️ Editar datos</summary>
+            <form method="POST" action="/editar_insumo/{{ ins.id }}" style="margin-top:8px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:12px;">Nombre</label>
+                        <input class="form-control" name="nombre" value="{{ ins.nombre }}" required>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:12px;">Stock mínimo</label>
+                        <input class="form-control" type="number" step="0.01" name="stock_min" value="{{ ins.stock_min }}">
+                    </div>
+                </div>
+                <div class="form-group" style="margin:6px 0 0 0;">
+                    <label style="font-size:12px;">Proveedor</label>
+                    <input class="form-control" name="proveedor" value="{{ ins.proveedor or '' }}">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="btn-primary" style="flex:1;padding:8px;">💾 Guardar</button>
+                    <button type="button" class="btn-peligro" style="padding:8px;"
+                        onclick="if(confirm('¿Eliminar {{ ins.nombre }}?')) document.getElementById('del-{{ ins.id }}').submit();">
+                        🗑
+                    </button>
+                </div>
+            </form>
+            <form id="del-{{ ins.id }}" method="POST" action="/eliminar_insumo/{{ ins.id }}"></form>
+        </details>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="text-align:center;padding:30px 20px;">
+        <div style="font-size:50px;">🌽</div>
+        <h3>Almacén vacío</h3>
+        <p style="color:gray;">Agrega tu primer insumo con el formulario de arriba.</p>
+    </div>
+{% endif %}
+{% endblock %}
