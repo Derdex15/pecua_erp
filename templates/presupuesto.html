@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>📋 Presupuesto</h2>
+
+<!-- Navegación de mes -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <a href="/presupuesto?mes={{ mes_ant }}&anio={{ anio_ant }}&lote_id={{ lote_id }}"
+       style="font-size:22px;color:#27ae60;text-decoration:none;padding:4px 10px;">‹</a>
+    <h3 style="margin:0;font-size:18px;color:#2c3e50;">{{ mes_nombre }} {{ anio }}</h3>
+    <a href="/presupuesto?mes={{ mes_sig }}&anio={{ anio_sig }}&lote_id={{ lote_id }}"
+       style="font-size:22px;color:#27ae60;text-decoration:none;padding:4px 10px;">›</a>
+</div>
+
+<!-- Filtro por lote -->
+<div class="card">
+    <form method="GET" action="/presupuesto"
+          style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="hidden" name="mes"  value="{{ mes }}">
+        <input type="hidden" name="anio" value="{{ anio }}">
+        <select class="form-control" name="lote_id" style="flex:1;"
+                onchange="this.form.submit()">
+            <option value="">Todos los lotes</option>
+            {% for l in lotes %}
+            <option value="{{ l.id }}" {% if lote_id|string == l.id|string %}selected{% endif %}>
+                {{ l.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if lote_id %}
+        <a href="/presupuesto?mes={{ mes }}&anio={{ anio }}" class="btn-secundario">✕</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Resumen financiero: estimado vs real -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+    <div class="card" style="text-align:center;">
+        <p style="margin:0;font-size:11px;color:gray;">💚 Ingresos estimados</p>
+        <h3 style="margin:4px 0;color:#27ae60;">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(ing_est) }}
+        </h3>
+        <p style="margin:0;font-size:11px;color:gray;">
+            Real: <strong style="color:#27ae60;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(reales.ingresos) }}
+            </strong>
+        </p>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="margin:0;font-size:11px;color:gray;">❤️ Gastos estimados</p>
+        <h3 style="margin:4px 0;color:#e74c3c;">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(gas_est) }}
+        </h3>
+        <p style="margin:0;font-size:11px;color:gray;">
+            Real: <strong style="color:#e74c3c;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(reales.gastos) }}
+            </strong>
+        </p>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="margin:0;font-size:11px;color:gray;">📈 Resultado estimado</p>
+        <h3 style="margin:4px 0;color:{% if res_est >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(res_est) }}
+        </h3>
+    </div>
+
+    <div class="card" style="text-align:center;">
+        <p style="margin:0;font-size:11px;color:gray;">📊 Resultado real</p>
+        <h3 style="margin:4px 0;color:{% if res_real >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+            <span class="moneda-sym">$</span>{{ "%.2f"|format(res_real) }}
+        </h3>
+    </div>
+
+</div>
+
+<!-- Formulario agregar partida -->
+<details class="card">
+    <summary style="font-weight:bold;font-size:14px;cursor:pointer;padding:4px 0;">
+        ➕ Agregar partida de presupuesto
+    </summary>
+    <br>
+    <form method="POST" action="/agregar_partida">
+        <input type="hidden" name="mes"  value="{{ mes }}">
+        <input type="hidden" name="anio" value="{{ anio }}">
+
+        <div class="form-group">
+            <label>Concepto *</label>
+            <input class="form-control" name="concepto"
+                   placeholder="Ej: Venta de terneros, Compra de alimento" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Tipo *</label>
+                <select class="form-control" name="tipo" required>
+                    <option value="ingreso">💚 Ingreso</option>
+                    <option value="gasto">❤️ Gasto</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monto estimado *</label>
+                <input class="form-control" type="number" step="0.01" name="monto_estimado"
+                       placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+                <label>Lote (opcional)</label>
+                <select class="form-control" name="lote_id">
+                    <option value="">Sin lote</option>
+                    {% for l in lotes %}
+                    <option value="{{ l.id }}"
+                        {% if lote_id|string == l.id|string %}selected{% endif %}>
+                        {{ l.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notas</label>
+                <input class="form-control" name="notas" placeholder="Opcional">
+            </div>
+        </div>
+        <button class="btn-primary">💾 Agregar</button>
+    </form>
+</details>
+
+<!-- Lista de partidas -->
+{% if partidas %}
+
+<!-- Ingresos estimados -->
+{% set ingresos = partidas | selectattr("tipo", "equalto", "ingreso") | list %}
+{% if ingresos %}
+<div class="card">
+    <h3 style="color:#27ae60;">💚 Ingresos estimados</h3>
+    {% for p in ingresos %}
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                padding:10px 0;border-bottom:1px solid #f0f0f0;gap:8px;">
+        <div style="flex:1;">
+            <p style="margin:0;font-weight:bold;font-size:14px;">
+                {% if p.cumplido %}✅{% else %}⬜{% endif %}
+                {{ p.concepto }}
+            </p>
+            <p style="margin:2px 0;font-size:12px;color:gray;">{{ p.lote_nombre }}</p>
+            {% if p.notas %}
+            <p style="margin:2px 0;font-size:11px;color:#aaa;">{{ p.notas }}</p>
+            {% endif %}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+            <p style="margin:0;font-size:14px;font-weight:bold;color:#27ae60;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(p.monto_estimado) }}
+            </p>
+            {% if p.monto_real is not none %}
+            <p style="margin:2px 0;font-size:12px;color:gray;">
+                Real: <span class="moneda-sym">$</span>{{ "%.2f"|format(p.monto_real) }}
+            </p>
+            {% endif %}
+        </div>
+        {% if mi_rol == 'admin' %}
+        <div style="display:flex;flex-direction:column;gap:4px;margin-left:4px;">
+            {% if not p.cumplido %}
+            <button onclick="marcarCumplido({{ p.id }}, {{ p.mes }}, {{ p.anio }})"
+                    class="btn-secundario" style="font-size:11px;padding:4px 7px;">✅</button>
+            {% endif %}
+            <form method="POST" action="/eliminar_partida/{{ p.id }}"
+                  onsubmit="return confirm('¿Eliminar esta partida?')">
+                <button class="btn-peligro" style="font-size:11px;padding:4px 7px;">🗑</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Gastos estimados -->
+{% set gastos_est = partidas | selectattr("tipo", "equalto", "gasto") | list %}
+{% if gastos_est %}
+<div class="card">
+    <h3 style="color:#e74c3c;">❤️ Gastos estimados</h3>
+    {% for p in gastos_est %}
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;
+                padding:10px 0;border-bottom:1px solid #f0f0f0;gap:8px;">
+        <div style="flex:1;">
+            <p style="margin:0;font-weight:bold;font-size:14px;">
+                {% if p.cumplido %}✅{% else %}⬜{% endif %}
+                {{ p.concepto }}
+            </p>
+            <p style="margin:2px 0;font-size:12px;color:gray;">{{ p.lote_nombre }}</p>
+            {% if p.notas %}
+            <p style="margin:2px 0;font-size:11px;color:#aaa;">{{ p.notas }}</p>
+            {% endif %}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+            <p style="margin:0;font-size:14px;font-weight:bold;color:#e74c3c;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(p.monto_estimado) }}
+            </p>
+            {% if p.monto_real is not none %}
+            <p style="margin:2px 0;font-size:12px;color:gray;">
+                Real: <span class="moneda-sym">$</span>{{ "%.2f"|format(p.monto_real) }}
+            </p>
+            {% endif %}
+        </div>
+        {% if mi_rol == 'admin' %}
+        <div style="display:flex;flex-direction:column;gap:4px;margin-left:4px;">
+            {% if not p.cumplido %}
+            <button onclick="marcarCumplido({{ p.id }}, {{ p.mes }}, {{ p.anio }})"
+                    class="btn-secundario" style="font-size:11px;padding:4px 7px;">✅</button>
+            {% endif %}
+            <form method="POST" action="/eliminar_partida/{{ p.id }}"
+                  onsubmit="return confirm('¿Eliminar esta partida?')">
+                <button class="btn-peligro" style="font-size:11px;padding:4px 7px;">🗑</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align:center;padding:30px;">
+    <div style="font-size:50px;">📋</div>
+    <h3>Sin partidas para {{ mes_nombre }} {{ anio }}</h3>
+    <p style="color:gray;font-size:13px;">
+        Agrega estimaciones de ingresos y gastos para planificar el mes.
+    </p>
+</div>
+{% endif %}
+
+<!-- Modal: marcar cumplido con monto real -->
+<div id="modal-cumplido" class="modal-overlay">
+    <div class="modal-box">
+        <h3>✅ Marcar como cumplido</h3>
+        <p style="color:gray;font-size:13px;">
+            Ingresa el monto real para comparar con tu estimación.
+        </p>
+        <form id="form-cumplido" method="POST">
+            <div class="form-group">
+                <label>Monto real ejecutado</label>
+                <input class="form-control" type="number" step="0.01"
+                       name="monto_real" id="inp-monto-real" placeholder="0.00">
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="cerrarModal()"
+                        class="btn-secundario">Cancelar</button>
+                <button type="submit" class="btn-primary">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function marcarCumplido(id, mes, anio) {
+    document.getElementById("form-cumplido").action = `/cumplir_partida/${id}`;
+    document.getElementById("inp-monto-real").value = "";
+    document.getElementById("modal-cumplido").classList.add("active");
+}
+function cerrarModal() {
+    document.getElementById("modal-cumplido").classList.remove("active");
+}
+</script>
+
+{% endblock %}

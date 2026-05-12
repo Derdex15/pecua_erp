@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>✏️ Editar proveedor</h2>
+
+<div class="card">
+    <form method="POST" action="/editar_proveedor/{{ prov.id }}">
+        <div class="form-group">
+            <label>Nombre del proveedor *</label>
+            <input class="form-control" name="nombre"
+                   value="{{ prov.nombre }}" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Categoría</label>
+                <select class="form-control" name="categoria">
+                    {% for clave, label in categorias.items() %}
+                    <option value="{{ clave }}"
+                        {% if prov.categoria == clave %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Teléfono / WhatsApp</label>
+                <input class="form-control" name="telefono" type="tel"
+                       value="{{ prov.telefono or '' }}">
+            </div>
+            <div class="form-group">
+                <label>Nombre de contacto</label>
+                <input class="form-control" name="contacto"
+                       value="{{ prov.contacto or '' }}">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-control" name="email" type="email"
+                       value="{{ prov.email or '' }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea class="form-control" name="notas" rows="3"
+                      style="resize:vertical;">{{ prov.notas or '' }}</textarea>
+        </div>
+        <div class="card-actions">
+            <button class="btn-primary" style="flex:1;">💾 Guardar cambios</button>
+            <a href="/proveedores" class="btn-secundario">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

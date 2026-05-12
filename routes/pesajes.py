@@ -34,6 +34,8 @@ def pesajes():
         return redirect("/login")
 
     owner_id, mi_rol = get_granja_info(session["user_id"])
+    if not es_premium_owner(session["user_id"]):
+        return render_template("premium_requerido.html", funcion="Pesajes y GDP")
     filtro_tipo = request.args.get("tipo", "lote")  # "lote" o "animal"
     filtro_id   = request.args.get("ref_id", "")
 

@@ -19,6 +19,7 @@
 <!-- Android Chrome legacy -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="ERP Pecuario">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- Favicon -->
 <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
@@ -424,6 +425,59 @@ body {
         // Opcional: Mostrar una alerta visual o actualizar el badge
         cargarBadgeAlertas();
     });
+</script>
+
+<!-- ── Protección CSRF: auto-inyecta el token en todos los formularios POST ── -->
+<script>
+(function () {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (!meta) return;
+    var csrfToken = meta.content;
+
+    // 1. Inyectar campo oculto en todos los formularios POST existentes y futuros
+    function inyectarEnForm(form) {
+        if (form.method.toUpperCase() !== "POST") return;
+        if (form.querySelector('input[name="csrf_token"]')) return;
+        var inp = document.createElement("input");
+        inp.type  = "hidden";
+        inp.name  = "csrf_token";
+        inp.value = csrfToken;
+        form.appendChild(inp);
+    }
+
+    // Formularios ya presentes en el DOM
+    document.querySelectorAll("form").forEach(inyectarEnForm);
+
+    // Formularios insertados dinámicamente (modals, etc.)
+    var obs = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+            m.addedNodes.forEach(function (n) {
+                if (n.nodeType !== 1) return;
+                if (n.tagName === "FORM") inyectarEnForm(n);
+                n.querySelectorAll && n.querySelectorAll("form").forEach(inyectarEnForm);
+            });
+        });
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+
+    // 2. Parchar fetch() para incluir X-CSRFToken en todas las peticiones POST/PUT/DELETE
+    var _fetch = window.fetch;
+    window.fetch = function (url, opts) {
+        opts = opts || {};
+        var method = (opts.method || "GET").toUpperCase();
+        if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+            opts.headers        = opts.headers || {};
+            // Funciona tanto con objeto plano como con Headers()
+            if (opts.headers instanceof Headers) {
+                if (!opts.headers.has("X-CSRFToken"))
+                    opts.headers.set("X-CSRFToken", csrfToken);
+            } else {
+                opts.headers["X-CSRFToken"] = opts.headers["X-CSRFToken"] || csrfToken;
+            }
+        }
+        return _fetch.apply(this, arguments);
+    };
+})();
 </script>
 
 </body>

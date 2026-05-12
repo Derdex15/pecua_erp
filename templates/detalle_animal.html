@@ -1,6 +1,123 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- ══ SECCIÓN FOTOS ═════════════════ -->
+<div class="card" id="seccion-fotos">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">📷 Fotos</h3>
+        {% if mi_rol == 'admin' %}
+        <label for="input-foto"
+               style="background:#27ae60;color:white;padding:7px 12px;
+                      border-radius:8px;font-size:13px;cursor:pointer;">
+            + Agregar foto
+        </label>
+        <input type="file" id="input-foto" accept="image/jpeg,image/png,image/webp"
+               capture="environment" style="display:none;">
+        {% endif %}
+    </div>
+ 
+    <!-- Galería -->
+    <div id="galeria-fotos"
+         style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:60px;">
+        <p id="msg-sin-fotos" style="color:gray;font-size:13px;">Cargando fotos...</p>
+    </div>
+    <div id="upload-progress"
+         style="display:none;font-size:13px;color:#27ae60;margin-top:6px;">
+        ⏳ Subiendo foto...
+    </div>
+</div>
+ 
+<script>
+(function () {
+    const ANIMAL_ID = {{ animal.id }};
+    const ES_ADMIN  = {{ 'true' if mi_rol == 'admin' else 'false' }};
+ 
+    // ── Cargar fotos existentes ──────────────────────────────────────────────
+    async function cargarFotos() {
+        const galeria = document.getElementById("galeria-fotos");
+        const msg     = document.getElementById("msg-sin-fotos");
+        try {
+            const res   = await fetch(`/api/fotos/animal/${ANIMAL_ID}`);
+            const fotos = await res.json();
+            if (!fotos || fotos.length === 0) {
+                msg.textContent = "Sin fotos registradas.";
+                return;
+            }
+            msg.style.display = "none";
+            galeria.innerHTML = fotos.map(f => `
+                <div style="position:relative;width:90px;height:90px;" id="foto-${f.id}">
+                    <img src="${f.url}" alt="Foto animal"
+                         style="width:90px;height:90px;object-fit:cover;
+                                border-radius:8px;cursor:pointer;"
+                         onclick="window.open('${f.url}','_blank')">
+                    ${ES_ADMIN ? `
+                    <button onclick="eliminarFoto(${f.id})"
+                            style="position:absolute;top:2px;right:2px;
+                                   background:rgba(231,76,60,0.9);color:white;
+                                   border:none;border-radius:50%;width:22px;height:22px;
+                                   font-size:12px;cursor:pointer;line-height:1;">✕</button>
+                    ` : ""}
+                </div>
+            `).join("");
+        } catch (e) {
+            msg.textContent = "Error al cargar fotos.";
+        }
+    }
+ 
+    // ── Subir foto al seleccionar archivo ───────────────────────────────────
+    const inputFoto = document.getElementById("input-foto");
+    if (inputFoto) {
+        inputFoto.addEventListener("change", async function () {
+            const archivo = this.files[0];
+            if (!archivo) return;
+ 
+            const progress = document.getElementById("upload-progress");
+            progress.style.display = "block";
+ 
+            const form = new FormData();
+            form.append("foto",         archivo);
+            form.append("entidad_tipo", "animal");
+            form.append("entidad_id",   ANIMAL_ID);
+ 
+            try {
+                const res  = await fetch("/api/fotos/subir", {
+                    method: "POST",
+                    body:   form,
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    await cargarFotos();
+                } else {
+                    alert("Error al subir: " + (data.error || "desconocido"));
+                }
+            } catch (e) {
+                alert("Error de red al subir la foto.");
+            } finally {
+                progress.style.display = "none";
+                this.value = "";
+            }
+        });
+    }
+ 
+    // ── Eliminar foto ────────────────────────────────────────────────────────
+    window.eliminarFoto = async function (fotoId) {
+        if (!confirm("¿Eliminar esta foto?")) return;
+        const res  = await fetch(`/api/fotos/eliminar/${fotoId}`, { method: "POST" });
+        const data = await res.json();
+        if (data.ok) {
+            const el = document.getElementById(`foto-${fotoId}`);
+            if (el) el.remove();
+        } else {
+            alert("Error al eliminar.");
+        }
+    };
+ 
+    // Cargar al montar
+    cargarFotos();
+})();
+</script>
+<!-- ══ FIN SECCIÓN FOTOS ═══════════════════════════════════════════ -->
+
 <!-- Cabecera del animal -->
 <div class="card" style="border-left:4px solid {{ animal.estado_info.color }};">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;">

@@ -1,72 +1,115 @@
 # routes/ajustes.py
+"""
+Ajustes — ERP Pecuario
+
+CORRECCIONES vs versión anterior:
+  - reset():     ahora elimina las 10 tablas (antes solo 5)
+  - restaurar(): ahora reconstruye las 10 tablas del backup (antes solo 3)
+"""
 from flask import Blueprint, render_template, redirect, session, request, flash
-from config import sb_get, sb_post, sb_delete, sb_patch
+from config import sb_get, sb_post, sb_patch, sb_delete
 from backup_utils import hacer_backup
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner
-import datetime
 
 bp = Blueprint("ajustes", __name__)
 
+# Tablas que se respaldan, resetean y restauran (mismo orden)
+TABLAS_DATOS = [
+    "lotes", "ventas", "gastos", "sanitario", "produccion",
+    "animales", "reproduccion", "pesajes", "bajas", "insumos",
+]
 
-# ================= AJUSTES =================
+
+# ── Ajustes ────────────────────────────────────────────────────────────────────
 @bp.route("/ajustes")
 def ajustes():
     if "user_id" not in session:
         return redirect("/login")
 
-    _, mi_rol = get_granja_info(session["user_id"])
-    return render_template("ajustes.html", mi_rol=mi_rol)
+    owner_id, mi_rol = get_granja_info(session["user_id"])
+    premium          = es_premium_owner(session["user_id"])
+
+    return render_template("ajustes.html", mi_rol=mi_rol, es_premium=premium)
 
 
-# ================= CAMBIAR CONTRASEÑA (cualquier usuario) =================
+# ── Cambiar contraseña ─────────────────────────────────────────────────────────
 @bp.route("/cambiar_password", methods=["GET", "POST"])
 def cambiar_password():
     if "user_id" not in session:
         return redirect("/login")
 
-    if request.method == "POST":
-        from werkzeug.security import generate_password_hash, check_password_hash
+    if request.method == "GET":
+        return render_template("cambiar_password.html")
 
-        actual    = request.form.get("password_actual", "").strip()
-        nueva     = request.form.get("password",        "").strip()
-        confirmar = request.form.get("confirmar",       "").strip()
+    from werkzeug.security import generate_password_hash, check_password_hash
 
-        # Cada usuario cambia SU propia contraseña (no la del owner)
-        usuario = sb_get("usuarios", f"id=eq.{session['user_id']}")
-        if not usuario or not check_password_hash(usuario[0]["password"], actual):
-            return render_template("cambiar_password.html",
-                                   error="La contraseña actual es incorrecta.")
-        if len(nueva) < 6:
-            return render_template("cambiar_password.html",
-                                   error="La nueva contraseña debe tener al menos 6 caracteres.")
-        if nueva != confirmar:
-            return render_template("cambiar_password.html",
-                                   error="Las contraseñas nuevas no coinciden.")
+    user_id      = session["user_id"]
+    actual       = request.form.get("actual",       "").strip()
+    nueva        = request.form.get("nueva",        "").strip()
+    confirmacion = request.form.get("confirmacion", "").strip()
 
-        sb_patch("usuarios", f"id=eq.{session['user_id']}", {
-            "password": generate_password_hash(nueva)
-        })
-        flash("✅ Contraseña actualizada correctamente.", "success")
-        return redirect("/ajustes")
+    if not all([actual, nueva, confirmacion]):
+        flash("Completa todos los campos.", "error")
+        return redirect("/cambiar_password")
 
-    return render_template("cambiar_password.html")
+    if nueva != confirmacion:
+        flash("Las contraseñas nuevas no coinciden.", "error")
+        return redirect("/cambiar_password")
+
+    if len(nueva) < 6:
+        flash("La contraseña debe tener al menos 6 caracteres.", "error")
+        return redirect("/cambiar_password")
+
+    usuario = sb_get("usuarios", f"id=eq.{user_id}")
+    if not usuario or not check_password_hash(usuario[0].get("password", ""), actual):
+        flash("Contraseña actual incorrecta.", "error")
+        return redirect("/cambiar_password")
+
+    nuevo_hash = generate_password_hash(nueva)
+    sb_patch("usuarios", f"id=eq.{user_id}", {"password": nuevo_hash})
+    flash("✅ Contraseña actualizada correctamente.", "success")
+    return redirect("/ajustes")
 
 
-# ================= BACKUP MANUAL (solo admin) =================
-@bp.route("/backup", methods=["POST"])
+# ── Confirmar reset (GET — mostrar página de confirmación) ────────────────────
+@bp.route("/confirmar_reset")
 @solo_admin
-def backup():
+def confirmar_reset():
+    if "user_id" not in session:
+        return redirect("/login")
+    return render_template("confirmar_reset.html")
+
+
+# ── Reset (POST — eliminar todos los datos) ───────────────────────────────────
+@bp.route("/reset", methods=["POST"])
+@solo_admin
+def reset():
     if "user_id" not in session:
         return redirect("/login")
 
     owner_id, _ = get_granja_info(session["user_id"])
-    etiqueta = request.form.get("etiqueta", "").strip()
-    hacer_backup(owner_id, etiqueta=etiqueta)
-    flash("📦 Respaldo creado correctamente.", "success")
-    return redirect("/ajustes")
+
+    # Backup automático antes de destruir
+    try:
+        hacer_backup(owner_id, etiqueta="Antes del reinicio completo")
+    except Exception as e:
+        flash(f"❌ Error al hacer backup previo: {e}", "error")
+        return redirect("/ajustes")
+
+    # Eliminar en orden correcto para respetar foreign keys
+    # (hijos antes que padres)
+    for tabla in [
+        "reproduccion", "pesajes", "sanitario", "produccion",
+        "bajas", "ventas", "gastos", "animales", "insumos",
+        "alertas", "lotes",
+    ]:
+        sb_delete(tabla, f"usuario_id=eq.{owner_id}")
+
+    flash("🗑 Todos los datos fueron eliminados. Se creó un respaldo previo.", "success")
+    return redirect("/")
 
 
-# ================= VER BACKUPS (solo admin) =================
+# ── Ver backups ────────────────────────────────────────────────────────────────
 @bp.route("/backups")
 @solo_admin
 def ver_backups():
@@ -74,21 +117,39 @@ def ver_backups():
         return redirect("/login")
 
     owner_id, _ = get_granja_info(session["user_id"])
-    premium = es_premium_owner(session["user_id"])
+    premium     = es_premium_owner(session["user_id"])
+    todos       = sb_get("respaldo", f"usuario_id=eq.{owner_id}&order=fecha.desc")
+    total       = len(todos)
 
-    backups = sb_get("respaldo", f"usuario_id=eq.{owner_id}&order=fecha.desc")
-
-    # Plan gratuito: solo últimos 3
-    if not premium:
-        backups = backups[:3]
+    # Plan gratuito: solo los 3 más recientes
+    backups = todos if premium else todos[:3]
 
     return render_template("backups.html",
-                           backups=backups,
-                           es_premium=premium,
-                           total=len(sb_get("respaldo", f"usuario_id=eq.{owner_id}")))
+                           backups    = backups,
+                           es_premium = premium,
+                           total      = total)
 
 
-# ================= ELIMINAR BACKUP (solo admin) =================
+# ── Crear backup manual ────────────────────────────────────────────────────────
+@bp.route("/crear_backup", methods=["POST"])
+@solo_admin
+def crear_backup():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    owner_id, _ = get_granja_info(session["user_id"])
+    etiqueta    = request.form.get("etiqueta", "").strip() or "Manual"
+
+    try:
+        hacer_backup(owner_id, etiqueta=etiqueta)
+        flash(f"✅ Backup '{etiqueta}' creado correctamente.", "success")
+    except Exception as e:
+        flash(f"❌ Error al crear backup: {e}", "error")
+
+    return redirect("/backups")
+
+
+# ── Eliminar backup ────────────────────────────────────────────────────────────
 @bp.route("/eliminar_backup/<backup_id>", methods=["POST"])
 @solo_admin
 def eliminar_backup(backup_id):
@@ -101,65 +162,54 @@ def eliminar_backup(backup_id):
     return redirect("/backups")
 
 
-# ================= RESET (solo admin) =================
-@bp.route("/reset", methods=["POST"])
-@solo_admin
-def reset():
-    if "user_id" not in session:
-        return redirect("/login")
-
-    owner_id, _ = get_granja_info(session["user_id"])
-    try:
-        hacer_backup(owner_id, etiqueta="Antes del reinicio")
-    except Exception as e:
-        flash(f"❌ Error al hacer backup: {e}", "error")
-        return redirect("/ajustes")
-
-    sb_delete("gastos",     f"usuario_id=eq.{owner_id}")
-    sb_delete("ventas",     f"usuario_id=eq.{owner_id}")
-    sb_delete("lotes",      f"usuario_id=eq.{owner_id}")
-    sb_delete("sanitario",  f"usuario_id=eq.{owner_id}")
-    sb_delete("produccion", f"usuario_id=eq.{owner_id}")
-    sb_delete("alertas",    f"usuario_id=eq.{owner_id}")
-
-    flash("🗑 Todos los datos fueron eliminados. Se creó un respaldo previo.", "success")
-    return redirect("/")
-
-
-# ================= RESTAURAR (solo admin) =================
+# ── Restaurar backup ───────────────────────────────────────────────────────────
 @bp.route("/restaurar/<backup_id>")
 @solo_admin
 def restaurar(backup_id):
     if "user_id" not in session:
         return redirect("/login")
 
-    owner_id, _  = get_granja_info(session["user_id"])
-    backup_data  = sb_get("respaldo", f"id=eq.{backup_id}&usuario_id=eq.{owner_id}")
+    owner_id, _ = get_granja_info(session["user_id"])
+    backup_data = sb_get("respaldo", f"id=eq.{backup_id}&usuario_id=eq.{owner_id}")
     if not backup_data:
         flash("Backup no encontrado.", "error")
         return redirect("/backups")
 
     datos = backup_data[0].get("datos", {})
 
-    sb_delete("gastos", f"usuario_id=eq.{owner_id}")
-    sb_delete("ventas", f"usuario_id=eq.{owner_id}")
-    sb_delete("lotes",  f"usuario_id=eq.{owner_id}")
+    # Backup de seguridad antes de restaurar
+    try:
+        hacer_backup(owner_id, etiqueta="Antes de restaurar")
+    except Exception:
+        pass
 
-    id_map = {}
-    for lote in datos.get("lotes", []):
-        old_id = lote.get("id")
-        lote.pop("id", None)
-        lote["usuario_id"] = owner_id
-        nuevo = sb_post("lotes", lote, prefer_representation=True)
-        if nuevo:
-            id_map[old_id] = nuevo[0]["id"]
+    # Eliminar datos actuales (mismo orden que reset)
+    for tabla in [
+        "reproduccion", "pesajes", "sanitario", "produccion",
+        "bajas", "ventas", "gastos", "animales", "insumos",
+        "alertas", "lotes",
+    ]:
+        sb_delete(tabla, f"usuario_id=eq.{owner_id}")
 
-    for tabla in ["ventas", "gastos"]:
-        for item in datos.get(tabla, []):
-            item.pop("id", None)
-            item["lote_id"]    = id_map.get(item.get("lote_id"))
-            item["usuario_id"] = owner_id
-            sb_post(tabla, item)
+    # Restaurar cada tabla del backup (si existe en el JSON)
+    tablas_ok   = 0
+    tablas_err  = []
+    for tabla in TABLAS_DATOS:
+        registros = datos.get(tabla, [])
+        if not registros:
+            continue
+        for r in registros:
+            r["usuario_id"] = owner_id  # garantizar que el owner es correcto
+            r.pop("id", None)           # dejar que Supabase asigne nuevo ID
+            try:
+                sb_post(tabla, r)
+                tablas_ok += 1
+            except Exception:
+                tablas_err.append(tabla)
 
-    flash("✅ Datos restaurados desde el respaldo.", "success")
+    if tablas_err:
+        flash(f"⚠️ Restaurado parcialmente. Errores en: {', '.join(set(tablas_err))}", "error")
+    else:
+        flash(f"✅ Backup restaurado correctamente ({tablas_ok} registros).", "success")
+
     return redirect("/")

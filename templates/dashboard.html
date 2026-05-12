@@ -3,7 +3,7 @@
 
 <h2>🐖 Resumen</h2>
 
-<!-- ── KPIs financieros principales ──────────────────────── -->
+<!-- ── KPIs financieros principales ──────────────────────────────────────── -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
 
     <div class="card" style="text-align:center;">
@@ -34,12 +34,11 @@
 
 </div>
 
-<!-- ── KPIs ganaderos (ítem 13) ──────────────────────────── -->
+<!-- ── KPIs ganaderos ─────────────────────────────────────────────────────── -->
 <div class="card">
     <h3>📊 Indicadores de la granja</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
 
-        <!-- ROI -->
         <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
             <p style="margin:0;font-size:11px;color:gray;">ROI</p>
             <p style="margin:4px 0;font-size:22px;font-weight:bold;
@@ -49,7 +48,6 @@
             <p style="margin:0;font-size:11px;color:gray;">retorno inversión</p>
         </div>
 
-        <!-- Mortalidad -->
         <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
             <p style="margin:0;font-size:11px;color:gray;">Mortalidad</p>
             <p style="margin:4px 0;font-size:22px;font-weight:bold;
@@ -59,7 +57,6 @@
             <p style="margin:0;font-size:11px;color:gray;">{{ total_muertes }} muertes</p>
         </div>
 
-        <!-- Precio promedio venta -->
         <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
             <p style="margin:0;font-size:11px;color:gray;">Precio prom. venta</p>
             <p style="margin:4px 0;font-size:20px;font-weight:bold;color:#3498db;">
@@ -68,7 +65,6 @@
             <p style="margin:0;font-size:11px;color:gray;">por animal</p>
         </div>
 
-        <!-- Total bajas -->
         <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
             <p style="margin:0;font-size:11px;color:gray;">Total bajas</p>
             <p style="margin:4px 0;font-size:22px;font-weight:bold;
@@ -78,10 +74,20 @@
             <p style="margin:0;font-size:11px;color:gray;">animales dados de baja</p>
         </div>
 
+        {% if costo_por_kg is not none %}
+        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;grid-column:1/-1;">
+            <p style="margin:0;font-size:11px;color:gray;">💰 Costo por kg ganado</p>
+            <p style="margin:4px 0;font-size:22px;font-weight:bold;color:#8e44ad;">
+                <span class="moneda-sym">$</span>{{ "%.2f"|format(costo_por_kg) }}
+            </p>
+            <p style="margin:0;font-size:11px;color:gray;">gastos totales ÷ kg ganados en pesajes</p>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 
-<!-- ── Resumen del mes ────────────────────────────────────── -->
+<!-- ── Resumen del mes ────────────────────────────────────────────────────── -->
 <div class="card">
     <h3>📅 Este mes</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -100,7 +106,7 @@
     </div>
 </div>
 
-<!-- ── Alerta de insumos bajos ────────────────────────────── -->
+<!-- ── Alerta de insumos bajos ────────────────────────────────────────────── -->
 {% if insumos_criticos > 0 %}
 <a href="/insumos" style="text-decoration:none;">
     <div class="card" style="background:#fff3cd;border-left:4px solid #f39c12;">
@@ -112,7 +118,7 @@
 </a>
 {% endif %}
 
-<!-- ── Desglose por especie ───────────────────────────────── -->
+<!-- ── Desglose por especie ───────────────────────────────────────────────── -->
 {% if detalle %}
 <div class="card">
     <h3>🐄 Animales activos por especie</h3>
@@ -143,16 +149,18 @@
 </div>
 {% endif %}
 
-<!-- Accesos rápidos a módulos -->
+<!-- ── Accesos rápidos ────────────────────────────────────────────────────── -->
 <div class="card">
     <h3>⚡ Accesos rápidos</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a href="/bajas"       class="btn-secundario" style="text-align:center;">💀 Registrar baja</a>
-        <a href="/sanitario"   class="btn-secundario" style="text-align:center;">🏥 Sanidad</a>
-        <a href="/animales"    class="btn-secundario" style="text-align:center;">🐄 Animales</a>
-        <a href="/insumos"     class="btn-secundario" style="text-align:center;">🌽 Insumos</a>
+        <a href="/bajas"        class="btn-secundario" style="text-align:center;">💀 Registrar baja</a>
+        <a href="/sanitario"    class="btn-secundario" style="text-align:center;">🏥 Sanidad</a>
+        <a href="/animales"     class="btn-secundario" style="text-align:center;">🐄 Animales</a>
+        <a href="/insumos"      class="btn-secundario" style="text-align:center;">🌽 Insumos</a>
+        <a href="/calendario"   class="btn-secundario" style="text-align:center;">📅 Calendario</a>
+        <a href="/presupuesto"  class="btn-secundario" style="text-align:center;">📋 Presupuesto</a>
         {% if mi_rol == 'admin' %}
-        <a href="/reportes"    class="btn-secundario" style="text-align:center;">📊 Reportes</a>
+        <a href="/reportes"     class="btn-secundario" style="text-align:center;">📊 Reportes</a>
         <a href="/reproduccion" class="btn-secundario" style="text-align:center;">🐣 Reproducción</a>
         {% endif %}
     </div>

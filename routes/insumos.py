@@ -56,6 +56,8 @@ def insumos():
         return redirect("/login")
 
     owner_id, mi_rol = get_granja_info(session["user_id"])
+    if not es_premium_owner(session["user_id"]):
+        return render_template("premium_requerido.html", funcion="Inventario de Insumos")
     filtro_cat = request.args.get("categoria", "")
 
     q = f"usuario_id=eq.{owner_id}&order=nombre.asc"

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+/* ── Calendario ─────────────────────────────────────────────── */
+.cal-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.cal-nav a {
+    font-size: 22px;
+    color: #27ae60;
+    text-decoration: none;
+    padding: 4px 10px;
+}
+.cal-nav h3 { margin: 0; font-size: 18px; color: #2c3e50; }
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 12px;
+}
+.cal-head {
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: #999;
+    padding: 6px 0;
+}
+.cal-day {
+    background: white;
+    border-radius: 8px;
+    min-height: 52px;
+    padding: 4px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #eee;
+    transition: background 0.15s;
+    position: relative;
+}
+.cal-day.vacio { background: transparent; border-color: transparent; cursor: default; }
+.cal-day.hoy {
+    background: #27ae60;
+    color: white;
+    font-weight: bold;
+}
+.cal-day.hoy .cal-num { color: white; }
+.cal-day.con-eventos { border-color: #c8e6c9; }
+.cal-day:not(.vacio):hover { background: #f0fdf4; }
+.cal-num {
+    font-size: 13px;
+    font-weight: bold;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+.cal-dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    margin-top: 3px;
+}
+.cal-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* ── Leyenda ────────────────────────────────────────────────── */
+.leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #555;
+}
+
+/* ── Panel de eventos del día ───────────────────────────────── */
+#panel-dia {
+    display: none;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    margin-top: 8px;
+}
+#panel-dia h4 { margin: 0 0 10px 0; color: #2c3e50; }
+.evento-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+.evento-item:last-child { border-bottom: none; }
+.evento-icon { font-size: 18px; min-width: 24px; }
+.evento-texto { flex: 1; line-height: 1.4; }
+</style>
+
+<h2>📅 Calendario</h2>
+
+<!-- Navegación de mes -->
+<div class="cal-nav">
+    <a href="/calendario?mes={{ mes_ant }}&anio={{ anio_ant }}">‹</a>
+    <h3>{{ mes_nombre }} {{ anio }}</h3>
+    <a href="/calendario?mes={{ mes_sig }}&anio={{ anio_sig }}">›</a>
+</div>
+
+<!-- Leyenda -->
+<div class="leyenda">
+    <div class="leyenda-item">
+        <span class="cal-dot" style="background:#3498db;"></span> Vacunas
+    </div>
+    <div class="leyenda-item">
+        <span class="cal-dot" style="background:#e67e22;"></span> Partos estimados
+    </div>
+    <div class="leyenda-item">
+        <span class="cal-dot" style="background:#e74c3c;"></span> Alertas
+    </div>
+</div>
+
+<!-- Grid del calendario -->
+<div class="card" style="padding:10px;">
+
+    <!-- Cabecera días de semana -->
+    <div class="cal-grid">
+        {% for d in dias_es %}
+        <div class="cal-head">{{ d }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Días del mes -->
+    <div class="cal-grid" id="cal-body">
+        {# Celdas vacías al inicio #}
+        {% for _ in range(primer_dia) %}
+        <div class="cal-day vacio"></div>
+        {% endfor %}
+
+        {# Días reales #}
+        {% for n in range(1, dias_en_mes + 1) %}
+        {% set ev = eventos.get(n, []) %}
+        <div class="cal-day {% if ev %}con-eventos{% endif %} {% if hoy.day == n and hoy.month == mes and hoy.year == anio %}hoy{% endif %}"
+             onclick="mostrarDia({{ n }}, {{ ev | tojson | safe }})">
+            <div class="cal-num">{{ n }}</div>
+            {% if ev %}
+            <div class="cal-dots">
+                {% for e in ev[:4] %}
+                <span class="cal-dot" style="background:{{ e.color }};"></span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Panel lateral de detalle del día -->
+<div id="panel-dia">
+    <h4 id="panel-titulo"></h4>
+    <div id="panel-eventos"></div>
+</div>
+
+<!-- Resumen del mes -->
+{% set total_eventos = eventos.values() | sum(attribute='__len__') if eventos else 0 %}
+{% if eventos %}
+<div class="card" style="margin-top:8px;">
+    <h3>📌 Eventos este mes ({{ eventos.values() | list | sum(start=[]) | length }})</h3>
+    {% for dia in eventos | sort %}
+    {% set ev_dia = eventos[dia] %}
+    <div style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
+        <p style="margin:0 0 4px 0;font-weight:bold;font-size:13px;">
+            Día {{ dia }} — {{ ev_dia | length }} evento(s)
+        </p>
+        {% for e in ev_dia %}
+        <p style="margin:2px 0;font-size:12px;color:#555;">
+            {{ e.icon }} {{ e.texto }}
+        </p>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:30px;">
+    <p style="color:gray;">Sin eventos en {{ mes_nombre }} {{ anio }}.</p>
+    <p style="color:gray;font-size:13px;">Los eventos aparecen al registrar vacunas con fecha de próxima dosis, o partos en reproducción.</p>
+</div>
+{% endif %}
+
+<script>
+const MESES_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const mesNombre = "{{ mes_nombre }}";
+const anio      = {{ anio }};
+
+function mostrarDia(dia, eventos) {
+    const panel = document.getElementById("panel-dia");
+    const titulo = document.getElementById("panel-titulo");
+    const cont   = document.getElementById("panel-eventos");
+
+    if (!eventos || eventos.length === 0) {
+        panel.style.display = "none";
+        return;
+    }
+
+    titulo.textContent = `${dia} de ${mesNombre} ${anio}`;
+    cont.innerHTML = eventos.map(e => `
+        <div class="evento-item">
+            <span class="evento-icon">${e.icon}</span>
+            <span class="evento-texto" style="color:${e.color};">${e.texto}</span>
+        </div>
+    `).join("");
+
+    panel.style.display = "block";
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+</script>
+
+{% endblock %}

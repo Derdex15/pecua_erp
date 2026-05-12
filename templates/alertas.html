@@ -1,50 +1,118 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:center;">
-    <h1>🔔 Alertas</h1>
-    {% if no_leidas > 0 %}
-    <form action="/leer_todas_alertas" method="POST">
-        <button class="btn-secundario" style="font-size:12px;">✅ Marcar todas leídas</button>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <h2 style="margin:0;">🔔 Alertas</h2>
+    {% if total_no_leidas > 0 %}
+    <form method="POST" action="/alertas/marcar_todas_leidas">
+        <button class="btn-secundario" style="font-size:12px;padding:6px 12px;">
+            ✅ Marcar todas leídas
+        </button>
     </form>
     {% endif %}
 </div>
 
-{% if no_leidas > 0 %}
-<p style="color:#e74c3c; font-size:13px; margin:0 0 10px 0;">
-    {{ no_leidas }} alerta{{ 's' if no_leidas > 1 else '' }} sin leer
-</p>
-{% endif %}
+<!-- Filtro -->
+<div style="display:flex;gap:8px;margin-bottom:12px;">
+    <a href="/alertas?mostrar=no_leidas"
+       class="{% if mostrar == 'no_leidas' %}btn-primary{% else %}btn-secundario{% endif %}"
+       style="flex:1;text-align:center;padding:8px;font-size:13px;">
+        🔴 Sin leer ({{ total_no_leidas }})
+    </a>
+    <a href="/alertas?mostrar=todas"
+       class="{% if mostrar == 'todas' %}btn-primary{% else %}btn-secundario{% endif %}"
+       style="flex:1;text-align:center;padding:8px;font-size:13px;">
+        📋 Todas
+    </a>
+</div>
 
 {% if alertas %}
-    {% for a in alertas %}
-    <div class="card {% if not a.leida %}{% if 'HOY' in a.mensaje or 'MAÑANA' in a.mensaje %}alerta-urgente{% else %}alerta-pronto{% endif %}{% else %}alerta-leida{% endif %}">
+{% for a in alertas %}
+<div class="card" id="alerta-{{ a.id }}"
+     style="border-left:4px solid
+     {% if a.tipo == 'vacuna' %}#3498db
+     {% elif a.tipo == 'stock_bajo' %}#e67e22
+     {% else %}#e74c3c{% endif %};
+     opacity:{% if a.leida %}0.55{% else %}1{% endif %};">
 
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
-            <div style="flex:1;">
-                <p style="margin:0 0 4px 0; font-size:14px;">{{ a.mensaje }}</p>
-                <p style="margin:0; font-size:12px; color:gray;">
-                    📅 {{ a.fecha_alerta }}
-                    {% if a.lote_nombre %} &nbsp;|&nbsp; 📦 {{ a.lote_nombre }}{% endif %}
-                </p>
-            </div>
-
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;">
+            <p style="margin:0 0 3px 0;font-size:14px;line-height:1.4;">
+                {{ a.mensaje }}
+            </p>
+            <p style="margin:0;font-size:11px;color:gray;">
+                {{ a.fecha_alerta }}
+                {% if a.lote_nombre %} · {{ a.lote_nombre }}{% endif %}
+                {% if a.leida %} · <em>Leída</em>{% endif %}
+            </p>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0;">
             {% if not a.leida %}
-            <form action="/leer_alerta/{{ a.id }}" method="POST">
-                <button class="btn-secundario" style="font-size:11px; padding:5px 8px; white-space:nowrap;">
-                    ✓ Leída
-                </button>
-            </form>
+            <button onclick="marcarLeida({{ a.id }})"
+                    style="background:#27ae60;color:white;border:none;border-radius:6px;
+                           padding:5px 9px;font-size:12px;cursor:pointer;"
+                    title="Marcar como leída">✓</button>
             {% endif %}
+            <button onclick="eliminarAlerta({{ a.id }})"
+                    style="background:#e74c3c;color:white;border:none;border-radius:6px;
+                           padding:5px 9px;font-size:12px;cursor:pointer;"
+                    title="Eliminar">✕</button>
         </div>
     </div>
-    {% endfor %}
+</div>
+{% endfor %}
+
 {% else %}
-    <div class="card" style="text-align:center; padding:40px 20px;">
-        <div style="font-size:50px;">✅</div>
-        <h3>Todo en orden</h3>
-        <p style="color:gray;">No tienes alertas pendientes.</p>
-    </div>
+<div class="card" style="text-align:center;padding:40px 20px;">
+    <div style="font-size:48px;">🔔</div>
+    <h3>Sin alertas {% if mostrar == 'no_leidas' %}pendientes{% endif %}</h3>
+    <p style="color:gray;font-size:13px;">
+        {% if mostrar == 'no_leidas' %}
+        ¡Todo al día! No tienes alertas sin leer.
+        {% else %}
+        Las alertas aparecen cuando hay vacunas por vencer o stock bajo.
+        {% endif %}
+    </p>
+</div>
 {% endif %}
+
+<script>
+async function marcarLeida(id) {
+    const res  = await fetch(`/alertas/marcar_leida/${id}`, { method: "POST" });
+    const data = await res.json();
+    if (data.ok) {
+        const el = document.getElementById(`alerta-${id}`);
+        if (el) el.style.opacity = "0.55";
+        actualizarBadge();
+    }
+}
+
+async function eliminarAlerta(id) {
+    if (!confirm("¿Eliminar esta alerta?")) return;
+    const res  = await fetch(`/alertas/eliminar/${id}`, { method: "POST" });
+    const data = await res.json();
+    if (data.ok) {
+        const el = document.getElementById(`alerta-${id}`);
+        if (el) el.remove();
+        actualizarBadge();
+    }
+}
+
+function actualizarBadge() {
+    fetch("/api/alertas_count")
+        .then(r => r.json())
+        .then(d => {
+            const badge = document.getElementById("badge-alertas");
+            if (badge) {
+                if (d.count > 0) {
+                    badge.textContent = d.count;
+                    badge.style.display = "inline";
+                } else {
+                    badge.style.display = "none";
+                }
+            }
+        });
+}
+</script>
 
 {% endblock %}

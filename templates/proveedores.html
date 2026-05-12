@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>🏪 Proveedores</h1>
+
+<!-- KPI rápido -->
+<div class="card" style="text-align:center;padding:15px;">
+    <p style="margin:0;font-size:12px;color:gray;">Proveedores registrados</p>
+    <h2 style="margin:5px 0;color:#2c3e50;">{{ proveedores | length }}</h2>
+</div>
+
+<!-- Filtro por categoría -->
+<div class="card">
+    <form method="GET" action="/proveedores" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select class="form-control" name="categoria" style="flex:1;min-width:160px;"
+                onchange="this.form.submit()">
+            <option value="">Todas las categorías</option>
+            {% for clave, label in categorias.items() %}
+            <option value="{{ clave }}" {% if filtro_cat == clave %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        {% if filtro_cat %}
+        <a href="/proveedores" class="btn-secundario">✕ Limpiar</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Formulario agregar -->
+<details class="card">
+    <summary style="font-weight:bold;font-size:14px;cursor:pointer;padding:4px 0;">
+        ➕ Agregar proveedor
+    </summary>
+    <br>
+    <form method="POST" action="/crear_proveedor">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Nombre del proveedor *</label>
+                <input class="form-control" name="nombre" placeholder="Ej: Agropecuaria El Campo" required>
+            </div>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select class="form-control" name="categoria">
+                    {% for clave, label in categorias.items() %}
+                    <option value="{{ clave }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Teléfono / WhatsApp</label>
+                <input class="form-control" name="telefono" type="tel"
+                       placeholder="+593 99 000 0000">
+            </div>
+            <div class="form-group">
+                <label>Nombre de contacto</label>
+                <input class="form-control" name="contacto" placeholder="Ej: Juan Pérez">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-control" name="email" type="email"
+                       placeholder="proveedor@email.com">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;">
+                <label>Notas</label>
+                <textarea class="form-control" name="notas" rows="2"
+                          style="resize:vertical;"
+                          placeholder="Horario, condiciones de pago, observaciones..."></textarea>
+            </div>
+        </div>
+        <button class="btn-primary">💾 Guardar proveedor</button>
+    </form>
+</details>
+
+<!-- Lista -->
+{% if proveedores %}
+{% for p in proveedores %}
+<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;">
+            <p style="margin:0 0 2px 0;font-weight:bold;font-size:15px;">{{ p.nombre }}</p>
+            <p style="margin:0;font-size:12px;color:gray;">
+                {{ categorias.get(p.categoria, p.categoria) }}
+            </p>
+        </div>
+        {% if mi_rol == 'admin' %}
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+            <a href="/editar_proveedor/{{ p.id }}" class="btn-warning"
+               style="font-size:12px;padding:5px 10px;">✏️</a>
+            <form method="POST" action="/eliminar_proveedor/{{ p.id }}"
+                  onsubmit="return confirm('¿Eliminar proveedor {{ p.nombre }}?')">
+                <button class="btn-peligro" style="font-size:12px;padding:5px 10px;">🗑</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if p.telefono or p.contacto or p.email %}
+    <div style="margin-top:10px;font-size:13px;display:flex;flex-wrap:wrap;gap:8px;">
+        {% if p.telefono %}
+        <a href="tel:{{ p.telefono }}"
+           style="background:#25D366;color:white;padding:5px 10px;border-radius:6px;
+                  text-decoration:none;font-size:12px;">
+            📞 {{ p.telefono }}
+        </a>
+        {% endif %}
+        {% if p.email %}
+        <a href="mailto:{{ p.email }}"
+           style="background:#3498db;color:white;padding:5px 10px;border-radius:6px;
+                  text-decoration:none;font-size:12px;">
+            ✉️ {{ p.email }}
+        </a>
+        {% endif %}
+        {% if p.contacto %}
+        <span style="color:#555;">👤 {{ p.contacto }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if p.notas %}
+    <p style="margin:8px 0 0 0;font-size:12px;color:#777;
+              background:#f8f9fa;padding:6px 10px;border-radius:6px;">
+        {{ p.notas }}
+    </p>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% else %}
+<div class="card" style="text-align:center;padding:30px;">
+    <div style="font-size:50px;">🏪</div>
+    <h3>Sin proveedores registrados</h3>
+    <p style="color:gray;font-size:13px;">
+        Registra tus proveedores de alimento, medicamentos y animales para tenerlos siempre a mano.
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

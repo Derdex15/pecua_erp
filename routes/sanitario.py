@@ -15,7 +15,11 @@ def _fmt(valor):
 def generar_alertas(owner_id):
     """
     Revisa registros sanitarios y crea alertas para los próximos 7 días.
-    Siempre trabaja con el owner_id para que las alertas queden en la cuenta correcta.
+
+    Fix de deduplicación: filtra por [sid:N] en el mensaje, donde N es el
+    id único del registro sanitario. Esto garantiza exactamente 1 alerta por
+    evento por día, incluso cuando vencen múltiples vacunas del mismo lote
+    el mismo día (bug original: filtraba solo por lote_id + fecha + tipo).
     """
     hoy       = datetime.date.today()
     en_7_dias = hoy + datetime.timedelta(days=7)
@@ -35,18 +39,20 @@ def generar_alertas(owner_id):
         dias_restantes = (datetime.date.fromisoformat(r["proxima_dosis"]) - hoy).days
 
         if dias_restantes == 0:
-            mensaje = f"⚠️ HOY vence: {r['nombre']} en lote {lote_nombre}"
+            mensaje = f"⚠️ HOY vence: {r['nombre']} en lote {lote_nombre} [sid:{r['id']}]"
         elif dias_restantes == 1:
-            mensaje = f"⚠️ MAÑANA vence: {r['nombre']} en lote {lote_nombre}"
+            mensaje = f"⚠️ MAÑANA vence: {r['nombre']} en lote {lote_nombre} [sid:{r['id']}]"
         else:
-            mensaje = f"📅 En {dias_restantes} días vence: {r['nombre']} en lote {lote_nombre}"
+            mensaje = (f"📅 En {dias_restantes} días vence: "
+                       f"{r['nombre']} en lote {lote_nombre} [sid:{r['id']}]")
 
+        # Filtrar por el ID único del registro (garantiza 1 alerta por evento)
         existente = sb_get(
             "alertas",
             f"usuario_id=eq.{owner_id}"
-            f"&lote_id=eq.{r['lote_id']}"
-            f"&fecha_alerta=eq.{hoy}"
             f"&tipo=eq.vacuna"
+            f"&fecha_alerta=eq.{hoy}"
+            f"&mensaje=ilike.*[sid:{r['id']}]*"
         )
         if not existente:
             sb_post("alertas", {
@@ -58,7 +64,7 @@ def generar_alertas(owner_id):
                 "leida":        False,
             })
 
-    # Alertas de stock bajo (≤ 3 animales en lote activo)
+    # ── Alertas de stock bajo (≤3 animales en lote activo) ────────────────────
     lotes_activos = sb_get("lotes", f"usuario_id=eq.{owner_id}&activo=eq.true")
     for l in lotes_activos:
         if l.get("cantidad_actual", 0) <= 3:
@@ -74,13 +80,14 @@ def generar_alertas(owner_id):
                     "usuario_id":   owner_id,
                     "lote_id":      l["id"],
                     "tipo":         "stock_bajo",
-                    "mensaje":      f"⚠️ Stock bajo: solo {l['cantidad_actual']} animales en '{l['nombre']}'",
+                    "mensaje":      (f"⚠️ Stock bajo: solo {l['cantidad_actual']} "
+                                     f"animales en '{l['nombre']}'"),
                     "fecha_alerta": str(hoy),
                     "leida":        False,
                 })
 
 
-# ================= VISTA PRINCIPAL =================
+# ── Vista principal ────────────────────────────────────────────────────────────
 @bp.route("/sanitario")
 def sanitario():
     if "user_id" not in session:
@@ -92,7 +99,7 @@ def sanitario():
     if not es_premium_owner(user_id):
         return render_template("premium_requerido.html", funcion="Control Sanitario")
 
-    lotes     = sb_get("lotes",    f"usuario_id=eq.{owner_id}&activo=eq.true")
+    lotes     = sb_get("lotes",     f"usuario_id=eq.{owner_id}&activo=eq.true")
     registros = sb_get("sanitario", f"usuario_id=eq.{owner_id}&order=fecha.desc")
 
     todos_lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}")
@@ -112,25 +119,25 @@ def sanitario():
     return render_template("sanitario.html", lotes=lotes, registros=registros, mi_rol=mi_rol)
 
 
-# ================= AGREGAR REGISTRO (operador y admin) =================
+# ── Agregar registro (operador y admin) ───────────────────────────────────────
 @bp.route("/agregar_sanitario", methods=["POST"])
 def agregar_sanitario():
     if "user_id" not in session:
         return redirect("/login")
 
-    user_id          = session["user_id"]
-    owner_id, _      = get_granja_info(user_id)
+    user_id     = session["user_id"]
+    owner_id, _ = get_granja_info(user_id)
 
     if not es_premium_owner(user_id):
         return redirect("/sanitario")
 
-    lote_id       = request.form.get("lote_id", "").strip()
-    tipo          = request.form.get("tipo", "").strip()
-    nombre        = request.form.get("nombre", "").strip()
-    fecha         = request.form.get("fecha", "").strip()
-    proxima_dosis = request.form.get("proxima_dosis", "").strip() or None
-    costo         = request.form.get("costo", "0").strip()
-    notas         = request.form.get("notas", "").strip()
+    lote_id       = request.form.get("lote_id",       "").strip()
+    tipo          = request.form.get("tipo",           "").strip()
+    nombre        = request.form.get("nombre",         "").strip()
+    fecha         = request.form.get("fecha",          "").strip()
+    proxima_dosis = request.form.get("proxima_dosis",  "").strip() or None
+    costo         = request.form.get("costo",          "0").strip()
+    notas         = request.form.get("notas",          "").strip()
 
     if not all([lote_id, tipo, nombre, fecha]):
         flash("Completa los campos obligatorios.", "error")
@@ -138,18 +145,16 @@ def agregar_sanitario():
 
     try:
         lote_id = int(lote_id)
-        costo   = round(float(costo), 2)
+        costo   = round(float(costo or 0), 2)
     except ValueError:
         flash("Lote o costo inválido.", "error")
         return redirect("/sanitario")
 
-    lote = sb_get("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}")
-    if not lote:
+    if not sb_get("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}"):
         flash("Lote no encontrado.", "error")
         return redirect("/sanitario")
 
     backup_automatico(owner_id)
-
     sb_post("sanitario", {
         "usuario_id":    owner_id,
         "lote_id":       lote_id,
@@ -158,77 +163,64 @@ def agregar_sanitario():
         "fecha":         fecha,
         "proxima_dosis": proxima_dosis,
         "costo":         costo,
-        "notas":         notas,
+        "notas":         notas or None,
     })
-
-    generar_alertas(owner_id)
     flash(f"✅ Registro sanitario '{nombre}' guardado.", "success")
     return redirect("/sanitario")
 
 
-# ================= EDITAR REGISTRO (solo admin) =================
-@bp.route("/editar_sanitario/<registro_id>")
+# ── Editar registro (solo admin) ──────────────────────────────────────────────
+@bp.route("/editar_sanitario/<registro_id>", methods=["GET", "POST"])
 @solo_admin
 def editar_sanitario(registro_id):
     if "user_id" not in session:
         return redirect("/login")
 
-    owner_id, _ = get_granja_info(session["user_id"])
-
-    if not es_premium_owner(session["user_id"]):
-        return redirect("/sanitario")
-
+    owner_id, mi_rol = get_granja_info(session["user_id"])
     registro = sb_get("sanitario", f"id=eq.{registro_id}&usuario_id=eq.{owner_id}")
     if not registro:
         flash("Registro no encontrado.", "error")
         return redirect("/sanitario")
 
-    lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}")
-    return render_template("editar_sanitario.html", registro=registro[0], lotes=lotes)
+    if request.method == "GET":
+        lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}&activo=eq.true")
+        return render_template("editar_sanitario.html",
+                               registro=registro[0], lotes=lotes, mi_rol=mi_rol)
 
+    lote_id       = request.form.get("lote_id",       "").strip()
+    tipo          = request.form.get("tipo",           "").strip()
+    nombre        = request.form.get("nombre",         "").strip()
+    fecha         = request.form.get("fecha",          "").strip()
+    proxima_dosis = request.form.get("proxima_dosis",  "").strip() or None
+    costo         = request.form.get("costo",          "0").strip()
+    notas         = request.form.get("notas",          "").strip()
 
-@bp.route("/guardar_sanitario/<registro_id>", methods=["POST"])
-@solo_admin
-def guardar_sanitario(registro_id):
-    if "user_id" not in session:
-        return redirect("/login")
-
-    owner_id, _ = get_granja_info(session["user_id"])
-    registro = sb_get("sanitario", f"id=eq.{registro_id}&usuario_id=eq.{owner_id}")
-    if not registro:
-        flash("Registro no encontrado.", "error")
-        return redirect("/sanitario")
-
-    nombre        = request.form.get("nombre", "").strip()
-    fecha         = request.form.get("fecha", "").strip()
-    proxima_dosis = request.form.get("proxima_dosis", "").strip() or None
-    costo         = request.form.get("costo", "0").strip()
-    notas         = request.form.get("notas", "").strip()
-
-    if not all([nombre, fecha]):
-        flash("Nombre y fecha son obligatorios.", "error")
+    if not all([lote_id, tipo, nombre, fecha]):
+        flash("Completa los campos obligatorios.", "error")
         return redirect(f"/editar_sanitario/{registro_id}")
 
     try:
-        costo = round(float(costo), 2)
+        lote_id = int(lote_id)
+        costo   = round(float(costo or 0), 2)
     except ValueError:
-        flash("El costo debe ser un número válido.", "error")
+        flash("Lote o costo inválido.", "error")
         return redirect(f"/editar_sanitario/{registro_id}")
 
+    backup_automatico(owner_id)
     sb_patch("sanitario", f"id=eq.{registro_id}&usuario_id=eq.{owner_id}", {
+        "lote_id":       lote_id,
+        "tipo":          tipo,
         "nombre":        nombre,
         "fecha":         fecha,
         "proxima_dosis": proxima_dosis,
         "costo":         costo,
-        "notas":         notas,
+        "notas":         notas or None,
     })
-
-    generar_alertas(owner_id)
-    flash(f"✅ Registro '{nombre}' actualizado.", "success")
+    flash("✅ Registro sanitario actualizado.", "success")
     return redirect("/sanitario")
 
 
-# ================= ELIMINAR REGISTRO (solo admin) =================
+# ── Eliminar registro (solo admin) ────────────────────────────────────────────
 @bp.route("/eliminar_sanitario/<registro_id>", methods=["POST"])
 @solo_admin
 def eliminar_sanitario(registro_id):
@@ -236,85 +228,22 @@ def eliminar_sanitario(registro_id):
         return redirect("/login")
 
     owner_id, _ = get_granja_info(session["user_id"])
-    registro = sb_get("sanitario", f"id=eq.{registro_id}&usuario_id=eq.{owner_id}")
-    if not registro:
+    if not sb_get("sanitario", f"id=eq.{registro_id}&usuario_id=eq.{owner_id}"):
         flash("Registro no encontrado.", "error")
         return redirect("/sanitario")
 
     backup_automatico(owner_id)
     sb_delete("sanitario", f"id=eq.{registro_id}&usuario_id=eq.{owner_id}")
-    flash("🗑 Registro eliminado.", "success")
+    flash("🗑 Registro sanitario eliminado.", "success")
     return redirect("/sanitario")
 
 
-# ================= ALERTAS (solo admin) =================
-@bp.route("/alertas")
-@solo_admin
-def alertas():
+# ── API: historial sanitario de un lote (para PDF) ────────────────────────────
+@bp.route("/api/sanitario/<lote_id>")
+def api_sanitario_lote(lote_id):
     if "user_id" not in session:
-        return redirect("/login")
-
+        return jsonify([])
     owner_id, _ = get_granja_info(session["user_id"])
-
-    if not es_premium_owner(session["user_id"]):
-        return render_template("premium_requerido.html", funcion="Alertas")
-
-    generar_alertas(owner_id)
-
-    todas = sb_get("alertas",
-                   f"usuario_id=eq.{owner_id}&order=fecha_alerta.desc&order=leida.asc")
-
-    lotes     = sb_get("lotes", f"usuario_id=eq.{owner_id}")
-    lotes_idx = {l["id"]: l["nombre"] for l in lotes}
-    for a in todas:
-        a["lote_nombre"] = lotes_idx.get(a.get("lote_id"), "")
-
-    no_leidas = sum(1 for a in todas if not a.get("leida"))
-
-    return render_template("alertas.html", alertas=todas, no_leidas=no_leidas)
-
-
-# ================= MARCAR ALERTA COMO LEÍDA (solo admin) =================
-@bp.route("/leer_alerta/<alerta_id>", methods=["POST"])
-@solo_admin
-def leer_alerta(alerta_id):
-    if "user_id" not in session:
-        return redirect("/login")
-
-    owner_id, _ = get_granja_info(session["user_id"])
-    sb_patch("alertas",
-             f"id=eq.{alerta_id}&usuario_id=eq.{owner_id}",
-             {"leida": True})
-    return redirect("/alertas")
-
-
-# ================= MARCAR TODAS LEÍDAS (solo admin) =================
-@bp.route("/leer_todas_alertas", methods=["POST"])
-@solo_admin
-def leer_todas_alertas():
-    if "user_id" not in session:
-        return redirect("/login")
-
-    owner_id, _ = get_granja_info(session["user_id"])
-    sb_patch("alertas",
-             f"usuario_id=eq.{owner_id}&leida=eq.false",
-             {"leida": True})
-    flash("✅ Todas las alertas marcadas como leídas.", "success")
-    return redirect("/alertas")
-
-
-# ================= API: contador de alertas no leídas =================
-@bp.route("/api/alertas_count")
-def alertas_count():
-    """Retorna el número de alertas no leídas (para el badge del navbar)."""
-    if "user_id" not in session:
-        return jsonify({"count": 0})
-
-    owner_id, _ = get_granja_info(session["user_id"])
-
-    if not es_premium_owner(session["user_id"]):
-        return jsonify({"count": 0})
-
-    no_leidas = sb_get("alertas",
-                       f"usuario_id=eq.{owner_id}&leida=eq.false")
-    return jsonify({"count": len(no_leidas)})
+    datos = sb_get("sanitario",
+                   f"lote_id=eq.{lote_id}&usuario_id=eq.{owner_id}&order=fecha.desc")
+    return jsonify(datos)

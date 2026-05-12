@@ -74,6 +74,7 @@ def animales():
         filtro_lote=filtro_lote, filtro_estado=filtro_estado,
         filtro_texto=filtro_texto, estados=ESTADOS,
         total_activos=total_activos, total_hembras=total_hembras, total_machos=total_machos)
+es_premium = es_premium_owner(session["user_id"]),
 
 
 @bp.route("/crear_animal", methods=["POST"])

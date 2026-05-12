@@ -40,6 +40,8 @@ def reproduccion():
         return render_template("premium_requerido.html", funcion="Control Reproductivo")
 
     owner_id, mi_rol = get_granja_info(user_id)
+    if not es_premium_owner(session["user_id"]):
+        return render_template("premium_requerido.html", funcion="Control Reproductivo")
     hembras  = sb_get("animales", f"usuario_id=eq.{owner_id}&sexo=eq.hembra&estado=eq.activo")
     machos   = sb_get("animales", f"usuario_id=eq.{owner_id}&sexo=eq.macho&estado=eq.activo")
     registros = sb_get("reproduccion", f"usuario_id=eq.{owner_id}&order=fecha.desc")

@@ -1,133 +1,237 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>⭐ Plan Premium</h2>
+<h2>⭐ Planes</h2>
 
 {% if es_premium %}
-<!-- Usuario con plan activo -->
-<div class="card-premium card">
-    <h3>🌟 Plan Premium Activo</h3>
-    <p>Tu plan vence en <strong>{{ dias_restantes }} días</strong></p>
-    {% if suscripcion %}
-    <p style="font-size:13px;">Hasta: {{ suscripcion.fecha_fin }}</p>
-    {% endif %}
-</div>
-
-<div class="card">
-    <h3>Extender plan</h3>
-    <form action="/activar_premium" method="POST">
-        <div class="form-group">
-            <label>Meses adicionales</label>
-            <select class="form-control" name="meses">
-                <option value="1">1 mes — $5.00</option>
-                <option value="3">3 meses — $13.50 (10% descuento)</option>
-                <option value="6">6 meses — $24.00 (20% descuento)</option>
-                <option value="12">12 meses — $42.00 (30% descuento)</option>
-            </select>
-        </div>
-        <button class="btn-premium">💳 Extender plan</button>
-    </form>
-</div>
-
-<div class="card">
-    <form action="/cancelar_premium" method="POST"
-          onsubmit="return confirm('¿Cancelar el plan premium? Perderás acceso a las funciones Pro.')">
-        <button class="btn-peligro" style="width:auto;">Cancelar plan</button>
-    </form>
-</div>
-
-{% else %}
-<!-- Usuario free — mostrar propuesta de valor -->
-<div class="card" style="background:linear-gradient(135deg,#667eea,#764ba2); color:white; text-align:center; padding:25px;">
-    <div style="font-size:50px; margin-bottom:10px;">🌟</div>
-    <h2 style="color:white; margin:0 0 5px 0;">ERP Pecuario Pro</h2>
-    <p style="color:rgba(255,255,255,0.9); margin:0; font-size:14px;">
-        Todo lo que necesitas para gestionar tu granja como un profesional
+<!-- ══ USUARIO CON PLAN ACTIVO ══════════════════════════════════ -->
+<div class="card" style="background:linear-gradient(135deg,#27ae60,#2ecc71);
+     color:white;text-align:center;padding:20px;">
+    <div style="font-size:40px;">🌟</div>
+    <h3 style="color:white;margin:6px 0;">Plan Premium Activo</h3>
+    <p style="color:rgba(255,255,255,.9);margin:0;">
+        Vence en <strong>{{ dias_restantes }} días</strong>
+        {% if suscripcion %} — {{ suscripcion.fecha_fin }}{% endif %}
     </p>
 </div>
 
-<!-- Beneficios -->
 <div class="card">
-    <h3>✅ Incluye todo del plan gratuito, más:</h3>
-
-    <div style="margin:10px 0;">
-        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
-            <span style="font-size:28px;">🏥</span>
-            <div>
-                <strong>Control Sanitario completo</strong>
-                <p style="margin:3px 0; color:gray; font-size:13px;">
-                    Registra vacunas, desparasitaciones y tratamientos por lote. Historial médico siempre a mano.
-                </p>
-            </div>
-        </div>
-
-        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
-            <span style="font-size:28px;">🔔</span>
-            <div>
-                <strong>Alertas automáticas</strong>
-                <p style="margin:3px 0; color:gray; font-size:13px;">
-                    La app te avisa antes de que venza una vacuna, cuando un lote tiene poco stock, y más. Nunca más olvides nada.
-                </p>
-            </div>
-        </div>
-
-        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
-            <span style="font-size:28px;">📊</span>
-            <div>
-                <strong>Reportes PDF descargables</strong>
-                <p style="margin:3px 0; color:gray; font-size:13px;">
-                    Genera reportes profesionales para presentar al banco, socio o contador. <span style="color:#e67e22;">Próximamente.</span>
-                </p>
-            </div>
-        </div>
-
-        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:15px;">
-            <span style="font-size:28px;">👥</span>
-            <div>
-                <strong>Múltiples usuarios por granja</strong>
-                <p style="margin:3px 0; color:gray; font-size:13px;">
-                    Agrega a tu empleado o socio con acceso controlado. <span style="color:#e67e22;">Próximamente.</span>
-                </p>
-            </div>
-        </div>
-
-        <div style="display:flex; gap:12px; align-items:flex-start;">
-            <span style="font-size:28px;">💾</span>
-            <div>
-                <strong>Backups ilimitados</strong>
-                <p style="margin:3px 0; color:gray; font-size:13px;">
-                    Historial completo de respaldos con etiquetas. Tus datos siempre seguros.
-                </p>
-            </div>
-        </div>
+    <h3>✅ Tienes acceso a:</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
+        <span>🏥 Control sanitario</span>  <span>🔔 Alertas automáticas</span>
+        <span>📈 Registro producción</span> <span>🐣 Reproducción</span>
+        <span>⚖️ Pesajes y GDP</span>       <span>🌽 Insumos + stock</span>
+        <span>📊 PDFs de reportes</span>    <span>👥 Múltiples usuarios</span>
+        <span>📅 Calendario</span>          <span>📋 Presupuesto</span>
+        <span>🏪 Proveedores</span>         <span>📷 Fotos</span>
     </div>
 </div>
 
-<!-- Precio -->
-<div class="card" style="text-align:center; border: 2px solid #27ae60;">
-    <p style="color:gray; margin:0; font-size:13px;">Precio especial de lanzamiento</p>
-    <h1 style="margin:5px 0; color:#27ae60;">$5 <span style="font-size:18px; font-weight:normal;">/ mes</span></h1>
-    <p style="color:gray; font-size:13px; margin:0;">Cancela cuando quieras. Sin compromisos.</p>
+{% if payphone_activo %}
+<div class="card">
+    <h3 style="margin:0 0 12px 0;">🔄 Renovar plan</h3>
+    {% for key, plan in planes.items() %}
+    <form method="POST" action="/checkout/{{ key }}" style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    border:1px solid #eee;border-radius:10px;padding:10px 14px;">
+            <div>
+                <strong style="font-size:14px;">{{ plan.label }}</strong>
+                {% if plan.descuento > 0 %}
+                <span style="background:#fff3cd;color:#856404;font-size:11px;
+                             padding:2px 7px;border-radius:10px;margin-left:6px;">
+                    -{{ plan.descuento }}%
+                </span>
+                {% endif %}
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <strong style="color:#27ae60;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+                <button class="btn-primary" style="padding:6px 14px;font-size:13px;">
+                    Renovar
+                </button>
+            </div>
+        </div>
+    </form>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <form action="/cancelar_premium" method="POST"
+          onsubmit="return confirm('¿Marcar para cancelar al vencer?')">
+        <p style="font-size:13px;color:gray;margin:0 0 10px 0;">
+            Al cancelar mantienes el acceso hasta que venza. Tus datos no se eliminan.
+        </p>
+        <button class="btn-peligro" style="width:auto;">Cancelar al vencer</button>
+    </form>
 </div>
 
-<!-- Formulario de activación -->
-<div class="card">
-    <form action="/activar_premium" method="POST">
-        <div class="form-group">
-            <label>Elige tu plan</label>
-            <select class="form-control" name="meses">
-                <option value="1">1 mes — $5.00</option>
-                <option value="3">3 meses — $13.50 (ahorra $1.50)</option>
-                <option value="6">6 meses — $24.00 (ahorra $6.00)</option>
-                <option value="12">12 meses — $42.00 (ahorra $18.00)</option>
-            </select>
-        </div>
-        <button class="btn-premium">🌟 Activar Premium ahora</button>
-    </form>
-    <p style="text-align:center; color:gray; font-size:12px; margin-top:10px;">
-        🔒 Pago seguro · Cancela cuando quieras
+<div style="text-align:center;margin-top:8px;">
+    <a href="/mis_pagos" style="color:gray;font-size:12px;text-decoration:underline;">
+        Ver historial de pagos
+    </a>
+</div>
+
+{% else %}
+<!-- ══ USUARIO FREE ══════════════════════════════════════════════ -->
+
+<!-- Hero -->
+<div class="card" style="background:linear-gradient(135deg,#667eea,#764ba2);
+     color:white;text-align:center;padding:24px;">
+    <div style="font-size:48px;margin-bottom:8px;">🌟</div>
+    <h2 style="color:white;margin:0 0 4px 0;">ERP Pecuario Pro</h2>
+    <p style="color:rgba(255,255,255,.85);margin:0;font-size:14px;">
+        Gestiona tu granja como un profesional
     </p>
 </div>
+
+<!-- Trial gratuito -->
+{% if trial_ok %}
+<div class="card" style="border:2px solid #27ae60;text-align:center;">
+    <div style="font-size:32px;">🎁</div>
+    <h3 style="margin:6px 0;color:#27ae60;">{{ dias_trial }} días gratis sin tarjeta</h3>
+    <p style="color:gray;font-size:13px;margin:0 0 14px 0;">
+        Prueba todas las funciones Premium sin compromisos.
+    </p>
+    <form method="POST" action="/activar_trial">
+        <button class="btn-primary" style="width:100%;padding:13px;font-size:15px;">
+            🚀 Empezar prueba gratuita
+        </button>
+    </form>
+    <p style="font-size:11px;color:gray;margin:8px 0 0 0;">Sin tarjeta · Sin compromiso</p>
+</div>
+{% endif %}
+
+<!-- Tabla comparativa -->
+<div class="card">
+    <h3>¿Qué incluye cada plan?</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+        <thead>
+            <tr>
+                <th style="text-align:left;padding:8px 0;border-bottom:2px solid #eee;width:60%;">Función</th>
+                <th style="text-align:center;border-bottom:2px solid #eee;padding:8px 4px;color:#555;">Gratis</th>
+                <th style="text-align:center;border-bottom:2px solid #eee;padding:8px 4px;color:#764ba2;">Premium</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fn, libre, prem in [
+                ("🐄 Lotes (CRUD completo)", True, True),
+                ("💰 Ventas y gastos", True, True),
+                ("💀 Registro de bajas", True, True),
+                ("📋 Exportar CSV", True, True),
+                ("🐾 Animales individuales", True, True),
+                ("💾 Hasta 3 backups", True, True),
+                ("🏥 Control sanitario", False, True),
+                ("🔔 Alertas push automáticas", False, True),
+                ("📈 Registro de producción", False, True),
+                ("🐣 Reproducción y partos", False, True),
+                ("⚖️ Pesajes + GDP", False, True),
+                ("🌽 Insumos con alertas", False, True),
+                ("📊 PDFs de reportes", False, True),
+                ("🧬 Genealogía (madre/padre)", False, True),
+                ("👥 Múltiples usuarios", False, True),
+                ("📅 Calendario de actividades", False, True),
+                ("📋 Presupuesto y proyecciones", False, True),
+                ("🏪 Proveedores", False, True),
+                ("📷 Fotos por animal/lote", False, True),
+                ("📈 KPIs avanzados (ROI, costo/kg)", False, True),
+                ("💾 Backups ilimitados", False, True),
+            ] %}
+            <tr style="border-bottom:1px solid #f5f5f5;">
+                <td style="padding:7px 0;">{{ fn }}</td>
+                <td style="text-align:center;padding:7px 4px;">{{ "✅" if libre else "—" }}</td>
+                <td style="text-align:center;padding:7px 4px;">{{ "✅" if prem else "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Precios y botones de pago -->
+<div class="card" style="border:2px solid #764ba2;">
+    <h3 style="text-align:center;color:#764ba2;margin:0 0 16px 0;">
+        💳 Elige tu plan — Pago seguro con PayPhone
+    </h3>
+
+    {% if payphone_activo %}
+    <!-- Pagos reales con PayPhone -->
+    {% for key, plan in planes.items() %}
+    <form method="POST" action="/checkout/{{ key }}" style="margin-bottom:10px;">
+        <button type="submit"
+                style="width:100%;
+                       background:{% if key == '3' %}#764ba2{% else %}white{% endif %};
+                       color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
+                       border:2px solid {% if key == '3' %}#764ba2{% else %}#ddd{% endif %};
+                       border-radius:12px;padding:15px;font-size:14px;cursor:pointer;
+                       display:flex;justify-content:space-between;align-items:center;">
+            <span>
+                <strong>{{ plan.label }}</strong>
+                {% if plan.descuento > 0 %}
+                <span style="background:rgba(102,91,255,.15);color:#764ba2;font-size:11px;
+                             padding:2px 7px;border-radius:10px;margin-left:6px;
+                             {% if key == '3' %}background:rgba(255,255,255,.25);color:white;{% endif %}">
+                    Ahorra {{ plan.descuento }}%
+                </span>
+                {% endif %}
+            </span>
+            <strong style="font-size:17px;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+        </button>
+    </form>
+    {% endfor %}
+
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;
+                padding:10px;background:#f8f9fa;border-radius:10px;">
+        <span style="font-size:20px;">🔒</span>
+        <div style="font-size:12px;color:#555;line-height:1.4;">
+            Pago 100% seguro con <strong>PayPhone</strong>.
+            Acepta <strong>Visa, Mastercard y Diners</strong> emitidas en Ecuador.
+            Nunca almacenamos datos de tu tarjeta.
+        </div>
+    </div>
+
+    {% else %}
+    <!-- PayPhone no configurado — fallback WhatsApp -->
+    <div style="background:#fff3cd;border-radius:10px;padding:16px;text-align:center;
+                margin-bottom:12px;">
+        <p style="margin:0 0 6px 0;font-size:14px;font-weight:bold;color:#856404;">
+            Activación por WhatsApp (en configuración)
+        </p>
+        <p style="margin:0;font-size:13px;color:#6c5a00;line-height:1.5;">
+            Escríbenos indicando el plan que deseas. Activamos tu cuenta en menos de 1 hora.
+        </p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for key, plan in planes.items() %}
+        <a href="https://wa.me/593000000000?text=Hola,%20quiero%20activar%20{{ plan.label | urlencode }}%20de%20ERP%20Pecuario%20(%24{{ plan.precio_usd }})"
+           target="_blank"
+           style="display:flex;justify-content:space-between;align-items:center;
+                  background:{% if key == '3' %}#25D366{% else %}white{% endif %};
+                  color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
+                  border:2px solid {% if key == '3' %}#25D366{% else %}#ddd{% endif %};
+                  border-radius:12px;padding:14px;text-decoration:none;font-size:14px;">
+            <span>
+                <strong>{{ plan.label }}</strong>
+                {% if plan.descuento > 0 %}
+                <span style="font-size:11px;margin-left:6px;opacity:.85;">
+                    -{{ plan.descuento }}%
+                </span>
+                {% endif %}
+            </span>
+            <strong>${{ "%.2f"|format(plan.precio_usd) }}</strong>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Garantía -->
+<div class="card" style="text-align:center;background:#f8f9fa;">
+    <p style="margin:0;font-size:13px;color:#555;">
+        🛡️ <strong>Garantía de satisfacción:</strong>
+        Si no estás satisfecho en los primeros 7 días te devolvemos el dinero. Sin preguntas.
+    </p>
+</div>
+
 {% endif %}
 
 {% endblock %}
