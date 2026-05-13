@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
 from config import sb_get, sb_post, sb_delete
 from backup_utils import backup_automatico
-from routes.permisos import get_granja_info, solo_admin
+from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 import datetime
 
 bp = Blueprint("pesajes", __name__)

@@ -1,189 +1,80 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>🐄 Animales</h1>
 
-<!-- KPIs -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px;">
-    <div class="card" style="text-align:center;padding:10px;">
-        <p style="color:gray;margin:0;font-size:11px;">Activos</p>
+<h1>🐾 Animales</h1>
+
+<!-- KPIs rápidos -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+    <div class="card" style="text-align:center;padding:12px;">
+        <p style="margin:0;font-size:11px;color:gray;">Activos</p>
         <h2 style="margin:4px 0;color:#27ae60;">{{ total_activos }}</h2>
     </div>
-    <div class="card" style="text-align:center;padding:10px;">
-        <p style="color:gray;margin:0;font-size:11px;">Hembras</p>
+    <div class="card" style="text-align:center;padding:12px;">
+        <p style="margin:0;font-size:11px;color:gray;">♀ Hembras</p>
         <h2 style="margin:4px 0;color:#e91e8c;">{{ total_hembras }}</h2>
     </div>
-    <div class="card" style="text-align:center;padding:10px;">
-        <p style="color:gray;margin:0;font-size:11px;">Machos</p>
+    <div class="card" style="text-align:center;padding:12px;">
+        <p style="margin:0;font-size:11px;color:gray;">♂ Machos</p>
         <h2 style="margin:4px 0;color:#3498db;">{{ total_machos }}</h2>
     </div>
 </div>
 
-<!-- Filtros -->
-<div class="card" style="padding:10px;">
-    <form method="GET" action="/animales" style="display:flex;flex-direction:column;gap:8px;">
-        <input class="form-control" name="q" value="{{ filtro_texto }}" placeholder="🔍 Buscar por arete o nombre">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <select class="form-control" name="estado" onchange="this.form.submit()">
-                <option value="">Todos los estados</option>
-                {% for clave, info in estados.items() %}
-                <option value="{{ clave }}" {% if filtro_estado == clave %}selected{% endif %}>
-                    {{ info.emoji }} {{ info.label }}
-                </option>
-                {% endfor %}
-            </select>
-            <select class="form-control" name="lote_id" onchange="this.form.submit()">
-                <option value="">Todos los lotes</option>
-                {% for l in lotes %}
-                <option value="{{ l.id }}" {% if filtro_lote == l.id|string %}selected{% endif %}>
-                    {{ l.nombre }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-        <button class="btn-primary" style="padding:8px;">Filtrar</button>
-    </form>
-</div>
-
 {% if mi_rol == 'admin' %}
-<!-- Formulario nuevo animal -->
+<!-- Formulario registrar animal -->
 <details class="card">
-    <summary style="cursor:pointer;font-weight:bold;padding:4px 0;">➕ Registrar animal individual</summary>
+    <summary style="font-weight:bold;font-size:14px;cursor:pointer;padding:4px 0;">
+        ➕ Registrar animal
+    </summary>
     <br>
     <form method="POST" action="/crear_animal">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div class="form-group">
-                <label>Arete / Chip</label>
-                <!-- ══ CAMPO ARETE CON BOTÓN CÁMARA — reemplaza el input de arete ═══ -->
-<div class="form-group">
-    <label>Arete / Identificador
-        <span style="color:gray;font-weight:normal;">(opcional)</span>
-    </label>
-    <div style="display:flex;gap:6px;align-items:center;">
-        <input class="form-control" name="arete" id="inp-arete"
-               placeholder="Ej: AR-0042"
-               style="flex:1;">
-        <button type="button" id="btn-camara"
-                onclick="abrirEscaner()"
-                style="background:#27ae60;color:white;border:none;
-                       border-radius:8px;padding:10px 13px;
-                       font-size:18px;cursor:pointer;flex-shrink:0;"
-                title="Leer arete con cámara">
-            📷
-        </button>
-    </div>
-</div>
- 
-<!-- Modal del escáner -->
-<div id="modal-escaner" style="display:none;position:fixed;top:0;left:0;
-     width:100%;height:100%;background:rgba(0,0,0,.85);z-index:300;
-     flex-direction:column;align-items:center;justify-content:center;">
-    <p style="color:white;font-size:15px;margin-bottom:10px;">
-        📷 Apunta la cámara al código de barras del arete
-    </p>
-    <video id="video-escaner" autoplay playsinline
-           style="width:90%;max-width:420px;border-radius:12px;"></video>
-    <div id="escaner-estado"
-         style="color:#f1c40f;margin-top:8px;font-size:13px;">
-        Buscando código...
-    </div>
-    <button onclick="cerrarEscaner()"
-            style="margin-top:14px;background:#e74c3c;color:white;
-                   border:none;border-radius:8px;padding:10px 28px;
-                   font-size:15px;cursor:pointer;">
-        ✕ Cancelar
-    </button>
-</div>
- 
-<script>
-(function () {
-    let stream       = null;
-    let detector     = null;
-    let scanInterval = null;
- 
-    window.abrirEscaner = async function () {
-        // Verificar soporte
-        if (!("BarcodeDetector" in window)) {
-            alert("Tu navegador no soporta lectura de códigos por cámara.\n" +
-                  "Usa Chrome en Android o escribe el arete manualmente.");
-            return;
-        }
- 
-        try {
-            detector = new BarcodeDetector({
-                formats: ["code_128", "code_39", "ean_13", "ean_8",
-                          "upc_a", "upc_e", "qr_code", "data_matrix"]
-            });
- 
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment", width: { ideal: 1280 } }
-            });
- 
-            const video   = document.getElementById("video-escaner");
-            const modal   = document.getElementById("modal-escaner");
-            video.srcObject = stream;
-            modal.style.display = "flex";
- 
-            scanInterval = setInterval(async () => {
-                if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-                try {
-                    const codes = await detector.detect(video);
-                    if (codes.length > 0) {
-                        const valor = codes[0].rawValue;
-                        document.getElementById("inp-arete").value = valor;
-                        document.getElementById("escaner-estado").textContent =
-                            "✅ Leído: " + valor;
-                        setTimeout(cerrarEscaner, 800);
-                    }
-                } catch (_) {}
-            }, 300);
- 
-        } catch (err) {
-            alert("No se pudo acceder a la cámara: " + err.message);
-        }
-    };
- 
-    window.cerrarEscaner = function () {
-        clearInterval(scanInterval);
-        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-        const video = document.getElementById("video-escaner");
-        if (video) video.srcObject = null;
-        const modal = document.getElementById("modal-escaner");
-        if (modal) modal.style.display = "none";
-        const estado = document.getElementById("escaner-estado");
-        if (estado) estado.textContent = "Buscando código...";
-    };
-})();
-</script>
-<!-- ══ FIN LECTOR DE ARETE ════════════════════════════════════════ -->
- 
-            </div>
-            <div class="form-group">
-                <label>Nombre <span style="color:gray;font-weight:normal;">(opcional)</span></label>
-                <input class="form-control" name="nombre" placeholder="Ej: Canela">
+
+        <!-- Arete con lector de cámara -->
+        <div class="form-group">
+            <label>Arete / Identificador
+                <span style="color:gray;font-weight:normal;">(opcional)</span>
+            </label>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <input class="form-control" name="arete" id="inp-arete"
+                       placeholder="Ej: AR-0042" style="flex:1;">
+                <button type="button" id="btn-camara" onclick="abrirEscaner()"
+                        style="background:#27ae60;color:white;border:none;
+                               border-radius:8px;padding:10px 13px;
+                               font-size:18px;cursor:pointer;flex-shrink:0;"
+                        title="Leer arete con cámara">📷</button>
             </div>
         </div>
+
+        <div class="form-group">
+            <label>Nombre
+                <span style="color:gray;font-weight:normal;">(opcional)</span>
+            </label>
+            <input class="form-control" name="nombre" placeholder="Ej: Canela">
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div class="form-group">
                 <label>Tipo *</label>
-                <select class="form-control" name="tipo" id="tipo_sel" onchange="cargarRazas()" required>
+                <select class="form-control" name="tipo" id="tipo_sel"
+                        onchange="cargarRazas()" required>
                     <option value="">Selecciona</option>
-                    <option value="vaca">Vaca</option>
-                    <option value="cerdo">Cerdo</option>
-                    <option value="pollo">Pollo</option>
-                    <option value="cabra">Cabra</option>
-                    <option value="oveja">Oveja</option>
-                    <option value="yegua">Yegua</option>
+                    <option value="vaca">🐄 Vaca</option>
+                    <option value="cerdo">🐷 Cerdo</option>
+                    <option value="pollo">🐔 Pollo</option>
+                    <option value="cabra">🐐 Cabra</option>
+                    <option value="oveja">🐑 Oveja</option>
+                    <option value="yegua">🐴 Yegua</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Sexo</label>
                 <select class="form-control" name="sexo">
-                    <option value="hembra">Hembra</option>
-                    <option value="macho">Macho</option>
-                    <option value="desconocido">Desconocido</option>
+                    <option value="hembra">♀ Hembra</option>
+                    <option value="macho">♂ Macho</option>
+                    <option value="desconocido">~ Desconocido</option>
                 </select>
             </div>
         </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div class="form-group">
                 <label>Raza</label>
@@ -192,13 +83,16 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Lote <span style="color:gray;font-weight:normal;">(opcional)</span></label>
+                <label>Lote</label>
                 <select class="form-control" name="lote_id">
                     <option value="">Sin lote</option>
-                    {% for l in lotes %}<option value="{{ l.id }}">{{ l.nombre }}</option>{% endfor %}
+                    {% for l in lotes %}
+                    <option value="{{ l.id }}">{{ l.nombre }}</option>
+                    {% endfor %}
                 </select>
             </div>
         </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div class="form-group">
                 <label>Fecha nacimiento</label>
@@ -206,30 +100,109 @@
             </div>
             <div class="form-group">
                 <label>Peso inicial (kg)</label>
-                <input class="form-control" type="number" step="0.1" name="peso_inicial" placeholder="0.0">
+                <input class="form-control" type="number" step="0.1"
+                       name="peso_inicial" placeholder="0.0">
             </div>
         </div>
+
+        <!-- ══ GENEALOGÍA — solo Premium ══════════════════════════════ -->
+        {% if es_premium %}
+        <div style="background:#EEEDFE;border-radius:10px;padding:12px;margin:8px 0;">
+            <p style="margin:0 0 8px 0;font-size:12px;font-weight:bold;color:#3C3489;">
+                🧬 Genealogía (Premium)
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="form-group" style="margin:0;">
+                    <label>Madre</label>
+                    <select class="form-control" name="madre_id">
+                        <option value="">Sin madre registrada</option>
+                        {% for a in lotes %}{% endfor %}
+                        {% set hembras_list = [] %}
+                        {% for a_raw in animales if a_raw.sexo == 'hembra' and a_raw.estado_info %}
+                        <option value="{{ a_raw.id }}">
+                            {{ a_raw.nombre or '' }}{% if a_raw.arete %} #{{ a_raw.arete }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>Padre</label>
+                    <select class="form-control" name="padre_id">
+                        <option value="">Sin padre registrado</option>
+                        {% for a_raw in animales if a_raw.sexo == 'macho' and a_raw.estado_info %}
+                        <option value="{{ a_raw.id }}">
+                            {{ a_raw.nombre or '' }}{% if a_raw.arete %} #{{ a_raw.arete }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="background:#f8f9fa;border-radius:10px;padding:10px;margin:8px 0;
+                    text-align:center;">
+            <p style="margin:0;font-size:13px;color:gray;">
+                🧬 Registro de genealogía (madre/padre) disponible en
+                <a href="/planes" style="color:#764ba2;font-weight:bold;">Plan Premium</a>
+            </p>
+        </div>
+        {% endif %}
+        <!-- ══ FIN GENEALOGÍA ═══════════════════════════════════════════ -->
+
         <div class="form-group">
             <label>Notas</label>
-            <textarea class="form-control" name="notas" rows="2" style="resize:vertical;" placeholder="Observaciones adicionales"></textarea>
+            <textarea class="form-control" name="notas" rows="2"
+                      style="resize:vertical;" placeholder="Observaciones..."></textarea>
         </div>
-        <button class="btn-primary">💾 Guardar animal</button>
+
+        <button class="btn-primary">💾 Registrar animal</button>
     </form>
 </details>
 {% endif %}
 
+<!-- Filtros -->
+<div class="card">
+    <form method="GET" action="/animales"
+          style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input class="form-control" name="q" value="{{ filtro_texto }}"
+               placeholder="🔍 Buscar por nombre o arete"
+               style="flex:1;min-width:140px;">
+        <select class="form-control" name="estado" style="flex:1;min-width:110px;"
+                onchange="this.form.submit()">
+            <option value="">Todos</option>
+            {% for clave, info in estados.items() %}
+            <option value="{{ clave }}"
+                {% if filtro_estado == clave %}selected{% endif %}>
+                {{ info.emoji }} {{ info.label }}
+            </option>
+            {% endfor %}
+        </select>
+        <select class="form-control" name="lote_id" style="flex:1;min-width:110px;"
+                onchange="this.form.submit()">
+            <option value="">Todos los lotes</option>
+            {% for l in lotes %}
+            <option value="{{ l.id }}"
+                {% if filtro_lote|string == l.id|string %}selected{% endif %}>
+                {{ l.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+        <button class="btn-primary" style="flex-shrink:0;">Buscar</button>
+    </form>
+</div>
+
 <!-- Lista de animales -->
-<h2>📋 Lista ({{ animales|length }})</h2>
 {% if animales %}
     {% for a in animales %}
     <a href="/animal/{{ a.id }}" style="text-decoration:none;color:inherit;">
     <div class="card" style="border-left:4px solid {{ a.estado_info.color }};">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
-                <p style="margin:0 0 2px 0;font-weight:bold;">
-                    {{ a.estado_info.emoji }}
-                    {% if a.nombre %}{{ a.nombre }}{% endif %}
-                    {% if a.arete %}<span style="color:gray;font-size:13px;">#{{ a.arete }}</span>{% endif %}
+                <p style="margin:0 0 2px 0;font-weight:bold;font-size:15px;">
+                    {{ a.nombre or '' }}
+                    {% if a.arete %}
+                    <span style="color:gray;font-weight:normal;">#{{ a.arete }}</span>
+                    {% endif %}
                 </p>
                 <p style="margin:0;font-size:12px;color:gray;">
                     {{ a.tipo|capitalize }}{% if a.raza %} · {{ a.raza }}{% endif %} ·
@@ -242,7 +215,8 @@
                 {% endif %}
                 <p style="margin:2px 0;font-size:12px;color:#777;">📦 {{ a.lote_nombre }}</p>
             </div>
-            <span style="font-size:12px;color:{{ a.estado_info.color }};font-weight:bold;white-space:nowrap;">
+            <span style="font-size:12px;color:{{ a.estado_info.color }};
+                         font-weight:bold;white-space:nowrap;">
                 {{ a.estado_info.label }}
             </span>
         </div>
@@ -257,7 +231,27 @@
     </div>
 {% endif %}
 
+<!-- Modal lector de arete por cámara -->
+<div id="modal-escaner"
+     style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+            background:rgba(0,0,0,.85);z-index:300;flex-direction:column;
+            align-items:center;justify-content:center;">
+    <p style="color:white;font-size:15px;margin-bottom:10px;">
+        📷 Apunta la cámara al código del arete
+    </p>
+    <video id="video-escaner" autoplay playsinline
+           style="width:90%;max-width:420px;border-radius:12px;"></video>
+    <div id="escaner-estado"
+         style="color:#f1c40f;margin-top:8px;font-size:13px;">Buscando código...</div>
+    <button onclick="cerrarEscaner()"
+            style="margin-top:14px;background:#e74c3c;color:white;border:none;
+                   border-radius:8px;padding:10px 28px;font-size:15px;cursor:pointer;">
+        ✕ Cancelar
+    </button>
+</div>
+
 <script>
+// ── Razas por tipo ──────────────────────────────────────────────────────────
 const razasPorTipo = {
     vaca:  ["Holstein","Brahman","Jersey","Angus","Simmental","Criolla"],
     cerdo: ["Landrace","Duroc","Pietrain","Yorkshire","Criollo"],
@@ -276,5 +270,56 @@ function cargarRazas() {
         sel.add(o);
     });
 }
+
+// ── Lector de arete por cámara ──────────────────────────────────────────────
+(function () {
+    let stream = null, detector = null, scanInterval = null;
+
+    window.abrirEscaner = async function () {
+        if (!("BarcodeDetector" in window)) {
+            alert("Tu navegador no soporta lectura de códigos.\nUsa Chrome en Android o escribe el arete manualmente.");
+            return;
+        }
+        try {
+            detector = new BarcodeDetector({
+                formats: ["code_128","code_39","ean_13","ean_8","upc_a","upc_e","qr_code"]
+            });
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment", width: { ideal: 1280 } }
+            });
+            const video = document.getElementById("video-escaner");
+            const modal = document.getElementById("modal-escaner");
+            video.srcObject = stream;
+            modal.style.display = "flex";
+
+            scanInterval = setInterval(async () => {
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+                try {
+                    const codes = await detector.detect(video);
+                    if (codes.length > 0) {
+                        document.getElementById("inp-arete").value = codes[0].rawValue;
+                        document.getElementById("escaner-estado").textContent =
+                            "✅ Leído: " + codes[0].rawValue;
+                        setTimeout(cerrarEscaner, 800);
+                    }
+                } catch (_) {}
+            }, 300);
+        } catch (err) {
+            alert("No se pudo acceder a la cámara: " + err.message);
+        }
+    };
+
+    window.cerrarEscaner = function () {
+        clearInterval(scanInterval);
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        const v = document.getElementById("video-escaner");
+        if (v) v.srcObject = null;
+        const m = document.getElementById("modal-escaner");
+        if (m) m.style.display = "none";
+        const e = document.getElementById("escaner-estado");
+        if (e) e.textContent = "Buscando código...";
+    };
+})();
 </script>
+
 {% endblock %}

@@ -47,7 +47,7 @@ def presupuesto():
 
     owner_id, mi_rol = get_granja_info(session["user_id"])
     if not es_premium_owner(session["user_id"]):
-        return render_template("premium_requerido.html", funcion="Calendario de Actividades")
+        return render_template("premium_requerido.html", funcion="Presupuesto y Proyecciones")
 
     hoy      = datetime.date.today()
     anio     = int(request.args.get("anio",    hoy.year))

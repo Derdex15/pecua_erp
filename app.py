@@ -1,6 +1,6 @@
 """
 ERP Pecuario — Punto de entrada principal
-Flask + Supabase + Firebase FCM + Stripe
+Flask + Supabase + Firebase FCM + PayPhone
 """
 import os
 import json
@@ -34,6 +34,7 @@ def create_app():
 
     csrf.init_app(app)
 
+    # ── Blueprints ──────────────────────────────────────────────
     from routes.auth           import bp as auth_bp
     from routes.inventario     import bp as inventario_bp
     from routes.ventas         import bp as ventas_bp
@@ -67,42 +68,50 @@ def create_app():
     ]:
         app.register_blueprint(blueprint)
 
+    # ── Exenciones CSRF ─────────────────────────────────────────
+    # notificaciones: JSON + X-CSRFToken desde JS
+    # fotos:          multipart/form-data desde JS
+    # NOTA: PayPhone no usa webhooks, no necesita exención adicional
     csrf.exempt(notificaciones_bp)
     csrf.exempt(fotos_bp)
-    from routes.suscripciones import stripe_webhook
-    csrf.exempt(stripe_webhook)
 
+    # ── PWA ─────────────────────────────────────────────────────
     @app.route("/sw.js")
     def service_worker():
-        r = send_from_directory(os.path.join(app.root_path, "static"), "sw.js",
-                                mimetype="application/javascript")
+        r = send_from_directory(
+            os.path.join(app.root_path, "static"), "sw.js",
+            mimetype="application/javascript")
         r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         return r
 
     @app.route("/firebase-messaging-sw.js")
     def firebase_messaging_sw():
-        r = send_from_directory(os.path.join(app.root_path, "static"),
-                                "firebase-messaging-sw.js",
-                                mimetype="application/javascript")
+        r = send_from_directory(
+            os.path.join(app.root_path, "static"),
+            "firebase-messaging-sw.js",
+            mimetype="application/javascript")
         r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         return r
 
     @app.route("/manifest.json")
     def manifest():
-        return send_from_directory(os.path.join(app.root_path, "static"),
-                                   "manifest.json",
-                                   mimetype="application/manifest+json")
+        return send_from_directory(
+            os.path.join(app.root_path, "static"), "manifest.json",
+            mimetype="application/manifest+json")
 
+    # ── TWA ──────────────────────────────────────────────────────
     @app.route("/.well-known/assetlinks.json")
     def assetlinks():
-        links = [{"relation": ["delegate_permission/common.handle_all_urls"],
-                  "target": {
-                      "namespace": "android_app",
-                      "package_name": os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.app"),
-                      "sha256_cert_fingerprints": [os.getenv("TWA_SHA256_CERT", "REEMPLAZAR")],
-                  }}]
-        r = app.response_class(response=json.dumps(links), status=200,
-                               mimetype="application/json")
+        links = [{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace":               "android_app",
+                "package_name":            os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.app"),
+                "sha256_cert_fingerprints": [os.getenv("TWA_SHA256_CERT", "REEMPLAZAR")],
+            }
+        }]
+        r = app.response_class(
+            response=json.dumps(links), status=200, mimetype="application/json")
         r.headers["Cache-Control"] = "no-cache"
         return r
 

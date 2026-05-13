@@ -6,7 +6,7 @@ Genera alertas cuando el stock cae por debajo del mínimo configurado.
 """
 from flask import Blueprint, render_template, redirect, session, request, flash
 from config import sb_get, sb_post, sb_patch, sb_delete
-from routes.permisos import get_granja_info, solo_admin
+from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 import datetime
 
 bp = Blueprint("insumos", __name__)

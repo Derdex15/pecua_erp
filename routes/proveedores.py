@@ -6,7 +6,7 @@ CRUD de proveedores de insumos, medicamentos y animales.
 from flask import Blueprint, render_template, redirect, session, request, flash
 from config import sb_get, sb_post, sb_patch, sb_delete
 from backup_utils import backup_automatico
-from routes.permisos import get_granja_info, solo_admin
+from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 
 bp = Blueprint("proveedores", __name__)
 
@@ -29,7 +29,7 @@ def proveedores():
 
     owner_id, mi_rol = get_granja_info(session["user_id"])
     if not es_premium_owner(session["user_id"]):
-       return render_template("premium_requerido.html", funcion="Calendario de Actividades")
+       return render_template("premium_requerido.html", funcion="Registro de Proveedores")
     filtro_cat = request.args.get("categoria", "")
 
     q = f"usuario_id=eq.{owner_id}&activo=eq.true&order=nombre.asc"
