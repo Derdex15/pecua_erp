@@ -1,11 +1,6 @@
 # routes/inventario.py
 """
 Dashboard y gestión de lotes — ERP Pecuario
-
-CORRECCIÓN: la versión anterior no calculaba ni pasaba al template:
-  roi, pct_mortalidad, precio_prom_venta, total_bajas,
-  ventas_mes, gastos_mes, insumos_criticos, mi_rol,
-  costo_por_kg  (KPI conversión alimenticia simplificado)
 """
 from flask import Blueprint, render_template, redirect, session, request, flash
 from config import sb_get, sb_post, sb_patch, sb_delete
@@ -20,9 +15,7 @@ def _fmt(valor):
     return round(float(valor or 0), 2)
 
 
-# ═══════════════════════════════════════════════════════════════
-# DASHBOARD
-# ═══════════════════════════════════════════════════════════════
+# ── DASHBOARD ─────────────────────────────────────────────────────────────────
 @bp.route("/")
 def dashboard():
     if "user_id" not in session:
@@ -30,7 +23,6 @@ def dashboard():
 
     owner_id, mi_rol = get_granja_info(session["user_id"])
 
-    # ── Datos base ────────────────────────────────────────────────────────────
     lotes  = sb_get("lotes",  f"usuario_id=eq.{owner_id}")
     ventas = sb_get("ventas", f"usuario_id=eq.{owner_id}")
     gastos = sb_get("gastos", f"usuario_id=eq.{owner_id}")
@@ -39,35 +31,32 @@ def dashboard():
     lotes_activos  = [l for l in lotes if l.get("activo", True)]
     lotes_con_anim = [l for l in lotes_activos if l.get("cantidad_actual", 0) > 0]
 
-    # ── KPIs financieros globales ─────────────────────────────────────────────
-    total_animales  = sum(l.get("cantidad_actual", 0) for l in lotes_con_anim)
-    total_compra    = _fmt(sum(_fmt(l.get("costo_compra", 0)) for l in lotes))
-    total_ventas    = _fmt(sum(_fmt(v.get("total",  0))       for v in ventas))
-    total_gastos_v  = _fmt(sum(_fmt(g.get("costo",  0))       for g in gastos))
-    inversion       = _fmt(total_compra + total_gastos_v)
-    ganancia        = _fmt(total_ventas - inversion)
-    roi             = round((ganancia / inversion * 100), 1) if inversion > 0 else 0
+    # KPIs financieros
+    total_animales = sum(l.get("cantidad_actual", 0) for l in lotes_con_anim)
+    total_compra   = _fmt(sum(_fmt(l.get("costo_compra", 0)) for l in lotes))
+    total_ventas   = _fmt(sum(_fmt(v.get("total",  0)) for v in ventas))
+    total_gastos_v = _fmt(sum(_fmt(g.get("costo",  0)) for g in gastos))
+    inversion      = _fmt(total_compra + total_gastos_v)
+    ganancia       = _fmt(total_ventas - inversion)
+    roi            = round((ganancia / inversion * 100), 1) if inversion > 0 else 0
 
-    # ── KPI mortalidad ────────────────────────────────────────────────────────
-    total_inicial   = sum(l.get("cantidad_inicial", 0) for l in lotes)
-    total_muertes   = sum(b.get("cantidad", 0) for b in bajas if b.get("tipo") == "muerte")
-    total_bajas     = sum(b.get("cantidad", 0) for b in bajas)
-    pct_mortalidad  = round((total_muertes / total_inicial * 100), 1) if total_inicial > 0 else 0
+    # Mortalidad
+    total_inicial  = sum(l.get("cantidad_inicial", 0) for l in lotes)
+    total_muertes  = sum(b.get("cantidad", 0) for b in bajas if b.get("tipo") == "muerte")
+    total_bajas    = sum(b.get("cantidad", 0) for b in bajas)
+    pct_mortalidad = round((total_muertes / total_inicial * 100), 1) if total_inicial > 0 else 0
 
-    # ── KPI precio promedio de venta (por animal) ─────────────────────────────
+    # Precio promedio de venta
     total_cab_vendidas = sum(_fmt(v.get("cantidad", 0)) for v in ventas)
     precio_prom_venta  = _fmt(total_ventas / total_cab_vendidas) if total_cab_vendidas > 0 else 0
 
-    # ── KPI costo por kg ganado (conversión alimenticia simplificada) ─────────
-    # Toma todos los pesajes de lote, calcula la ganancia total en kg,
-    # y divide entre el total de gastos para obtener costo por kg ganado.
+    # Costo por kg ganado (conversión alimenticia simplificada)
     costo_por_kg = None
     try:
         pesajes_lote = sb_get("pesajes",
                               f"usuario_id=eq.{owner_id}&lote_id=not.is.null&order=fecha.asc")
         if pesajes_lote and total_gastos_v > 0:
-            # Agrupar por lote_id, tomar primer y último pesaje
-            lote_pesajes: dict = {}
+            lote_pesajes = {}
             for p in pesajes_lote:
                 lid = p.get("lote_id")
                 if lid:
@@ -82,7 +71,7 @@ def dashboard():
     except Exception:
         pass
 
-    # ── Resumen del mes actual ────────────────────────────────────────────────
+    # Mes actual
     hoy     = datetime.date.today()
     mes_str = hoy.strftime("%Y-%m")
     ventas_mes = _fmt(sum(
@@ -94,7 +83,7 @@ def dashboard():
         if str(g.get("fecha", "")).startswith(mes_str)
     ))
 
-    # ── Insumos con stock crítico ─────────────────────────────────────────────
+    # Insumos críticos
     insumos = sb_get("insumos", f"usuario_id=eq.{owner_id}")
     insumos_criticos = sum(
         1 for i in insumos
@@ -102,8 +91,8 @@ def dashboard():
            _fmt(i.get("cantidad", 0)) <= _fmt(i.get("stock_min", 0))
     )
 
-    # ── Desglose por especie ──────────────────────────────────────────────────
-    detalle: dict = {}
+    # Desglose por especie
+    detalle = {}
     for l in lotes_con_anim:
         tipo = l.get("tipo", "Desconocido")
         raza = l.get("raza", "Desconocido")
@@ -112,33 +101,25 @@ def dashboard():
 
     return render_template(
         "dashboard.html",
-        # Conteos
         total_animales    = total_animales,
         detalle           = detalle,
-        # Financiero global
         total_ventas      = total_ventas,
         inversion         = inversion,
         ganancia          = ganancia,
         roi               = roi,
-        # KPIs ganaderos
         pct_mortalidad    = pct_mortalidad,
         total_muertes     = total_muertes,
         total_bajas       = total_bajas,
         precio_prom_venta = precio_prom_venta,
         costo_por_kg      = costo_por_kg,
-        # Mes actual
         ventas_mes        = ventas_mes,
         gastos_mes        = gastos_mes,
-        # Alertas de insumos
         insumos_criticos  = insumos_criticos,
-        # Rol del usuario
         mi_rol            = mi_rol,
     )
 
 
-# ═══════════════════════════════════════════════════════════════
-# INVENTARIO (lista de lotes activos)
-# ═══════════════════════════════════════════════════════════════
+# ── INVENTARIO ────────────────────────────────────────────────────────────────
 @bp.route("/inventario")
 def inventario():
     if "user_id" not in session:
@@ -154,9 +135,7 @@ def lotes_redirect():
     return redirect("/inventario")
 
 
-# ═══════════════════════════════════════════════════════════════
-# CREAR LOTE (solo admin)
-# ═══════════════════════════════════════════════════════════════
+# ── CREAR LOTE ────────────────────────────────────────────────────────────────
 @bp.route("/crear_lote", methods=["POST"])
 @solo_admin
 def crear_lote():
@@ -182,11 +161,11 @@ def crear_lote():
         if cantidad <= 0 or costo < 0:
             raise ValueError
     except ValueError:
-        flash("Cantidad o costo inválido.", "error")
+        flash("Cantidad debe ser entero positivo y costo un número válido.", "error")
         return redirect("/inventario")
 
     backup_automatico(owner_id)
-    sb_post("lotes", {
+    res = sb_post("lotes", {
         "usuario_id":       owner_id,
         "nombre":           nombre,
         "tipo":             tipo,
@@ -197,13 +176,16 @@ def crear_lote():
         "fecha":            fecha,
         "activo":           True,
     })
+
+    if hasattr(res, "status_code") and res.status_code not in (200, 201):
+        flash(f"Error al guardar el lote (código {res.status_code}). Intenta de nuevo.", "error")
+        return redirect("/inventario")
+
     flash(f"✅ Lote '{nombre}' creado con {cantidad} animales.", "success")
     return redirect("/inventario")
 
 
-# ═══════════════════════════════════════════════════════════════
-# EDITAR LOTE (solo admin)
-# ═══════════════════════════════════════════════════════════════
+# ── EDITAR LOTE ───────────────────────────────────────────────────────────────
 @bp.route("/editar_lote/<lote_id>", methods=["GET", "POST"])
 @solo_admin
 def editar_lote(lote_id):
@@ -250,9 +232,7 @@ def editar_lote(lote_id):
     return redirect("/inventario")
 
 
-# ═══════════════════════════════════════════════════════════════
-# ARCHIVAR LOTE (solo admin)
-# ═══════════════════════════════════════════════════════════════
+# ── ARCHIVAR LOTE ─────────────────────────────────────────────────────────────
 @bp.route("/archivar_lote/<lote_id>", methods=["POST"])
 @solo_admin
 def archivar_lote(lote_id):
@@ -271,9 +251,7 @@ def archivar_lote(lote_id):
     return redirect("/inventario")
 
 
-# ═══════════════════════════════════════════════════════════════
-# ELIMINAR LOTE (solo admin)
-# ═══════════════════════════════════════════════════════════════
+# ── ELIMINAR LOTE ─────────────────────────────────────────────────────────────
 @bp.route("/eliminar_lote/<lote_id>", methods=["POST"])
 @solo_admin
 def eliminar_lote(lote_id):
@@ -294,9 +272,7 @@ def eliminar_lote(lote_id):
     return redirect("/inventario")
 
 
-# ═══════════════════════════════════════════════════════════════
-# HISTORIAL DE LOTES INACTIVOS (solo admin)
-# ═══════════════════════════════════════════════════════════════
+# ── HISTORIAL DE LOTES INACTIVOS ──────────────────────────────────────────────
 @bp.route("/lotes_historial")
 @solo_admin
 def lotes_historial():
