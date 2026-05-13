@@ -24,10 +24,10 @@ PP_API_URL  = "https://pay.payphonetodoesmas.com/api"
 DIAS_TRIAL  = 7
 
 PLANES = {
-    "1":  {"label": "1 mes",    "precio_usd": 5.00,  "precio_ctvs": 500,  "descuento": 0},
-    "3":  {"label": "3 meses",  "precio_usd": 13.50, "precio_ctvs": 1350, "descuento": 10},
-    "6":  {"label": "6 meses",  "precio_usd": 24.00, "precio_ctvs": 2400, "descuento": 20},
-    "12": {"label": "12 meses", "precio_usd": 42.00, "precio_ctvs": 4200, "descuento": 30},
+    "1":  {"label": "1 mes",    "precio_usd": 4.99,  "precio_ctvs": 499,  "descuento": 0},
+    "3":  {"label": "3 meses",  "precio_usd": 12.99, "precio_ctvs": 1299, "descuento": 10},
+    "6":  {"label": "6 meses",  "precio_usd": 22.99, "precio_ctvs": 2299, "descuento": 20},
+    "12": {"label": "12 meses", "precio_usd": 39.99, "precio_ctvs": 3999, "descuento": 30},
 }
 
 

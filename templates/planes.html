@@ -146,63 +146,112 @@
     </table>
 </div>
 
-<!-- Precios y botones de pago -->
+<!-- Precios -->
 <div class="card" style="border:2px solid #764ba2;">
-    <h3 style="text-align:center;color:#764ba2;margin:0 0 16px 0;">
-        💳 Elige tu plan — Pago seguro con PayPhone
-    </h3>
+    <h3 style="text-align:center;color:#764ba2;margin:0 0 6px 0;">💳 Elige tu plan</h3>
+    <p style="text-align:center;color:gray;font-size:12px;margin:0 0 16px 0;">
+        Equivale a <strong>menos de $0.17 al día</strong> con el plan anual
+    </p>
 
     {% if payphone_activo %}
-    <!-- Pagos reales con PayPhone -->
-    {% for key, plan in planes.items() %}
-    <form method="POST" action="/checkout/{{ key }}" style="margin-bottom:10px;">
-        <button type="submit"
-                style="width:100%;
-                       background:{% if key == '3' %}#764ba2{% else %}white{% endif %};
-                       color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
-                       border:2px solid {% if key == '3' %}#764ba2{% else %}#ddd{% endif %};
-                       border-radius:12px;padding:15px;font-size:14px;cursor:pointer;
-                       display:flex;justify-content:space-between;align-items:center;">
-            <span>
-                <strong>{{ plan.label }}</strong>
-                {% if plan.descuento > 0 %}
-                <span style="background:rgba(102,91,255,.15);color:#764ba2;font-size:11px;
-                             padding:2px 7px;border-radius:10px;margin-left:6px;
-                             {% if key == '3' %}background:rgba(255,255,255,.25);color:white;{% endif %}">
-                    Ahorra {{ plan.descuento }}%
-                </span>
-                {% endif %}
-            </span>
-            <strong style="font-size:17px;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+
+    <!-- Plan 1 mes -->
+    <form method="POST" action="/checkout/1" style="margin-bottom:10px;">
+        <button type="submit" style="width:100%;background:white;color:#2c3e50;
+                border:2px solid #ddd;border-radius:12px;padding:15px;
+                font-size:14px;cursor:pointer;text-align:left;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span><strong>1 mes</strong></span>
+                <strong style="font-size:18px;color:#2c3e50;">$4.99</strong>
+            </div>
+            <p style="margin:4px 0 0 0;font-size:11px;color:gray;">$4.99 por mes</p>
         </button>
     </form>
-    {% endfor %}
+
+    <!-- Plan 3 meses — DESTACADO -->
+    <form method="POST" action="/checkout/3" style="margin-bottom:10px;">
+        <button type="submit" style="width:100%;background:#764ba2;color:white;
+                border:2px solid #764ba2;border-radius:12px;padding:15px;
+                font-size:14px;cursor:pointer;text-align:left;position:relative;">
+            <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+                        background:#e74c3c;color:white;font-size:11px;font-weight:bold;
+                        padding:2px 12px;border-radius:10px;white-space:nowrap;">
+                ⭐ MÁS POPULAR
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span><strong>3 meses</strong></span>
+                <strong style="font-size:18px;">$12.99</strong>
+            </div>
+            <p style="margin:4px 0 0 0;font-size:11px;color:rgba(255,255,255,.8);">
+                $4.33/mes · Ahorras $2.00 vs mensual
+            </p>
+        </button>
+    </form>
+
+    <!-- Plan 6 meses -->
+    <form method="POST" action="/checkout/6" style="margin-bottom:10px;">
+        <button type="submit" style="width:100%;background:white;color:#2c3e50;
+                border:2px solid #ddd;border-radius:12px;padding:15px;
+                font-size:14px;cursor:pointer;text-align:left;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span>
+                    <strong>6 meses</strong>
+                    <span style="background:#fff3cd;color:#856404;font-size:11px;
+                                 padding:2px 7px;border-radius:10px;margin-left:6px;">
+                        Ahorra $7
+                    </span>
+                </span>
+                <strong style="font-size:18px;color:#2c3e50;">$22.99</strong>
+            </div>
+            <p style="margin:4px 0 0 0;font-size:11px;color:gray;">$3.83/mes</p>
+        </button>
+    </form>
+
+    <!-- Plan 12 meses -->
+    <form method="POST" action="/checkout/12" style="margin-bottom:10px;">
+        <button type="submit" style="width:100%;background:white;color:#2c3e50;
+                border:2px solid #27ae60;border-radius:12px;padding:15px;
+                font-size:14px;cursor:pointer;text-align:left;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span>
+                    <strong>12 meses</strong>
+                    <span style="background:#EAF3DE;color:#3B6D11;font-size:11px;
+                                 padding:2px 7px;border-radius:10px;margin-left:6px;">
+                        Ahorra $20
+                    </span>
+                </span>
+                <strong style="font-size:18px;color:#27ae60;">$39.99</strong>
+            </div>
+            <p style="margin:4px 0 0 0;font-size:11px;color:gray;">
+                $3.33/mes · El mejor precio
+            </p>
+        </button>
+    </form>
 
     <div style="display:flex;align-items:center;gap:8px;margin-top:12px;
                 padding:10px;background:#f8f9fa;border-radius:10px;">
         <span style="font-size:20px;">🔒</span>
         <div style="font-size:12px;color:#555;line-height:1.4;">
-            Pago 100% seguro con <strong>PayPhone</strong>.
-            Acepta <strong>Visa, Mastercard y Diners</strong> emitidas en Ecuador.
-            Nunca almacenamos datos de tu tarjeta.
+            Pago 100% seguro · Visa, Mastercard y más ·
+            Nunca almacenamos datos de tu tarjeta
         </div>
     </div>
 
     {% else %}
-    <!-- PayPhone no configurado — fallback WhatsApp -->
+    <!-- Sin pasarela configurada: WhatsApp -->
     <div style="background:#fff3cd;border-radius:10px;padding:16px;text-align:center;
                 margin-bottom:12px;">
         <p style="margin:0 0 6px 0;font-size:14px;font-weight:bold;color:#856404;">
-            Activación por WhatsApp (en configuración)
+            Activación por WhatsApp
         </p>
         <p style="margin:0;font-size:13px;color:#6c5a00;line-height:1.5;">
             Escríbenos indicando el plan que deseas. Activamos tu cuenta en menos de 1 hora.
         </p>
     </div>
-
     <div style="display:flex;flex-direction:column;gap:8px;">
         {% for key, plan in planes.items() %}
-        <a href="https://wa.me/593000000000?text=Hola,%20quiero%20activar%20{{ plan.label | urlencode }}%20de%20ERP%20Pecuario%20(%24{{ plan.precio_usd }})"
+        {% set ahorros = {"1": "", "3": " · Ahorras $2", "6": " · Ahorras $7", "12": " · Ahorras $20"} %}
+        <a href="https://wa.me/593000000000?text=Hola,%20quiero%20el%20plan%20{{ plan.label | urlencode }}%20de%20ERP%20Pecuario"
            target="_blank"
            style="display:flex;justify-content:space-between;align-items:center;
                   background:{% if key == '3' %}#25D366{% else %}white{% endif %};
@@ -211,13 +260,11 @@
                   border-radius:12px;padding:14px;text-decoration:none;font-size:14px;">
             <span>
                 <strong>{{ plan.label }}</strong>
-                {% if plan.descuento > 0 %}
-                <span style="font-size:11px;margin-left:6px;opacity:.85;">
-                    -{{ plan.descuento }}%
+                <span style="font-size:11px;margin-left:5px;opacity:.8;">
+                    {{ ahorros.get(key, "") }}
                 </span>
-                {% endif %}
             </span>
-            <strong>${{ "%.2f"|format(plan.precio_usd) }}</strong>
+            <strong style="font-size:16px;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
         </a>
         {% endfor %}
     </div>
@@ -227,11 +274,10 @@
 <!-- Garantía -->
 <div class="card" style="text-align:center;background:#f8f9fa;">
     <p style="margin:0;font-size:13px;color:#555;">
-        🛡️ <strong>Garantía de satisfacción:</strong>
-        Si no estás satisfecho en los primeros 7 días te devolvemos el dinero. Sin preguntas.
+        🛡️ <strong>Garantía de 7 días:</strong>
+        Si no estás satisfecho te devolvemos el dinero. Sin preguntas.
     </p>
 </div>
 
 {% endif %}
-
 {% endblock %}

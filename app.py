@@ -119,6 +119,14 @@ def create_app():
     def privacidad():
         return render_template("privacidad.html")
 
+    @app.route("/terminos")
+    def terminos():
+        return render_template("terminos.html")
+
+    @app.route("/reembolso")
+    def reembolso():
+        return render_template("reembolso.html")
+
     @app.errorhandler(404)
     def not_found(e):
         return render_template("404.html"), 404
