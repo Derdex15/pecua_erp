@@ -3,18 +3,40 @@
 Control de acceso por rol para ERP Pecuario.
 
 Exporta:
-  - get_granja_info(user_id) → (owner_id, rol)
-  - solo_admin               → decorador que bloquea operadores
-  - es_premium_owner(user_id) → bool (verifica premium del dueño de la granja)
+  - login_required              → decorador que redirige a /login si no hay sesión
+  - get_granja_info(user_id)    → (owner_id, rol)
+  - solo_admin                  → decorador que bloquea operadores
+  - es_premium_owner(user_id)   → bool (verifica premium del dueño de la granja)
 
 Uso en cualquier blueprint:
-    from routes.permisos import get_granja_info, solo_admin, es_premium_owner
+    from routes.permisos import get_granja_info, login_required, solo_admin, es_premium_owner
 """
 
 import datetime
 from functools import wraps
 from flask import session, redirect, flash
 from config import sb_get
+
+
+# ── login_required ────────────────────────────────────────────────────────────
+
+def login_required(f):
+    """
+    Decorador que redirige a /login si el usuario no está autenticado.
+    Úsalo en TODAS las rutas que requieran sesión activa.
+
+    Ejemplo:
+        @bp.route("/mi_ruta")
+        @login_required
+        def mi_ruta():
+            ...
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated
 
 
 # ── Consulta principal ────────────────────────────────────────────────────────
@@ -38,7 +60,7 @@ def get_granja_info(user_id):
                        f"usuario_id=eq.{user_id}&activo=eq.true")
     if membresia:
         granja_id = membresia[0].get("granja_id")
-        granja = sb_get("granjas", f"id=eq.{granja_id}")
+        granja    = sb_get("granjas", f"id=eq.{granja_id}")
         if granja:
             rol = membresia[0].get("rol", "operador")
             return granja[0]["owner_id"], rol
@@ -67,10 +89,12 @@ def es_premium_owner(user_id):
 def solo_admin(f):
     """
     Decorador que bloquea el acceso a cualquier usuario con rol 'operador'.
+    Requiere que login_required ya haya validado la sesión.
     Colócalo inmediatamente debajo de @bp.route(...).
 
     Ejemplo:
         @bp.route("/eliminar_lote/<lote_id>", methods=["POST"])
+        @login_required
         @solo_admin
         def eliminar_lote(lote_id):
             ...

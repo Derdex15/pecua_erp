@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>App Pecuaria</title>
+<title>ERP Pecuario</title>
 
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#27ae60">
@@ -48,7 +48,7 @@ body {
     padding: 12px 15px;
     border-radius: 8px;
     margin: 8px 0;
-    font-size: 14px;
+    font-size: 15px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -58,14 +58,14 @@ body {
 .flash.info    { background:#d1ecf1; color:#0c5460; border-left:4px solid #3498db; }
 
 /* ── FORMULARIOS ──────────────────────────────────────────────── */
-.form-group { margin-bottom:12px; }
+.form-group { margin-bottom:14px; }
 .form-group label {
-    display:block; font-size:13px; color:#555;
-    margin-bottom:4px; font-weight:bold;
+    display:block; font-size:15px; color:#444;
+    margin-bottom:5px; font-weight:bold;
 }
 .form-control {
-    width:100%; padding:10px; border-radius:8px;
-    border:1px solid #ccc; font-size:max(16px,14px);
+    width:100%; padding:12px; border-radius:8px;
+    border:1px solid #ccc; font-size:16px;
     transition:border-color 0.2s;
 }
 .form-control:focus {
@@ -75,34 +75,34 @@ body {
 
 /* ── BOTONES ──────────────────────────────────────────────────── */
 .btn-primary {
-    background:#27ae60; color:white; padding:11px 16px;
-    border:none; border-radius:8px; font-size:14px;
+    background:#27ae60; color:white; padding:13px 16px;
+    border:none; border-radius:8px; font-size:16px;
     width:100%; cursor:pointer; font-weight:bold;
 }
 .btn-primary:active { background:#1e8449; }
 .btn-secundario {
-    background:#ecf0f1; color:#2c3e50; padding:8px 12px;
-    border-radius:6px; font-size:13px; border:none;
+    background:#ecf0f1; color:#2c3e50; padding:10px 14px;
+    border-radius:6px; font-size:15px; border:none;
     cursor:pointer; text-decoration:none; display:inline-block;
 }
 .btn-peligro {
-    background:#e74c3c; color:white; padding:8px 12px;
-    border-radius:6px; font-size:13px; border:none; cursor:pointer;
+    background:#e74c3c; color:white; padding:10px 14px;
+    border-radius:6px; font-size:15px; border:none; cursor:pointer;
 }
 .btn-warning {
-    background:#f39c12; color:white; padding:8px 12px;
-    border-radius:6px; font-size:13px; border:none;
+    background:#f39c12; color:white; padding:10px 14px;
+    border-radius:6px; font-size:15px; border:none;
     cursor:pointer; text-decoration:none; display:inline-block;
 }
 .btn-premium {
     background:linear-gradient(135deg,#f39c12,#e67e22);
-    color:white; padding:11px 16px; border:none;
-    border-radius:8px; font-size:14px; width:100%;
+    color:white; padding:13px 16px; border:none;
+    border-radius:8px; font-size:16px; width:100%;
     cursor:pointer; font-weight:bold;
 }
 
 /* ── BADGES ───────────────────────────────────────────────────── */
-.badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold; }
+.badge { display:inline-block; padding:3px 9px; border-radius:12px; font-size:12px; font-weight:bold; }
 .badge-activo   { background:#d4edda; color:#155724; }
 .badge-inactivo { background:#f8d7da; color:#721c24; }
 .badge-premium  { background:linear-gradient(135deg,#f39c12,#e67e22); color:white; }
@@ -136,22 +136,24 @@ body {
     padding:10px 15px; background:white; border-bottom:1px solid #eee;
     position:sticky; top:0; z-index:99;
 }
-.top-bar h3 { margin:0; font-size:16px; }
+.top-bar h3 { margin:0; font-size:17px; }
 .top-bar a  { text-decoration:none; font-size:20px; color:#2c3e50; }
-.back-btn   { font-size:20px; color:#2c3e50; text-decoration:none; }
+.back-btn   { font-size:20px; color:#2c3e50; text-decoration:none; cursor:pointer;
+              background:none; border:none; padding:0; }
 
 /* ── BOTTOM NAV ───────────────────────────────────────────────── */
 .bottom-nav {
     position:fixed; bottom:0; left:0; width:100%;
     background:white; display:flex; justify-content:space-around;
-    border-top:1px solid #ddd; height:60px; z-index:100;
+    border-top:1px solid #ddd; height:62px; z-index:100;
     padding-bottom:env(safe-area-inset-bottom,0);
 }
 .bottom-nav a {
-    text-decoration:none; color:gray; font-size:9px;
-    text-align:center; flex:1; padding-top:6px; position:relative;
+    text-decoration:none; color:#888; font-size:10px;
+    text-align:center; flex:1; padding-top:7px; position:relative;
+    display:flex; flex-direction:column; align-items:center;
 }
-.bottom-nav i { display:block; font-size:17px; margin-bottom:2px; }
+.bottom-nav i { font-size:18px; margin-bottom:3px; }
 .bottom-nav a.active { color:#27ae60; font-weight:bold; }
 
 /* Badge campana */
@@ -173,9 +175,10 @@ body {
     background:white; border-radius:12px; padding:20px;
     margin:20px; width:100%; max-width:380px;
 }
-.modal-box h3 { margin-top:0; }
+.modal-box h3 { margin-top:0; font-size:17px; }
 .modal-actions { display:flex; gap:10px; margin-top:15px; }
-.modal-actions button { flex:1; padding:10px; border-radius:8px; border:none; font-size:14px; cursor:pointer; }
+.modal-actions button { flex:1; padding:12px; border-radius:8px; border:none;
+                        font-size:15px; cursor:pointer; }
 
 /* ── CARD ACTIONS ─────────────────────────────────────────────── */
 .card-actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
@@ -183,19 +186,13 @@ body {
 /* ══════════════════════════════════════════════════════════════
    MENÚ LATERAL (drawer)
    ══════════════════════════════════════════════════════════════ */
-
-/* Overlay oscuro detrás del drawer */
 .drawer-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 150;
+    display: none; position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 150;
 }
 .drawer-overlay.open { display: block; }
 
-/* El drawer en sí */
 .drawer {
     position: fixed;
     top: 0; right: -310px;
@@ -210,41 +207,50 @@ body {
 }
 .drawer.open { right: 0; }
 
-/* Cabecera del drawer */
 .drawer-header {
     background: linear-gradient(135deg,#27ae60,#1e8449);
     color: white;
-    padding: 40px 20px 20px 20px;
+    padding: 44px 20px 20px 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 .drawer-avatar {
     width: 52px; height: 52px;
     background: rgba(255,255,255,0.25);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
+    font-size: 24px; flex-shrink: 0;
 }
-.drawer-username { font-weight: bold; font-size: 16px; }
+.drawer-username {
+    font-weight: bold; font-size: 17px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 180px;
+}
 .drawer-plan {
-    font-size: 11px;
-    background: rgba(255,255,255,0.2);
-    padding: 2px 8px;
+    font-size: 12px;
+    padding: 3px 9px;
     border-radius: 10px;
-    margin-top: 3px;
+    margin-top: 4px;
     display: inline-block;
 }
+.drawer-plan.premium {
+    background: rgba(243,156,18,0.9);
+    color: white;
+}
+.drawer-plan.free {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
 
-/* Secciones del drawer */
 .drawer-section {
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid #f0f0f0;
 }
 .drawer-section-title {
     font-size: 11px;
     font-weight: bold;
-    color: #999;
+    color: #aaa;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 8px 20px 4px 20px;
@@ -253,36 +259,34 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 12px 20px;
+    padding: 13px 20px;
     text-decoration: none;
     color: #2c3e50;
-    font-size: 14px;
+    font-size: 15px;
     transition: background 0.15s;
-    border-radius: 0;
 }
 .drawer-item:active,
 .drawer-item:hover { background: #f4f6f9; }
 .drawer-item.active { color: #27ae60; font-weight: bold; }
 .drawer-item i {
     width: 22px; text-align: center;
-    font-size: 16px; color: #555;
+    font-size: 17px; color: #666;
 }
 .drawer-item.active i { color: #27ae60; }
 .drawer-item-badge {
     margin-left: auto;
     background: #e74c3c; color: white;
-    border-radius: 10px; padding: 1px 7px;
+    border-radius: 10px; padding: 2px 8px;
     font-size: 11px; font-weight: bold;
 }
 
-/* Botón cerrar del drawer */
 .drawer-close {
     position: absolute;
     top: 12px; right: 14px;
     background: none; border: none;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.85);
     font-size: 22px; cursor: pointer;
-    padding: 4px;
+    padding: 4px; line-height: 1;
 }
 </style>
 </head>
@@ -292,25 +296,23 @@ body {
 <!-- ── TOP BAR ──────────────────────────────────────────────────── -->
 <div class="top-bar">
     {% if request.path != '/' %}
-    <a href="javascript:history.back()" class="back-btn">
+    <button class="back-btn" onclick="navegarAtras()" aria-label="Volver">
         <i class="fas fa-arrow-left"></i>
-    </a>
+    </button>
     {% else %}
-    <span style="width:24px;"></span>
+    <span style="width:28px;"></span>
     {% endif %}
 
     <h3>🐄 ERP Pecuario</h3>
 
     <div style="display:flex;gap:16px;align-items:center;">
-        <!-- Campana de alertas -->
-        <a href="/alertas" style="position:relative;font-size:20px;color:#2c3e50;text-decoration:none;"
+        <a href="/alertas" style="position:relative;font-size:21px;color:#2c3e50;text-decoration:none;"
            aria-label="Alertas">
             <i class="fas fa-bell"></i>
             <span id="badge-alertas" style="display:none;" class="nav-badge">0</span>
         </a>
-        <!-- Botón menú hamburguesa -->
         <button onclick="abrirDrawer()" aria-label="Menú"
-                style="background:none;border:none;font-size:22px;
+                style="background:none;border:none;font-size:23px;
                        color:#2c3e50;cursor:pointer;padding:0;line-height:1;">
             <i class="fas fa-bars"></i>
         </button>
@@ -321,19 +323,27 @@ body {
 <div class="drawer-overlay" id="drawerOverlay" onclick="cerrarDrawer()"></div>
 
 <!-- ── DRAWER MENÚ LATERAL ──────────────────────────────────────── -->
-<div class="drawer" id="drawer">
-    <button class="drawer-close" onclick="cerrarDrawer()">
+<div class="drawer" id="drawer" role="navigation" aria-label="Menú principal">
+    <button class="drawer-close" onclick="cerrarDrawer()" aria-label="Cerrar menú">
         <i class="fas fa-times"></i>
     </button>
 
-    <!-- Cabecera con avatar y usuario -->
+    <!-- Cabecera: avatar + username real + badge de plan -->
     <div class="drawer-header">
         <div class="drawer-avatar">🐄</div>
-        <div>
-            <div class="drawer-username">ERP Pecuario</div>
-            <span class="drawer-plan">
-                <i class="fas fa-star" style="font-size:9px;"></i> Mi cuenta
+        <div style="min-width:0;">
+            <div class="drawer-username">
+                {{ g_username if g_username else "Mi cuenta" }}
+            </div>
+            {% if g_es_premium %}
+            <span class="drawer-plan premium">
+                <i class="fas fa-star" style="font-size:10px;"></i> Premium
             </span>
+            {% else %}
+            <span class="drawer-plan free">
+                Plan gratuito
+            </span>
+            {% endif %}
         </div>
     </div>
 
@@ -344,13 +354,13 @@ body {
             <i class="fas fa-home"></i> Inicio
         </a>
         <a href="/inventario" class="drawer-item {% if request.path == '/inventario' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-box"></i> Lotes de animales
+            <i class="fas fa-layer-group"></i> Lotes de animales
         </a>
         <a href="/animales" class="drawer-item {% if request.path == '/animales' %}active{% endif %}" onclick="cerrarDrawer()">
             <i class="fas fa-paw"></i> Animales individuales
         </a>
         <a href="/bajas" class="drawer-item {% if request.path == '/bajas' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-skull-crossbones"></i> Bajas
+            <i class="fas fa-minus-circle"></i> Registro de bajas
         </a>
     </div>
 
@@ -361,7 +371,7 @@ body {
             <i class="fas fa-dollar-sign"></i> Ventas
         </a>
         <a href="/gastos" class="drawer-item {% if request.path == '/gastos' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-seedling"></i> Gastos
+            <i class="fas fa-file-invoice-dollar"></i> Gastos
         </a>
         <a href="/presupuesto" class="drawer-item {% if request.path == '/presupuesto' %}active{% endif %}" onclick="cerrarDrawer()">
             <i class="fas fa-chart-pie"></i> Presupuesto
@@ -374,7 +384,7 @@ body {
         </a>
     </div>
 
-    <!-- Sección: Producción -->
+    <!-- Sección: Producción y salud -->
     <div class="drawer-section">
         <div class="drawer-section-title">Producción y salud</div>
         <a href="/sanitario" class="drawer-item {% if request.path == '/sanitario' %}active{% endif %}" onclick="cerrarDrawer()">
@@ -421,20 +431,19 @@ body {
         <a href="/ajustes" class="drawer-item {% if request.path == '/ajustes' %}active{% endif %}" onclick="cerrarDrawer()">
             <i class="fas fa-cog"></i> Ajustes
         </a>
-        <a href="/logout" class="drawer-item" onclick="cerrarDrawer()"
-           style="color:#e74c3c;">
+        <a href="/logout" class="drawer-item" onclick="cerrarDrawer()" style="color:#e74c3c;">
             <i class="fas fa-sign-out-alt" style="color:#e74c3c;"></i> Cerrar sesión
         </a>
     </div>
 
     <!-- Footer legal dentro del drawer -->
     <div style="padding:16px 20px;margin-top:auto;">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;">
-            <a href="/terminos"   style="font-size:11px;color:gray;text-decoration:underline;">Términos</a>
-            <a href="/privacidad" style="font-size:11px;color:gray;text-decoration:underline;">Privacidad</a>
-            <a href="/reembolso"  style="font-size:11px;color:gray;text-decoration:underline;">Reembolso</a>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;">
+            <a href="/terminos"   style="font-size:12px;color:#aaa;text-decoration:underline;">Términos</a>
+            <a href="/privacidad" style="font-size:12px;color:#aaa;text-decoration:underline;">Privacidad</a>
+            <a href="/reembolso"  style="font-size:12px;color:#aaa;text-decoration:underline;">Reembolso</a>
         </div>
-        <p style="font-size:11px;color:#bbb;margin:6px 0 0 0;">© 2026 ERP Pecuario</p>
+        <p style="font-size:11px;color:#ccc;margin:6px 0 0 0;">© 2026 ERP Pecuario</p>
     </div>
 </div>
 
@@ -457,46 +466,49 @@ body {
 </div>
 
 <!-- ── BARRA INFERIOR ─────────────────────────────────────────────── -->
-<div class="bottom-nav" role="navigation" aria-label="Navegación principal">
+<nav class="bottom-nav" aria-label="Navegación rápida">
     <a href="/" class="{% if request.path == '/' %}active{% endif %}" aria-label="Inicio">
         <i class="fas fa-home"></i>Inicio
     </a>
     <a href="/inventario" class="{% if request.path == '/inventario' %}active{% endif %}" aria-label="Lotes">
-        <i class="fas fa-box"></i>Lotes
+        <i class="fas fa-layer-group"></i>Lotes
     </a>
     <a href="/movimientos" class="{% if request.path == '/movimientos' %}active{% endif %}" aria-label="Ventas">
         <i class="fas fa-dollar-sign"></i>Ventas
     </a>
     <a href="/gastos" class="{% if request.path == '/gastos' %}active{% endif %}" aria-label="Gastos">
-        <i class="fas fa-seedling"></i>Gastos
+        <i class="fas fa-file-invoice-dollar"></i>Gastos
     </a>
     <a href="/sanitario" class="{% if request.path == '/sanitario' %}active{% endif %}" aria-label="Salud">
         <i class="fas fa-syringe"></i>Salud
     </a>
-    <a href="/bajas" class="{% if request.path == '/bajas' %}active{% endif %}" aria-label="Bajas">
-        <i class="fas fa-skull-crossbones"></i>Bajas
+    <a href="/alertas" class="{% if request.path == '/alertas' %}active{% endif %}" aria-label="Alertas">
+        <i class="fas fa-bell"></i>Alertas
+        <span id="badge-alertas-nav" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);
+              background:#e74c3c;color:white;border-radius:50%;width:15px;height:15px;font-size:9px;
+              display:none;align-items:center;justify-content:center;font-weight:bold;"></span>
     </a>
-</div>
+</nav>
 
 <!-- Banner sin conexión -->
 <div id="banner-offline" role="alert"
      style="display:none;position:fixed;top:0;left:0;width:100%;
-            background:#e74c3c;color:white;padding:8px 15px;font-size:13px;
+            background:#e74c3c;color:white;padding:8px 15px;font-size:14px;
             z-index:999;align-items:center;gap:8px;justify-content:center;">
     📡 Sin conexión — mostrando datos guardados
 </div>
 
-<!-- Footer legal (visible para Paddle) -->
+<!-- Footer legal (visible para Paddle / Play Store) -->
 <footer style="text-align:center;padding:20px 16px 80px 16px;
                border-top:1px solid #eee;margin-top:20px;">
-    <p style="font-size:12px;color:gray;margin:0 0 8px 0;">
+    <p style="font-size:12px;color:#bbb;margin:0 0 8px 0;">
         © 2026 ERP Pecuario · Todos los derechos reservados
     </p>
-    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-        <a href="/terminos"   style="font-size:12px;color:gray;text-decoration:underline;">Términos y condiciones</a>
-        <a href="/privacidad" style="font-size:12px;color:gray;text-decoration:underline;">Política de privacidad</a>
-        <a href="/reembolso"  style="font-size:12px;color:gray;text-decoration:underline;">Política de reembolso</a>
-        <a href="/planes"     style="font-size:12px;color:gray;text-decoration:underline;">Planes y precios</a>
+    <div style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;">
+        <a href="/terminos"   style="font-size:13px;color:#999;text-decoration:underline;">Términos y condiciones</a>
+        <a href="/privacidad" style="font-size:13px;color:#999;text-decoration:underline;">Política de privacidad</a>
+        <a href="/reembolso"  style="font-size:13px;color:#999;text-decoration:underline;">Política de reembolso</a>
+        <a href="/planes"     style="font-size:13px;color:#999;text-decoration:underline;">Planes y precios</a>
     </div>
 </footer>
 
@@ -510,13 +522,11 @@ async function cargarBadgeAlertas() {
         const badgeDrawer = document.getElementById("badge-drawer");
         if (data.count > 0) {
             const txt = data.count > 9 ? "9+" : String(data.count);
-            badgeTop.textContent    = txt;
-            badgeTop.style.display  = "flex";
-            badgeDrawer.textContent = txt;
-            badgeDrawer.style.display = "inline";
+            if (badgeTop)    { badgeTop.textContent = txt;    badgeTop.style.display    = "flex"; }
+            if (badgeDrawer) { badgeDrawer.textContent = txt; badgeDrawer.style.display = "inline"; }
         } else {
-            badgeTop.style.display    = "none";
-            badgeDrawer.style.display = "none";
+            if (badgeTop)    badgeTop.style.display    = "none";
+            if (badgeDrawer) badgeDrawer.style.display = "none";
         }
     } catch (_) {}
 }
@@ -527,11 +537,7 @@ setInterval(cargarBadgeAlertas, 60000);
 function actualizarBanner() {
     const banner = document.getElementById("banner-offline");
     if (!banner) return;
-    if (!navigator.onLine) {
-        banner.style.display = "flex";
-    } else {
-        banner.style.display = "none";
-    }
+    banner.style.display = navigator.onLine ? "none" : "flex";
 }
 actualizarBanner();
 window.addEventListener("online",  actualizarBanner);
@@ -547,12 +553,12 @@ try {
     const { initializeApp }           = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
     const { getMessaging, getToken, onMessage } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js");
     const firebaseConfig = {
-        apiKey:            "{{ config['FIREBASE_API_KEY']       | default('') }}",
-        authDomain:        "{{ config['FIREBASE_AUTH_DOMAIN']   | default('') }}",
-        projectId:         "{{ config['FIREBASE_PROJECT_ID']    | default('') }}",
-        storageBucket:     "{{ config['FIREBASE_STORAGE_BUCKET']| default('') }}",
-        messagingSenderId: "{{ config['FIREBASE_SENDER_ID']     | default('') }}",
-        appId:             "{{ config['FIREBASE_APP_ID']        | default('') }}",
+        apiKey:            "{{ config['FIREBASE_API_KEY']        | default('') }}",
+        authDomain:        "{{ config['FIREBASE_AUTH_DOMAIN']    | default('') }}",
+        projectId:         "{{ config['FIREBASE_PROJECT_ID']     | default('') }}",
+        storageBucket:     "{{ config['FIREBASE_STORAGE_BUCKET'] | default('') }}",
+        messagingSenderId: "{{ config['FIREBASE_SENDER_ID']      | default('') }}",
+        appId:             "{{ config['FIREBASE_APP_ID']         | default('') }}",
     };
     if (firebaseConfig.apiKey) {
         const app       = initializeApp(firebaseConfig);
@@ -594,11 +600,24 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") cerrarDrawer();
 });
 
-/* ── CSRF automático ──────────────────────────────────────────── */
+/* ── Botón atrás seguro ───────────────────────────────────────── */
+// Si el usuario viene de fuera del dominio (link directo, correo, etc.)
+// history.back() lo sacaría de la app. Este helper lo redirige al inicio.
+function navegarAtras() {
+    const origen = document.referrer;
+    if (origen && new URL(origen).origin === window.location.origin) {
+        history.back();
+    } else {
+        window.location.href = "/";
+    }
+}
+
+/* ── CSRF automático en forms y fetch ─────────────────────────── */
 (function () {
     var meta = document.querySelector('meta[name="csrf-token"]');
     if (!meta) return;
     var csrfToken = meta.getAttribute("content");
+
     function inyectarEnForm(form) {
         if (!form || form.method.toUpperCase() !== "POST") return;
         if (form.querySelector('input[name="csrf_token"]')) return;
@@ -616,6 +635,7 @@ document.addEventListener("keydown", e => {
             });
         });
     }).observe(document.body, { childList:true, subtree:true });
+
     var _fetch = window.fetch;
     window.fetch = function(url, opts) {
         opts = opts || {};

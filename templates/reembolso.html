@@ -1,36 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>💳 Política de Reembolso</h1>
-<p style="color:gray;font-size:13px;">Última actualización: Mayo 2026</p>
+
+<h2>💳 Política de Reembolso</h2>
+<p style="color:#999; font-size:13px;">Última actualización: Mayo 2026</p>
 
 <div class="card" style="border-left:4px solid #27ae60;">
     <h3>🛡️ Garantía de satisfacción de 7 días</h3>
-    <p>Si adquieres el plan Premium y no estás satisfecho por cualquier motivo, puedes solicitar un reembolso completo dentro de los <strong>7 días calendario</strong> siguientes a tu primer pago. Sin preguntas.</p>
+    <p style="font-size:15px; line-height:1.7;">
+        Si adquieres el plan Premium y no estás satisfecho por cualquier motivo, puedes solicitar
+        un reembolso completo dentro de los <strong>7 días calendario</strong> siguientes a tu
+        primer pago. Sin preguntas.
+    </p>
 </div>
 
 <div class="card">
     <h3>¿Cómo solicitar un reembolso?</h3>
-    <p>Escríbenos desde tu cuenta registrada dentro del período de garantía. Procesamos el reembolso en un plazo de <strong>5 a 10 días hábiles</strong> dependiendo de tu método de pago.</p>
+    <p style="font-size:15px; line-height:1.7;">
+        Contáctanos dentro del período de garantía por cualquiera de estos canales:
+    </p>
+    <ul style="font-size:15px; line-height:1.9; padding-left:20px;">
+        <li>📧 Email: <strong>soporte@erpecuario.com</strong></li>
+        <li>💬 WhatsApp: el número indicado en la sección de Planes de la app</li>
+    </ul>
+    <p style="font-size:15px; line-height:1.7;">
+        Incluye tu nombre de usuario y el número de transacción (disponible en
+        <a href="/mis_pagos" style="color:#27ae60;">Mis Pagos</a>).
+        Procesamos el reembolso en un plazo de <strong>5 a 10 días hábiles</strong>
+        dependiendo de tu método de pago.
+    </p>
 </div>
 
 <div class="card">
     <h3>Condiciones del reembolso</h3>
-    <ul style="line-height:2;">
+    <ul style="font-size:15px; line-height:1.9; padding-left:20px;">
         <li>Solo aplica al primer pago de cada cuenta.</li>
         <li>La solicitud debe realizarse dentro de los 7 días posteriores al pago.</li>
-        <li>Tras el reembolso, el acceso Premium se desactiva inmediatamente.</li>
+        <li>Tras el reembolso, el acceso Premium se desactiva y la cuenta vuelve al plan gratuito.
+            Tus datos no se eliminan.</li>
         <li>Los reembolsos de renovaciones o planes adicionales se evalúan caso por caso.</li>
-        <li>El período de prueba gratuito no es reembolsable (es gratuito).</li>
+        <li>El período de prueba gratuito no aplica (no tiene costo).</li>
     </ul>
 </div>
 
 <div class="card">
-    <h3>Pagos procesados por Paddle</h3>
-    <p>Los pagos son procesados por <strong>Paddle</strong>, quien actúa como Merchant of Record. El reembolso se acredita al método de pago original utilizado en la compra.</p>
+    <h3>Procesamiento de pagos</h3>
+    <p style="font-size:15px; line-height:1.7;">
+        Los pagos son procesados por plataformas certificadas de pago (PayPhone y/o Paddle según
+        disponibilidad en tu región). El reembolso se acredita al método de pago original
+        utilizado en la compra.
+    </p>
 </div>
 
 <div class="card">
     <h3>Cancelación del plan</h3>
-    <p>Puedes cancelar tu plan Premium en cualquier momento desde la sección <strong>Planes</strong> de la aplicación. Seguirás teniendo acceso hasta la fecha de vencimiento del período ya pagado. No realizamos cobros automáticos sin tu autorización explícita.</p>
+    <p style="font-size:15px; line-height:1.7;">
+        Puedes cancelar tu plan Premium en cualquier momento desde la sección
+        <strong>Planes</strong> de la aplicación. Seguirás teniendo acceso hasta la fecha de
+        vencimiento del período ya pagado. No realizamos cobros automáticos sin tu
+        autorización explícita.
+    </p>
 </div>
+
+<div style="text-align:center; margin: 20px 0 10px 0;">
+    <a href="/planes" class="btn-primary" style="display:inline-block;width:auto;padding:12px 24px;">
+        Ver planes Premium
+    </a>
+</div>
+<div style="text-align:center; margin:10px 0;">
+    <a href="/" class="btn-secundario">← Volver al inicio</a>
+</div>
+
 {% endblock %}
