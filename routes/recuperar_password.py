@@ -1,66 +1,62 @@
 # routes/recuperar_password.py
 """
 Recuperación de contraseña por email — ERP Pecuario
+Usa Resend (https://resend.com) vía API HTTP — funciona en Render Free.
 
 Variables de entorno necesarias en Render:
-  SMTP_HOST      → smtp.gmail.com  (o el de tu proveedor)
-  SMTP_PORT      → 587
-  SMTP_USER      → tu-correo@gmail.com
-  SMTP_PASSWORD  → contraseña de aplicación de Gmail (no tu contraseña normal)
-  FROM_EMAIL     → soporte@erpecuario.com  (o el mismo SMTP_USER)
-  APP_URL        → https://erpecuario.com
-
-Para Gmail: activa "Contraseñas de aplicación" en tu cuenta Google
-(Seguridad → Verificación en dos pasos → Contraseñas de aplicaciones)
+  RESEND_API_KEY  → re_xxxxxxxxxxxx  (de tu dashboard en resend.com)
+  APP_URL         → https://erpecuario.com
 """
 import os
 import secrets
-import smtplib
 import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests as http_requests
 from flask import Blueprint, render_template, redirect, request, flash
 from werkzeug.security import generate_password_hash
 from config import sb_get, sb_post, sb_patch, sb_delete
 
 bp = Blueprint("recuperar_password", __name__)
 
-APP_URL       = os.getenv("APP_URL", "https://erpecuario.com")
-SMTP_HOST     = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT     = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER     = os.getenv("SMTP_USER", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-FROM_EMAIL    = os.getenv("FROM_EMAIL", SMTP_USER)
+APP_URL          = os.getenv("APP_URL", "https://erpecuario.com")
+RESEND_API_KEY   = os.getenv("RESEND_API_KEY", "")
+RESEND_API_URL   = "https://api.resend.com/emails"
+FROM_EMAIL       = "ERP Pecuario <onboarding@resend.dev>"
 TOKEN_EXPIRY_MINUTOS = 60
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _enviar_email(destinatario: str, asunto: str, cuerpo_html: str) -> bool:
-    """Envía un email. Retorna True si tuvo éxito, False si falló."""
-    if not SMTP_USER or not SMTP_PASSWORD:
-        print("[EMAIL] SMTP no configurado — revisa SMTP_USER y SMTP_PASSWORD en Render")
+    """Envía un email vía Resend. Retorna True si tuvo éxito."""
+    if not RESEND_API_KEY:
+        print("[EMAIL] RESEND_API_KEY no configurada en Render")
         return False
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = asunto
-        msg["From"]    = f"ERP Pecuario <{FROM_EMAIL}>"
-        msg["To"]      = destinatario
-        msg.attach(MIMEText(cuerpo_html, "html", "utf-8"))
-
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as s:
-            s.ehlo()
-            s.starttls()
-            s.login(SMTP_USER, SMTP_PASSWORD)
-            s.sendmail(FROM_EMAIL, [destinatario], msg.as_string())
-        return True
+        res = http_requests.post(
+            RESEND_API_URL,
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type":  "application/json",
+            },
+            json={
+                "from":    FROM_EMAIL,
+                "to":      [destinatario],
+                "subject": asunto,
+                "html":    cuerpo_html,
+            },
+            timeout=10,
+        )
+        if res.status_code == 200 or res.status_code == 201:
+            return True
+        else:
+            print(f"[EMAIL] Resend error {res.status_code}: {res.text}")
+            return False
     except Exception as e:
         print(f"[EMAIL] Error al enviar: {e}")
         return False
 
 
 def _limpiar_tokens_vencidos(user_id):
-    """Elimina tokens expirados del usuario para mantener la tabla limpia."""
     ahora = datetime.datetime.utcnow().isoformat()
     try:
         sb_delete("password_reset_tokens",
@@ -82,18 +78,15 @@ def recuperar():
         flash("Ingresa un correo electrónico válido.", "error")
         return render_template("recuperar.html")
 
-    # Buscar usuario con ese email
     usuarios = sb_get("usuarios", f"email=eq.{email}")
 
-    # Por seguridad: siempre mostrar el mismo mensaje aunque no exista el email
-    # (evitar enumerar usuarios)
     if usuarios:
         user_id = usuarios[0]["id"]
         _limpiar_tokens_vencidos(user_id)
 
-        token    = secrets.token_urlsafe(32)
-        expires  = (datetime.datetime.utcnow() +
-                    datetime.timedelta(minutes=TOKEN_EXPIRY_MINUTOS)).isoformat()
+        token   = secrets.token_urlsafe(32)
+        expires = (datetime.datetime.utcnow() +
+                   datetime.timedelta(minutes=TOKEN_EXPIRY_MINUTOS)).isoformat()
 
         sb_post("password_reset_tokens", {
             "usuario_id": user_id,
@@ -121,7 +114,7 @@ def recuperar():
             Si no solicitaste este cambio, ignora este correo.
           </p>
           <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-          <p style="color:#bbb;font-size:12px;">ERP Pecuario · soporte@erpecuario.com</p>
+          <p style="color:#bbb;font-size:12px;">ERP Pecuario · erpecuario.com</p>
         </div>
         """
         _enviar_email(email, "Recupera tu contraseña — ERP Pecuario", cuerpo)
@@ -135,8 +128,7 @@ def recuperar():
 
 @bp.route("/reset_password/<token>", methods=["GET", "POST"])
 def reset_password(token):
-    # Validar token
-    ahora    = datetime.datetime.utcnow().isoformat()
+    ahora     = datetime.datetime.utcnow().isoformat()
     registros = sb_get("password_reset_tokens",
                         f"token=eq.{token}&expires_at=gte.{ahora}")
 
@@ -149,7 +141,7 @@ def reset_password(token):
     if request.method == "GET":
         return render_template("reset_password.html", token=token)
 
-    nueva    = request.form.get("password",  "").strip()
+    nueva     = request.form.get("password",  "").strip()
     confirmar = request.form.get("confirmar", "").strip()
 
     if not nueva or not confirmar:
@@ -164,11 +156,8 @@ def reset_password(token):
         flash("Las contraseñas no coinciden.", "error")
         return render_template("reset_password.html", token=token)
 
-    # Actualizar contraseña
     sb_patch("usuarios", f"id=eq.{user_id}",
              {"password": generate_password_hash(nueva)})
-
-    # Eliminar el token usado (y todos los del usuario)
     sb_delete("password_reset_tokens", f"usuario_id=eq.{user_id}")
 
     flash("✅ Contraseña actualizada. Ya puedes iniciar sesión.", "success")
