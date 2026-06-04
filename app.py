@@ -36,7 +36,6 @@ def create_app():
     csrf.init_app(app)
 
     # ── Context processor — disponible en TODAS las templates ───────
-    # Inyecta username y es_premium sin repetirlo en cada ruta.
     @app.context_processor
     def inject_usuario():
         username   = session.get("username", "")
@@ -64,28 +63,29 @@ def create_app():
         )
 
     # ── Blueprints ──────────────────────────────────────────────────
-    from routes.auth           import bp as auth_bp
-    from routes.inventario     import bp as inventario_bp
-    from routes.ventas         import bp as ventas_bp
-    from routes.gastos         import bp as gastos_bp
-    from routes.reportes       import bp as reportes_bp
-    from routes.ajustes        import bp as ajustes_bp
-    from routes.sanitario      import bp as sanitario_bp
-    from routes.suscripciones  import bp as suscripciones_bp
-    from routes.produccion     import bp as produccion_bp
-    from routes.granja         import bp as granja_bp
-    from routes.bajas          import bp as bajas_bp
-    from routes.animales       import bp as animales_bp
-    from routes.reproduccion   import bp as reproduccion_bp
-    from routes.pesajes        import bp as pesajes_bp
-    from routes.onboarding     import bp as onboarding_bp
-    from routes.notificaciones import bp as notificaciones_bp
-    from routes.insumos        import bp as insumos_bp
-    from routes.calendario     import bp as calendario_bp
-    from routes.fotos          import bp as fotos_bp
-    from routes.proveedores    import bp as proveedores_bp
-    from routes.presupuesto    import bp as presupuesto_bp
-    from routes.alertas        import bp as alertas_bp
+    from routes.auth               import bp as auth_bp
+    from routes.inventario         import bp as inventario_bp
+    from routes.ventas             import bp as ventas_bp
+    from routes.gastos             import bp as gastos_bp
+    from routes.reportes           import bp as reportes_bp
+    from routes.ajustes            import bp as ajustes_bp
+    from routes.sanitario          import bp as sanitario_bp
+    from routes.suscripciones      import bp as suscripciones_bp
+    from routes.produccion         import bp as produccion_bp
+    from routes.granja             import bp as granja_bp
+    from routes.bajas              import bp as bajas_bp
+    from routes.animales           import bp as animales_bp
+    from routes.reproduccion       import bp as reproduccion_bp
+    from routes.pesajes            import bp as pesajes_bp
+    from routes.onboarding         import bp as onboarding_bp
+    from routes.notificaciones     import bp as notificaciones_bp
+    from routes.insumos            import bp as insumos_bp
+    from routes.calendario         import bp as calendario_bp
+    from routes.fotos              import bp as fotos_bp
+    from routes.proveedores        import bp as proveedores_bp
+    from routes.presupuesto        import bp as presupuesto_bp
+    from routes.alertas            import bp as alertas_bp
+    from routes.recuperar_password import bp as recuperar_password_bp
 
     for blueprint in [
         auth_bp, inventario_bp, ventas_bp, gastos_bp,
@@ -94,6 +94,7 @@ def create_app():
         reproduccion_bp, pesajes_bp, onboarding_bp,
         notificaciones_bp, insumos_bp, calendario_bp,
         fotos_bp, proveedores_bp, presupuesto_bp, alertas_bp,
+        recuperar_password_bp,
     ]:
         app.register_blueprint(blueprint)
 
@@ -132,7 +133,7 @@ def create_app():
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
                 "namespace":               "android_app",
-                "package_name":            os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.app"),
+                "package_name":            os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.twa"),
                 "sha256_cert_fingerprints": [os.getenv("TWA_SHA256_CERT", "REEMPLAZAR")],
             }
         }]
@@ -141,7 +142,7 @@ def create_app():
         r.headers["Cache-Control"] = "no-cache"
         return r
 
-    # ── Páginas legales (accesibles sin login) ───────────────────────
+    # ── Páginas legales ──────────────────────────────────────────────
     @app.route("/privacidad")
     def privacidad():
         return render_template("privacidad.html")

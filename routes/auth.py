@@ -9,20 +9,13 @@ from config import sb_get, sb_post
 bp = Blueprint("auth", __name__)
 
 # ── Rate limiting simple (por IP, en memoria por worker) ──────────────────────
-# Con 2 workers en Gunicorn el límite efectivo es 2× por worker.
-# Para producción con alta carga: reemplazar por Flask-Limiter + Redis.
 _rl_store: dict[str, list[float]] = {}
 _rl_lock  = threading.Lock()
 
 def _rate_limit_ok(ip: str, max_intentos: int = 8, ventana_seg: int = 300) -> bool:
-    """
-    Retorna True si el IP puede intentar login.
-    Bloquea si hizo más de `max_intentos` en los últimos `ventana_seg` segundos.
-    """
     ahora = time.time()
     with _rl_lock:
         intentos = _rl_store.get(ip, [])
-        # Limpiar intentos fuera de la ventana
         intentos = [t for t in intentos if ahora - t < ventana_seg]
         if len(intentos) >= max_intentos:
             _rl_store[ip] = intentos
@@ -32,14 +25,16 @@ def _rate_limit_ok(ip: str, max_intentos: int = 8, ventana_seg: int = 300) -> bo
         return True
 
 def _get_ip() -> str:
-    # Render pone la IP real en X-Forwarded-For
     return (request.headers.get("X-Forwarded-For", request.remote_addr) or "").split(",")[0].strip()
 
 
-# ── Validación de username ────────────────────────────────────────────────────
+# ── Validación ────────────────────────────────────────────────────────────────
 
 def _username_valido(username: str) -> bool:
     return bool(re.match(r"^[\w\-]{3,30}$", username))
+
+def _email_valido(email: str) -> bool:
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
 
 
 # ── Login ─────────────────────────────────────────────────────────────────────
@@ -69,7 +64,6 @@ def login():
                     session.permanent   = True
                     session["user_id"]  = res[0]["id"]
                     session["username"] = username
-                    # Limpiar contador de intentos al loguearse bien
                     with _rl_lock:
                         _rl_store.pop(ip, None)
                     flash(f"👋 Bienvenido, {username}.", "success")
@@ -95,13 +89,16 @@ def registro():
             error = "Demasiados intentos. Espera 10 minutos."
         else:
             username  = request.form.get("username",  "").strip()
+            email     = request.form.get("email",     "").strip().lower()
             password  = request.form.get("password",  "")
             confirmar = request.form.get("confirmar", "")
 
-            if not username or not password or not confirmar:
+            if not username or not email or not password or not confirmar:
                 error = "Completa todos los campos."
             elif not _username_valido(username):
                 error = "Solo letras, números, guiones y guiones bajos (3-30 caracteres)."
+            elif not _email_valido(email):
+                error = "Ingresa un correo electrónico válido."
             elif len(password) < 6:
                 error = "La contraseña debe tener al menos 6 caracteres."
             elif password != confirmar:
@@ -109,10 +106,16 @@ def registro():
             else:
                 if sb_get("usuarios", f"username=eq.{username}"):
                     error = "Ese nombre de usuario ya está en uso."
+                elif sb_get("usuarios", f"email=eq.{email}"):
+                    error = "Ese correo ya está registrado."
                 else:
                     nuevo = sb_post(
                         "usuarios",
-                        {"username": username, "password": generate_password_hash(password)},
+                        {
+                            "username": username,
+                            "password": generate_password_hash(password),
+                            "email":    email,
+                        },
                         prefer_representation=True,
                     )
                     if nuevo:

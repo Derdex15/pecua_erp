@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 
 <h2>🐄 Iniciar sesión</h2>
@@ -7,25 +6,60 @@
 <div class="card">
 
     {% if error %}
-    <p style="color: red;">⚠️ {{ error }}</p>
+    <div class="flash error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
     {% endif %}
 
     <form method="POST">
-        <input type="text" name="username" placeholder="Usuario" required
-               style="width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+        <div class="form-group">
+            <label>Usuario</label>
+            <input class="form-control" type="text" name="username"
+                   placeholder="Tu nombre de usuario" required
+                   autocomplete="username" autocapitalize="none">
+        </div>
 
-        <input type="password" name="password" placeholder="Contraseña" required
-               style="width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+        <div class="form-group">
+            <label>Contraseña</label>
+            <div style="position:relative;">
+                <input class="form-control" type="password" name="password"
+                       id="password" placeholder="Tu contraseña" required
+                       autocomplete="current-password"
+                       style="padding-right:48px;">
+                <button type="button" onclick="toggleOjo('password','ojo-login')"
+                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                               background:none;border:none;cursor:pointer;color:#888;
+                               font-size:18px;padding:4px;">
+                    <i class="fas fa-eye" id="ojo-login"></i>
+                </button>
+            </div>
+        </div>
 
-        <button style="background:#27ae60; color:white; padding:10px; border:none; border-radius:6px; width:100%; font-size:15px;">
-            Entrar
-        </button>
+        <button class="btn-primary">Entrar</button>
     </form>
 
-    <p style="margin-top:15px; text-align:center;">
-        ¿No tienes cuenta? <a href="/registro">Crear cuenta</a>
+    <p style="text-align:center; margin-top:14px; font-size:14px;">
+        <a href="/recuperar" style="color:#27ae60;">¿Olvidaste tu contraseña?</a>
+    </p>
+
+    <p style="text-align:center; margin-top:8px; font-size:14px; color:#666;">
+        ¿No tienes cuenta? <a href="/registro" style="color:#27ae60;">Crear cuenta</a>
     </p>
 
 </div>
+
+<script>
+function toggleOjo(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+}
+</script>
 
 {% endblock %}
