@@ -35,7 +35,7 @@ def create_app():
 
     csrf.init_app(app)
 
-    # ── Context processor — disponible en TODAS las templates ───────
+    # ── Context processor ───────────────────────────────────────────
     @app.context_processor
     def inject_usuario():
         username   = session.get("username", "")
@@ -86,6 +86,7 @@ def create_app():
     from routes.presupuesto        import bp as presupuesto_bp
     from routes.alertas            import bp as alertas_bp
     from routes.recuperar_password import bp as recuperar_password_bp
+    from routes.admin              import bp as admin_bp
 
     for blueprint in [
         auth_bp, inventario_bp, ventas_bp, gastos_bp,
@@ -94,13 +95,14 @@ def create_app():
         reproduccion_bp, pesajes_bp, onboarding_bp,
         notificaciones_bp, insumos_bp, calendario_bp,
         fotos_bp, proveedores_bp, presupuesto_bp, alertas_bp,
-        recuperar_password_bp,
+        recuperar_password_bp, admin_bp,
     ]:
         app.register_blueprint(blueprint)
 
     # ── Exenciones CSRF ─────────────────────────────────────────────
     csrf.exempt(notificaciones_bp)
     csrf.exempt(fotos_bp)
+    csrf.exempt(admin_bp)
 
     # ── PWA ─────────────────────────────────────────────────────────
     @app.route("/sw.js")
