@@ -36,10 +36,12 @@ def reproduccion():
     if "user_id" not in session:
         return redirect("/login")
     user_id = session["user_id"]
+    owner_id, mi_rol = get_granja_info(user_id)   # ← fix: definir owner_id antes de usarlo
     if not es_premium_owner(user_id):
         return render_template("premium_requerido.html", funcion="Control Reproductivo")
-    hembras  = sb_get("animales", f"usuario_id=eq.{owner_id}&sexo=eq.hembra&estado=eq.activo")
-    machos   = sb_get("animales", f"usuario_id=eq.{owner_id}&sexo=eq.macho&estado=eq.activo")
+
+    hembras   = sb_get("animales",     f"usuario_id=eq.{owner_id}&sexo=eq.hembra&estado=eq.activo")
+    machos    = sb_get("animales",     f"usuario_id=eq.{owner_id}&sexo=eq.macho&estado=eq.activo")
     registros = sb_get("reproduccion", f"usuario_id=eq.{owner_id}&order=fecha.desc")
 
     todos_anim   = sb_get("animales", f"usuario_id=eq.{owner_id}")
@@ -113,7 +115,6 @@ def registrar_repro():
         resultado = "en_curso"
 
     if tipo == "parto":
-        # Cerrar preñeces abiertas de este animal
         prenez = sb_get("reproduccion",
                         f"animal_id=eq.{animal_id}&usuario_id=eq.{owner_id}"
                         f"&tipo=eq.prenez_confirmada&resultado=eq.en_curso")
@@ -131,7 +132,6 @@ def registrar_repro():
         "resultado": resultado, "notas": notas,
     })
 
-    # Alerta automática de parto
     if fecha_esperada:
         label = a.get("nombre") or a.get("arete") or f"animal {animal_id}"
         sb_post("alertas", {

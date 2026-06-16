@@ -11,7 +11,7 @@ No requiere tablas nuevas. Usa sanitario, reproduccion y alertas.
 """
 from flask import Blueprint, render_template, redirect, session, request, jsonify
 from config import sb_get
-from routes.permisos import get_granja_info
+from routes.permisos import get_granja_info, es_premium_owner  # ← fix: agregar es_premium_owner
 import datetime
 
 bp = Blueprint("calendario", __name__)

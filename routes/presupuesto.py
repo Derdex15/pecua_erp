@@ -8,7 +8,7 @@ y comparar contra los valores reales registrados en ventas y gastos.
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
 from config import sb_get, sb_post, sb_patch, sb_delete
 from backup_utils import backup_automatico
-from routes.permisos import get_granja_info, solo_admin
+from routes.permisos import get_granja_info, solo_admin, es_premium_owner  # ← fix: agregar es_premium_owner
 import datetime
 
 bp = Blueprint("presupuesto", __name__)
@@ -59,7 +59,6 @@ def presupuesto():
 
     lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}&activo=eq.true")
 
-    # Partidas del mes
     q = (f"usuario_id=eq.{owner_id}"
          f"&mes=eq.{mes}&anio=eq.{anio}&order=tipo.asc,concepto.asc")
     if lote_id:
@@ -73,17 +72,14 @@ def presupuesto():
         p["monto_estimado"] = _fmt(p.get("monto_estimado", 0))
         p["monto_real"]     = _fmt(p.get("monto_real")) if p.get("monto_real") is not None else None
 
-    # Totales estimados
     ing_est = _fmt(sum(p["monto_estimado"] for p in partidas if p["tipo"] == "ingreso"))
     gas_est = _fmt(sum(p["monto_estimado"] for p in partidas if p["tipo"] == "gasto"))
     res_est = _fmt(ing_est - gas_est)
 
-    # Valores reales del mes
     lid = int(lote_id) if lote_id else None
     reales    = _reales_del_mes(owner_id, lid, anio, mes)
     res_real  = _fmt(reales["ingresos"] - reales["gastos"])
 
-    # Navegación de meses
     if mes == 1:
         mes_ant, anio_ant = 12, anio - 1
     else:
@@ -162,7 +158,7 @@ def agregar_partida():
     return redirect(f"/presupuesto?mes={mes}&anio={anio}&lote_id={lote_id or ''}")
 
 
-# ── Marcar como cumplido y actualizar monto real ───────────────────────────────
+# ── Marcar como cumplido ───────────────────────────────────────────────────────
 @bp.route("/cumplir_partida/<int:partida_id>", methods=["POST"])
 def cumplir_partida(partida_id):
     if "user_id" not in session:
@@ -188,7 +184,7 @@ def cumplir_partida(partida_id):
     return redirect(f"/presupuesto?mes={p['mes']}&anio={p['anio']}")
 
 
-# ── Eliminar partida (solo admin) ──────────────────────────────────────────────
+# ── Eliminar partida ───────────────────────────────────────────────────────────
 @bp.route("/eliminar_partida/<int:partida_id>", methods=["POST"])
 @solo_admin
 def eliminar_partida(partida_id):
