@@ -27,11 +27,10 @@
     </div>
 </div>
 
-{% if payphone_activo %}
 <div class="card">
     <h3 style="margin:0 0 12px 0;">🔄 Renovar plan</h3>
     {% for key, plan in planes.items() %}
-    <form method="POST" action="/checkout/{{ key }}" style="margin-bottom:8px;">
+    <form method="POST" action="/paypal/checkout/{{ key }}" style="margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;
                     border:1px solid #eee;border-radius:10px;padding:10px 14px;">
             <div>
@@ -44,7 +43,7 @@
                 {% endif %}
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <strong style="color:#27ae60;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+                <strong style="color:#27ae60;">${{ plan.precio }}</strong>
                 <button class="btn-primary" style="padding:6px 14px;font-size:13px;">
                     Renovar
                 </button>
@@ -53,7 +52,6 @@
     </form>
     {% endfor %}
 </div>
-{% endif %}
 
 <div class="card">
     <form action="/cancelar_premium" method="POST"
@@ -99,6 +97,7 @@
 </div>
 {% endif %}
 
+<!-- Tabla comparativa -->
 <div class="card">
     <h3>¿Qué incluye cada plan?</h3>
     <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
@@ -143,88 +142,64 @@
 </div>
 
 <!-- Precios -->
-<div class="card" style="border:2px solid #764ba2;">
-    <h3 style="text-align:center;color:#764ba2;margin:0 0 16px 0;">
+<div class="card" style="border:2px solid #003087;">
+    <h3 style="text-align:center;color:#003087;margin:0 0 4px 0;">
         💳 Elige tu plan
     </h3>
+    <p style="text-align:center;font-size:13px;color:#555;margin:0 0 16px 0;">
+        Pago seguro con PayPal — Visa, Mastercard y más
+    </p>
 
-    {% if payphone_activo %}
     {% for key, plan in planes.items() %}
-    <form method="POST" action="/checkout/{{ key }}" style="margin-bottom:10px;">
+    <form method="POST" action="/paypal/checkout/{{ key }}" style="margin-bottom:10px;">
         <button type="submit"
                 style="width:100%;
-                       background:{% if key == '3' %}#764ba2{% else %}white{% endif %};
+                       background:{% if key == '3' %}#003087{% else %}white{% endif %};
                        color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
-                       border:2px solid {% if key == '3' %}#764ba2{% else %}#ddd{% endif %};
+                       border:2px solid {% if key == '3' %}#003087{% else %}#ddd{% endif %};
                        border-radius:12px;padding:15px;font-size:14px;cursor:pointer;
                        display:flex;justify-content:space-between;align-items:center;">
             <span>
                 <strong>{{ plan.label }}</strong>
                 {% if plan.descuento > 0 %}
                 <span style="font-size:11px;padding:2px 7px;border-radius:10px;margin-left:6px;
-                             background:rgba(102,91,255,.15);color:#764ba2;
-                             {% if key == '3' %}background:rgba(255,255,255,.25);color:white;{% endif %}">
+                             background:{% if key == '3' %}rgba(255,255,255,.2){% else %}#e8eaf6{% endif %};
+                             color:{% if key == '3' %}white{% else %}#003087{% endif %};">
                     Ahorra {{ plan.descuento }}%
                 </span>
                 {% endif %}
             </span>
-            <strong style="font-size:17px;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+            <strong style="font-size:17px;">${{ plan.precio }}</strong>
         </button>
     </form>
     {% endfor %}
 
-    {% else %}
-    <!-- Pago por WhatsApp -->
-    <div style="background:#e8f5e9;border-radius:10px;padding:14px;
-                text-align:center;margin-bottom:14px;">
-        <p style="margin:0 0 4px 0;font-size:14px;font-weight:bold;color:#1a5c30;">
-            📲 Pago por WhatsApp
-        </p>
-        <p style="margin:0;font-size:13px;color:#2e7d32;line-height:1.5;">
-            Escríbenos con el plan que quieres. Activamos tu cuenta
-            en menos de 1 hora.
-        </p>
-    </div>
-
-    {% for key, plan in planes.items() %}
-    <a href="https://wa.me/593980341380?text=Hola%2C%20quiero%20activar%20el%20plan%20{{ plan.label | urlencode }}%20de%20ERP%20Pecuario%20(%24{{ '%.2f' | format(plan.precio_usd) }})"
-       target="_blank"
-       style="display:flex;justify-content:space-between;align-items:center;
-              background:{% if key == '3' %}#25D366{% else %}white{% endif %};
-              color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
-              border:2px solid {% if key == '3' %}#25D366{% else %}#ddd{% endif %};
-              border-radius:12px;padding:14px;text-decoration:none;font-size:14px;
-              margin-bottom:10px;">
-        <span>
-            <strong>{{ plan.label }}</strong>
-            {% if plan.descuento > 0 %}
-            <span style="font-size:11px;margin-left:6px;opacity:.85;">
-                Ahorra {{ plan.descuento }}%
-            </span>
-            {% endif %}
-        </span>
-        <div style="display:flex;align-items:center;gap:8px;">
-            <strong style="font-size:16px;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
-            <i class="fab fa-whatsapp" style="font-size:18px;"></i>
-        </div>
-    </a>
-    {% endfor %}
-
-    <div style="display:flex;align-items:center;gap:8px;margin-top:4px;
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;
                 padding:10px;background:#f8f9fa;border-radius:10px;">
-        <span style="font-size:18px;">🔒</span>
+        <span style="font-size:20px;">🔒</span>
         <p style="margin:0;font-size:12px;color:#555;line-height:1.4;">
-            Aceptamos transferencia bancaria, efectivo y otros métodos.
-            Activación en menos de 1 hora en horario laboral.
+            Pago 100% seguro con <strong>PayPal</strong>.
+            Acepta tarjetas de crédito y débito internacionales.
+            No almacenamos datos de tu tarjeta.
         </p>
     </div>
-    {% endif %}
+</div>
+
+<!-- WhatsApp alternativo -->
+<div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+    <p style="margin:0;font-size:13px;color:#166534;text-align:center;">
+        ¿Prefieres pagar por otro medio?
+        <a href="https://wa.me/593980341380?text=Hola%2C%20quiero%20activar%20ERP%20Pecuario%20Premium"
+           target="_blank" style="color:#15803d;font-weight:bold;">
+            Escríbenos por WhatsApp
+        </a>
+    </p>
 </div>
 
 <div class="card" style="text-align:center;background:#f8f9fa;">
     <p style="margin:0;font-size:13px;color:#555;">
         🛡️ <strong>Garantía de satisfacción:</strong>
-        Si no estás satisfecho en los primeros 7 días te devolvemos el dinero. Sin preguntas.
+        Si no estás satisfecho en los primeros 7 días te devolvemos el dinero.
         <a href="/reembolso" style="color:#27ae60;">Ver política</a>
     </p>
 </div>

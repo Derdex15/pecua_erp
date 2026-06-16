@@ -1,6 +1,6 @@
 """
 ERP Pecuario — Punto de entrada principal
-Flask + Supabase + Firebase FCM + PayPhone
+Flask + Supabase + Firebase FCM + PayPal
 """
 import os
 import json
@@ -87,6 +87,7 @@ def create_app():
     from routes.alertas            import bp as alertas_bp
     from routes.recuperar_password import bp as recuperar_password_bp
     from routes.admin              import bp as admin_bp
+    from routes.paypal             import bp as paypal_bp
 
     for blueprint in [
         auth_bp, inventario_bp, ventas_bp, gastos_bp,
@@ -95,7 +96,7 @@ def create_app():
         reproduccion_bp, pesajes_bp, onboarding_bp,
         notificaciones_bp, insumos_bp, calendario_bp,
         fotos_bp, proveedores_bp, presupuesto_bp, alertas_bp,
-        recuperar_password_bp, admin_bp,
+        recuperar_password_bp, admin_bp, paypal_bp,
     ]:
         app.register_blueprint(blueprint)
 
