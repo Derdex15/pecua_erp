@@ -29,29 +29,18 @@ body {
     padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-.content {
-    padding: 15px;
-    padding-bottom: 80px;
-}
+.content { padding: 15px; padding-bottom: 80px; }
 
 /* ── TARJETAS ─────────────────────────────────────────────────── */
 .card {
-    background: white;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background: white; padding: 15px; margin: 10px 0;
+    border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 /* ── FLASH MESSAGES ───────────────────────────────────────────── */
 .flash {
-    padding: 12px 15px;
-    border-radius: 8px;
-    margin: 8px 0;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    padding: 12px 15px; border-radius: 8px; margin: 8px 0;
+    font-size: 15px; display: flex; align-items: center; gap: 8px;
 }
 .flash.success { background:#d4edda; color:#155724; border-left:4px solid #27ae60; }
 .flash.error   { background:#f8d7da; color:#721c24; border-left:4px solid #e74c3c; }
@@ -59,19 +48,12 @@ body {
 
 /* ── FORMULARIOS ──────────────────────────────────────────────── */
 .form-group { margin-bottom:14px; }
-.form-group label {
-    display:block; font-size:15px; color:#444;
-    margin-bottom:5px; font-weight:bold;
-}
+.form-group label { display:block; font-size:15px; color:#444; margin-bottom:5px; font-weight:bold; }
 .form-control {
     width:100%; padding:12px; border-radius:8px;
-    border:1px solid #ccc; font-size:16px;
-    transition:border-color 0.2s;
+    border:1px solid #ccc; font-size:16px; transition:border-color 0.2s;
 }
-.form-control:focus {
-    outline:none; border-color:#27ae60;
-    box-shadow:0 0 0 2px rgba(39,174,96,0.15);
-}
+.form-control:focus { outline:none; border-color:#27ae60; box-shadow:0 0 0 2px rgba(39,174,96,0.15); }
 
 /* ── BOTONES ──────────────────────────────────────────────────── */
 .btn-primary {
@@ -85,39 +67,19 @@ body {
     border-radius:6px; font-size:15px; border:none;
     cursor:pointer; text-decoration:none; display:inline-block;
 }
-.btn-peligro {
-    background:#e74c3c; color:white; padding:10px 14px;
-    border-radius:6px; font-size:15px; border:none; cursor:pointer;
-}
-.btn-warning {
-    background:#f39c12; color:white; padding:10px 14px;
-    border-radius:6px; font-size:15px; border:none;
-    cursor:pointer; text-decoration:none; display:inline-block;
-}
-.btn-premium {
-    background:linear-gradient(135deg,#f39c12,#e67e22);
-    color:white; padding:13px 16px; border:none;
-    border-radius:8px; font-size:16px; width:100%;
-    cursor:pointer; font-weight:bold;
-}
+.btn-peligro  { background:#e74c3c; color:white; padding:10px 14px; border-radius:6px; font-size:15px; border:none; cursor:pointer; }
+.btn-warning  { background:#f39c12; color:white; padding:10px 14px; border-radius:6px; font-size:15px; border:none; cursor:pointer; text-decoration:none; display:inline-block; }
+.btn-premium  { background:linear-gradient(135deg,#f39c12,#e67e22); color:white; padding:13px 16px; border:none; border-radius:8px; font-size:16px; width:100%; cursor:pointer; font-weight:bold; }
 
 /* ── BADGES ───────────────────────────────────────────────────── */
 .badge { display:inline-block; padding:3px 9px; border-radius:12px; font-size:12px; font-weight:bold; }
 .badge-activo   { background:#d4edda; color:#155724; }
 .badge-inactivo { background:#f8d7da; color:#721c24; }
 .badge-premium  { background:linear-gradient(135deg,#f39c12,#e67e22); color:white; }
-.badge-alerta   {
-    background:#e74c3c; color:white; border-radius:50%;
-    width:18px; height:18px; display:inline-flex;
-    align-items:center; justify-content:center;
-    font-size:10px; font-weight:bold;
-}
+.badge-alerta   { background:#e74c3c; color:white; border-radius:50%; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; }
 
 /* ── CARD PREMIUM ─────────────────────────────────────────────── */
-.card-premium {
-    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
-    color:white; padding:20px; margin:10px 0; border-radius:12px;
-}
+.card-premium { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:20px; margin:10px 0; border-radius:12px; }
 .card-premium h3, .card-premium p { color:white; margin:5px 0; }
 
 /* ── SANITARIO BADGES ─────────────────────────────────────────── */
@@ -137,9 +99,7 @@ body {
     position:sticky; top:0; z-index:99;
 }
 .top-bar h3 { margin:0; font-size:17px; }
-.top-bar a  { text-decoration:none; font-size:20px; color:#2c3e50; }
-.back-btn   { font-size:20px; color:#2c3e50; text-decoration:none; cursor:pointer;
-              background:none; border:none; padding:0; }
+.back-btn   { font-size:20px; color:#2c3e50; cursor:pointer; background:none; border:none; padding:0; }
 
 /* ── BOTTOM NAV ───────────────────────────────────────────────── */
 .bottom-nav {
@@ -155,8 +115,6 @@ body {
 }
 .bottom-nav i { font-size:18px; margin-bottom:3px; }
 .bottom-nav a.active { color:#27ae60; font-weight:bold; }
-
-/* Badge campana */
 .nav-badge {
     position:absolute; top:4px; right:50%; transform:translateX(8px);
     background:#e74c3c; color:white; border-radius:50%;
@@ -165,20 +123,12 @@ body {
 }
 
 /* ── MODAL ────────────────────────────────────────────────────── */
-.modal-overlay {
-    display:none; position:fixed; top:0; left:0;
-    width:100%; height:100%; background:rgba(0,0,0,0.5);
-    z-index:200; justify-content:center; align-items:center;
-}
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center; }
 .modal-overlay.active { display:flex; }
-.modal-box {
-    background:white; border-radius:12px; padding:20px;
-    margin:20px; width:100%; max-width:380px;
-}
+.modal-box { background:white; border-radius:12px; padding:20px; margin:20px; width:100%; max-width:380px; }
 .modal-box h3 { margin-top:0; font-size:17px; }
 .modal-actions { display:flex; gap:10px; margin-top:15px; }
-.modal-actions button { flex:1; padding:12px; border-radius:8px; border:none;
-                        font-size:15px; cursor:pointer; }
+.modal-actions button { flex:1; padding:12px; border-radius:8px; border:none; font-size:15px; cursor:pointer; }
 
 /* ── CARD ACTIONS ─────────────────────────────────────────────── */
 .card-actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
@@ -194,99 +144,72 @@ body {
 .drawer-overlay.open { display: block; }
 
 .drawer {
-    position: fixed;
-    top: 0; right: -310px;
-    width: 300px; height: 100%;
-    background: white;
-    z-index: 160;
+    position: fixed; top: 0; right: -310px;
+    width: 300px; height: 100%; background: white; z-index: 160;
     transition: right 0.28s cubic-bezier(.4,0,.2,1);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    overflow-y: auto; display: flex; flex-direction: column;
     box-shadow: -4px 0 20px rgba(0,0,0,0.15);
 }
 .drawer.open { right: 0; }
 
 .drawer-header {
     background: linear-gradient(135deg,#27ae60,#1e8449);
-    color: white;
-    padding: 44px 20px 20px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
+    color: white; padding: 44px 20px 20px 20px;
+    display: flex; align-items: center; gap: 14px;
 }
 .drawer-avatar {
-    width: 52px; height: 52px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
+    width: 52px; height: 52px; background: rgba(255,255,255,0.25);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 24px; flex-shrink: 0;
 }
 .drawer-username {
     font-weight: bold; font-size: 17px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 180px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
 }
 .drawer-plan {
-    font-size: 12px;
-    padding: 3px 9px;
-    border-radius: 10px;
-    margin-top: 4px;
-    display: inline-block;
+    font-size: 12px; padding: 3px 9px; border-radius: 10px;
+    margin-top: 4px; display: inline-block;
 }
-.drawer-plan.premium {
-    background: rgba(243,156,18,0.9);
-    color: white;
-}
-.drawer-plan.free {
-    background: rgba(255,255,255,0.2);
-    color: white;
-}
+.drawer-plan.premium { background: rgba(243,156,18,0.9); color: white; }
+.drawer-plan.free    { background: rgba(255,255,255,0.2); color: white; }
 
-.drawer-section {
-    padding: 6px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
+/* Sección colapsable */
+.drawer-section { border-bottom: 1px solid #f0f0f0; }
+
 .drawer-section-title {
-    font-size: 11px;
-    font-weight: bold;
-    color: #aaa;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 8px 20px 4px 20px;
-}
-.drawer-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 13px 20px;
-    text-decoration: none;
-    color: #2c3e50;
-    font-size: 15px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 20px 10px 20px;
+    font-size: 12px; font-weight: bold; color: #888;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    cursor: pointer; user-select: none;
     transition: background 0.15s;
 }
-.drawer-item:active,
-.drawer-item:hover { background: #f4f6f9; }
-.drawer-item.active { color: #27ae60; font-weight: bold; }
-.drawer-item i {
-    width: 22px; text-align: center;
-    font-size: 17px; color: #666;
+.drawer-section-title:active { background: #f8f9fa; }
+.drawer-section-title .section-arrow {
+    font-size: 11px; color: #bbb;
+    transition: transform 0.2s ease;
 }
+
+.drawer-section-items { overflow: hidden; }
+
+.drawer-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 20px; text-decoration: none; color: #2c3e50;
+    font-size: 15px; transition: background 0.15s;
+}
+.drawer-item:active, .drawer-item:hover { background: #f4f6f9; }
+.drawer-item.active { color: #27ae60; font-weight: bold; }
+.drawer-item i { width: 22px; text-align: center; font-size: 17px; color: #666; }
 .drawer-item.active i { color: #27ae60; }
 .drawer-item-badge {
-    margin-left: auto;
-    background: #e74c3c; color: white;
-    border-radius: 10px; padding: 2px 8px;
-    font-size: 11px; font-weight: bold;
+    margin-left: auto; background: #e74c3c; color: white;
+    border-radius: 10px; padding: 2px 8px; font-size: 11px; font-weight: bold;
 }
 
 .drawer-close {
-    position: absolute;
-    top: 12px; right: 14px;
-    background: none; border: none;
-    color: rgba(255,255,255,0.85);
-    font-size: 22px; cursor: pointer;
-    padding: 4px; line-height: 1;
+    position: absolute; top: 12px; right: 14px;
+    background: none; border: none; color: rgba(255,255,255,0.85);
+    font-size: 22px; cursor: pointer; padding: 4px; line-height: 1;
 }
 </style>
 </head>
@@ -306,14 +229,12 @@ body {
     <h3>🐄 ERP Pecuario</h3>
 
     <div style="display:flex;gap:16px;align-items:center;">
-        <a href="/alertas" style="position:relative;font-size:21px;color:#2c3e50;text-decoration:none;"
-           aria-label="Alertas">
+        <a href="/alertas" style="position:relative;font-size:21px;color:#2c3e50;text-decoration:none;" aria-label="Alertas">
             <i class="fas fa-bell"></i>
             <span id="badge-alertas" style="display:none;" class="nav-badge">0</span>
         </a>
         <button onclick="abrirDrawer()" aria-label="Menú"
-                style="background:none;border:none;font-size:23px;
-                       color:#2c3e50;cursor:pointer;padding:0;line-height:1;">
+                style="background:none;border:none;font-size:23px;color:#2c3e50;cursor:pointer;padding:0;line-height:1;">
             <i class="fas fa-bars"></i>
         </button>
     </div>
@@ -328,115 +249,134 @@ body {
         <i class="fas fa-times"></i>
     </button>
 
-    <!-- Cabecera: avatar + username real + badge de plan -->
+    <!-- Cabecera -->
     <div class="drawer-header">
         <div class="drawer-avatar">🐄</div>
         <div style="min-width:0;">
-            <div class="drawer-username">
-                {{ g_username if g_username else "Mi cuenta" }}
-            </div>
+            <div class="drawer-username">{{ g_username if g_username else "Mi cuenta" }}</div>
             {% if g_es_premium %}
-            <span class="drawer-plan premium">
-                <i class="fas fa-star" style="font-size:10px;"></i> Premium
-            </span>
+            <span class="drawer-plan premium"><i class="fas fa-star" style="font-size:10px;"></i> Premium</span>
             {% else %}
-            <span class="drawer-plan free">
-                Plan gratuito
-            </span>
+            <span class="drawer-plan free">Plan gratuito</span>
             {% endif %}
         </div>
     </div>
 
-    <!-- Sección: Principal -->
+    <!-- PRINCIPAL -->
     <div class="drawer-section">
-        <div class="drawer-section-title">Principal</div>
-        <a href="/" class="drawer-item {% if request.path == '/' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-home"></i> Inicio
-        </a>
-        <a href="/inventario" class="drawer-item {% if request.path == '/inventario' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-layer-group"></i> Lotes de animales
-        </a>
-        <a href="/animales" class="drawer-item {% if request.path == '/animales' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-paw"></i> Animales individuales
-        </a>
-        <a href="/bajas" class="drawer-item {% if request.path == '/bajas' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-minus-circle"></i> Registro de bajas
-        </a>
+        <div class="drawer-section-title" onclick="toggleSection('principal')">
+            <span>Principal</span>
+            <i class="fas fa-chevron-down section-arrow" id="arrow-principal"></i>
+        </div>
+        <div class="drawer-section-items" id="items-principal">
+            <a href="/" class="drawer-item {% if request.path == '/' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-home"></i> Inicio
+            </a>
+            <a href="/inventario" class="drawer-item {% if request.path == '/inventario' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-layer-group"></i> Lotes de animales
+            </a>
+            <a href="/animales" class="drawer-item {% if request.path == '/animales' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-paw"></i> Animales individuales
+            </a>
+            <a href="/bajas" class="drawer-item {% if request.path == '/bajas' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-minus-circle"></i> Registro de bajas
+            </a>
+        </div>
     </div>
 
-    <!-- Sección: Finanzas -->
+    <!-- FINANZAS -->
     <div class="drawer-section">
-        <div class="drawer-section-title">Finanzas</div>
-        <a href="/movimientos" class="drawer-item {% if request.path == '/movimientos' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-dollar-sign"></i> Ventas
-        </a>
-        <a href="/gastos" class="drawer-item {% if request.path == '/gastos' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-file-invoice-dollar"></i> Gastos
-        </a>
-        <a href="/presupuesto" class="drawer-item {% if request.path == '/presupuesto' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-chart-pie"></i> Presupuesto
-        </a>
-        <a href="/proveedores" class="drawer-item {% if request.path == '/proveedores' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-store"></i> Proveedores
-        </a>
-        <a href="/reportes" class="drawer-item {% if request.path == '/reportes' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-chart-bar"></i> Reportes
-        </a>
+        <div class="drawer-section-title" onclick="toggleSection('finanzas')">
+            <span>Finanzas</span>
+            <i class="fas fa-chevron-down section-arrow" id="arrow-finanzas"></i>
+        </div>
+        <div class="drawer-section-items" id="items-finanzas">
+            <a href="/movimientos" class="drawer-item {% if request.path == '/movimientos' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-dollar-sign"></i> Ventas
+            </a>
+            <a href="/gastos" class="drawer-item {% if request.path == '/gastos' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-file-invoice-dollar"></i> Gastos
+            </a>
+            <a href="/presupuesto" class="drawer-item {% if request.path == '/presupuesto' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-chart-pie"></i> Presupuesto
+            </a>
+            <a href="/proveedores" class="drawer-item {% if request.path == '/proveedores' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-store"></i> Proveedores
+            </a>
+            <a href="/reportes" class="drawer-item {% if request.path == '/reportes' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+        </div>
     </div>
 
-    <!-- Sección: Producción y salud -->
+    <!-- PRODUCCIÓN Y SALUD -->
     <div class="drawer-section">
-        <div class="drawer-section-title">Producción y salud</div>
-        <a href="/sanitario" class="drawer-item {% if request.path == '/sanitario' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-syringe"></i> Control sanitario
-        </a>
-        <a href="/produccion" class="drawer-item {% if request.path == '/produccion' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-chart-line"></i> Producción
-        </a>
-        <a href="/reproduccion" class="drawer-item {% if request.path == '/reproduccion' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-baby"></i> Reproducción
-        </a>
-        <a href="/pesajes" class="drawer-item {% if request.path == '/pesajes' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-weight"></i> Pesajes
-        </a>
-        <a href="/insumos" class="drawer-item {% if request.path == '/insumos' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-warehouse"></i> Insumos
-        </a>
+        <div class="drawer-section-title" onclick="toggleSection('produccion')">
+            <span>Producción y salud</span>
+            <i class="fas fa-chevron-down section-arrow" id="arrow-produccion"></i>
+        </div>
+        <div class="drawer-section-items" id="items-produccion">
+            <a href="/sanitario" class="drawer-item {% if request.path == '/sanitario' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-syringe"></i> Control sanitario
+            </a>
+            <a href="/produccion" class="drawer-item {% if request.path == '/produccion' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-chart-line"></i> Producción
+            </a>
+            <a href="/reproduccion" class="drawer-item {% if request.path == '/reproduccion' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-baby"></i> Reproducción
+            </a>
+            <a href="/pesajes" class="drawer-item {% if request.path == '/pesajes' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-weight"></i> Pesajes
+            </a>
+            <a href="/insumos" class="drawer-item {% if request.path == '/insumos' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-warehouse"></i> Insumos
+            </a>
+        </div>
     </div>
 
-    <!-- Sección: Herramientas -->
+    <!-- HERRAMIENTAS -->
     <div class="drawer-section">
-        <div class="drawer-section-title">Herramientas</div>
-        <a href="/calendario" class="drawer-item {% if request.path == '/calendario' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-calendar-alt"></i> Calendario
-        </a>
-        <a href="/alertas" class="drawer-item {% if request.path == '/alertas' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-bell"></i> Alertas
-            <span id="badge-drawer" class="drawer-item-badge" style="display:none;">0</span>
-        </a>
-        <a href="/historial" class="drawer-item {% if request.path == '/historial' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-history"></i> Historial
-        </a>
+        <div class="drawer-section-title" onclick="toggleSection('herramientas')">
+            <span>Herramientas</span>
+            <i class="fas fa-chevron-down section-arrow" id="arrow-herramientas"></i>
+        </div>
+        <div class="drawer-section-items" id="items-herramientas">
+            <a href="/calendario" class="drawer-item {% if request.path == '/calendario' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-calendar-alt"></i> Calendario
+            </a>
+            <a href="/alertas" class="drawer-item {% if request.path == '/alertas' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-bell"></i> Alertas
+                <span id="badge-drawer" class="drawer-item-badge" style="display:none;">0</span>
+            </a>
+            <a href="/historial" class="drawer-item {% if request.path == '/historial' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-history"></i> Historial
+            </a>
+        </div>
     </div>
 
-    <!-- Sección: Mi cuenta -->
+    <!-- MI CUENTA -->
     <div class="drawer-section">
-        <div class="drawer-section-title">Mi cuenta</div>
-        <a href="/planes" class="drawer-item {% if request.path == '/planes' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-star"></i> Planes Premium
-        </a>
-        <a href="/granja" class="drawer-item {% if request.path == '/granja' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-users"></i> Mi granja
-        </a>
-        <a href="/ajustes" class="drawer-item {% if request.path == '/ajustes' %}active{% endif %}" onclick="cerrarDrawer()">
-            <i class="fas fa-cog"></i> Ajustes
-        </a>
-        <a href="/logout" class="drawer-item" onclick="cerrarDrawer()" style="color:#e74c3c;">
-            <i class="fas fa-sign-out-alt" style="color:#e74c3c;"></i> Cerrar sesión
-        </a>
+        <div class="drawer-section-title" onclick="toggleSection('cuenta')">
+            <span>Mi cuenta</span>
+            <i class="fas fa-chevron-down section-arrow" id="arrow-cuenta"></i>
+        </div>
+        <div class="drawer-section-items" id="items-cuenta">
+            <a href="/planes" class="drawer-item {% if request.path == '/planes' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-star"></i> Planes Premium
+            </a>
+            <a href="/granja" class="drawer-item {% if request.path == '/granja' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-users"></i> Mi granja
+            </a>
+            <a href="/ajustes" class="drawer-item {% if request.path == '/ajustes' %}active{% endif %}" onclick="cerrarDrawer()">
+                <i class="fas fa-cog"></i> Ajustes
+            </a>
+            <a href="/logout" class="drawer-item" onclick="cerrarDrawer()" style="color:#e74c3c;">
+                <i class="fas fa-sign-out-alt" style="color:#e74c3c;"></i> Cerrar sesión
+            </a>
+        </div>
     </div>
 
-    <!-- Footer legal dentro del drawer -->
+    <!-- Footer legal -->
     <div style="padding:16px 20px;margin-top:auto;">
         <div style="display:flex;flex-wrap:wrap;gap:12px;">
             <a href="/terminos"   style="font-size:12px;color:#aaa;text-decoration:underline;">Términos</a>
@@ -461,7 +401,6 @@ body {
             {% endfor %}
         {% endif %}
     {% endwith %}
-
     {% block content %}{% endblock %}
 </div>
 
@@ -484,9 +423,6 @@ body {
     </a>
     <a href="/alertas" class="{% if request.path == '/alertas' %}active{% endif %}" aria-label="Alertas">
         <i class="fas fa-bell"></i>Alertas
-        <span id="badge-alertas-nav" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);
-              background:#e74c3c;color:white;border-radius:50%;width:15px;height:15px;font-size:9px;
-              display:none;align-items:center;justify-content:center;font-weight:bold;"></span>
     </a>
 </nav>
 
@@ -498,25 +434,21 @@ body {
     📡 Sin conexión — mostrando datos guardados
 </div>
 
-<!-- Footer legal (visible para Paddle / Play Store) -->
-<footer style="text-align:center;padding:20px 16px 80px 16px;
-               border-top:1px solid #eee;margin-top:20px;">
-    <p style="font-size:12px;color:#bbb;margin:0 0 8px 0;">
-        © 2026 ERP Pecuario · Todos los derechos reservados
-    </p>
+<!-- Footer legal -->
+<footer style="text-align:center;padding:20px 16px 80px 16px;border-top:1px solid #eee;margin-top:20px;">
+    <p style="font-size:12px;color:#bbb;margin:0 0 8px 0;">© 2026 ERP Pecuario · Todos los derechos reservados</p>
     <div style="display:flex;justify-content:center;gap:18px;flex-wrap:wrap;">
-        <a href="/terminos"   style="font-size:13px;color:#999;text-decoration:underline;">Términos y condiciones</a>
-        <a href="/privacidad" style="font-size:13px;color:#999;text-decoration:underline;">Política de privacidad</a>
-        <a href="/reembolso"  style="font-size:13px;color:#999;text-decoration:underline;">Política de reembolso</a>
-        <a href="/planes"     style="font-size:13px;color:#999;text-decoration:underline;">Planes y precios</a>
+        <a href="/terminos"   style="font-size:13px;color:#999;text-decoration:underline;">Términos</a>
+        <a href="/privacidad" style="font-size:13px;color:#999;text-decoration:underline;">Privacidad</a>
+        <a href="/reembolso"  style="font-size:13px;color:#999;text-decoration:underline;">Reembolso</a>
+        <a href="/planes"     style="font-size:13px;color:#999;text-decoration:underline;">Planes</a>
     </div>
 </footer>
 
 <script type="module">
-/* ── Badge de alertas ─────────────────────────────────────────── */
 async function cargarBadgeAlertas() {
     try {
-        const r = await fetch("/api/alertas_count");
+        const r    = await fetch("/api/alertas_count");
         const data = await r.json();
         const badgeTop    = document.getElementById("badge-alertas");
         const badgeDrawer = document.getElementById("badge-drawer");
@@ -533,24 +465,20 @@ async function cargarBadgeAlertas() {
 cargarBadgeAlertas();
 setInterval(cargarBadgeAlertas, 60000);
 
-/* ── Banner offline ───────────────────────────────────────────── */
 function actualizarBanner() {
-    const banner = document.getElementById("banner-offline");
-    if (!banner) return;
-    banner.style.display = navigator.onLine ? "none" : "flex";
+    const b = document.getElementById("banner-offline");
+    if (b) b.style.display = navigator.onLine ? "none" : "flex";
 }
 actualizarBanner();
 window.addEventListener("online",  actualizarBanner);
 window.addEventListener("offline", actualizarBanner);
 
-/* ── Service Worker ───────────────────────────────────────────── */
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
-/* ── FCM Token ────────────────────────────────────────────────── */
 try {
-    const { initializeApp }           = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js");
     const { getMessaging, getToken, onMessage } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js");
     const firebaseConfig = {
         apiKey:            "{{ config['FIREBASE_API_KEY']        | default('') }}",
@@ -565,9 +493,7 @@ try {
         const messaging = getMessaging(app);
         const perm      = await Notification.requestPermission();
         if (perm === "granted") {
-            const token = await getToken(messaging, {
-                vapidKey: "{{ config.get('FIREBASE_VAPID_KEY','') }}"
-            });
+            const token = await getToken(messaging, { vapidKey: "{{ config.get('FIREBASE_VAPID_KEY','') }}" });
             if (token) {
                 await fetch("/api/save_token", {
                     method: "POST",
@@ -596,15 +522,57 @@ function cerrarDrawer() {
     document.getElementById("drawerOverlay").classList.remove("open");
     document.body.style.overflow = "";
 }
-document.addEventListener("keydown", e => {
-    if (e.key === "Escape") cerrarDrawer();
-});
+document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarDrawer(); });
+
+/* ── Drawer secciones colapsables ─────────────────────────────── */
+var SECCIONES = ["principal", "finanzas", "produccion", "herramientas", "cuenta"];
+
+function toggleSection(name) {
+    var items = document.getElementById("items-" + name);
+    var arrow = document.getElementById("arrow-" + name);
+    if (!items || !arrow) return;
+    var abierto = items.style.display !== "none";
+    items.style.display = abierto ? "none" : "block";
+    arrow.style.transform = abierto ? "rotate(-90deg)" : "rotate(0deg)";
+    try { sessionStorage.setItem("drawer_" + name, abierto ? "0" : "1"); } catch(e) {}
+}
+
+function initSecciones() {
+    // Detectar qué sección contiene el enlace activo
+    var seccionActiva = null;
+    SECCIONES.forEach(function(name) {
+        var sec = document.getElementById("items-" + name);
+        if (sec && sec.querySelector(".drawer-item.active")) {
+            seccionActiva = name;
+        }
+    });
+
+    SECCIONES.forEach(function(name) {
+        var items = document.getElementById("items-" + name);
+        var arrow = document.getElementById("arrow-" + name);
+        if (!items || !arrow) return;
+
+        // Leer estado guardado
+        var guardado = null;
+        try { guardado = sessionStorage.getItem("drawer_" + name); } catch(e) {}
+
+        var abierto;
+        if (guardado !== null) {
+            abierto = guardado === "1";
+        } else {
+            // Por defecto: abrir "principal" y la sección activa
+            abierto = (name === "principal" || name === seccionActiva);
+        }
+
+        items.style.display = abierto ? "block" : "none";
+        arrow.style.transform = abierto ? "rotate(0deg)" : "rotate(-90deg)";
+    });
+}
+initSecciones();
 
 /* ── Botón atrás seguro ───────────────────────────────────────── */
-// Si el usuario viene de fuera del dominio (link directo, correo, etc.)
-// history.back() lo sacaría de la app. Este helper lo redirige al inicio.
 function navegarAtras() {
-    const origen = document.referrer;
+    var origen = document.referrer;
     if (origen && new URL(origen).origin === window.location.origin) {
         history.back();
     } else {
@@ -612,7 +580,7 @@ function navegarAtras() {
     }
 }
 
-/* ── CSRF automático en forms y fetch ─────────────────────────── */
+/* ── CSRF automático ──────────────────────────────────────────── */
 (function () {
     var meta = document.querySelector('meta[name="csrf-token"]');
     if (!meta) return;

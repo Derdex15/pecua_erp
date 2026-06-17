@@ -31,7 +31,6 @@ def dashboard():
     lotes_activos  = [l for l in lotes if l.get("activo", True)]
     lotes_con_anim = [l for l in lotes_activos if l.get("cantidad_actual", 0) > 0]
 
-    # KPIs financieros
     total_animales = sum(l.get("cantidad_actual", 0) for l in lotes_con_anim)
     total_compra   = _fmt(sum(_fmt(l.get("costo_compra", 0)) for l in lotes))
     total_ventas   = _fmt(sum(_fmt(v.get("total",  0)) for v in ventas))
@@ -40,17 +39,14 @@ def dashboard():
     ganancia       = _fmt(total_ventas - inversion)
     roi            = round((ganancia / inversion * 100), 1) if inversion > 0 else 0
 
-    # Mortalidad
     total_inicial  = sum(l.get("cantidad_inicial", 0) for l in lotes)
     total_muertes  = sum(b.get("cantidad", 0) for b in bajas if b.get("tipo") == "muerte")
     total_bajas    = sum(b.get("cantidad", 0) for b in bajas)
     pct_mortalidad = round((total_muertes / total_inicial * 100), 1) if total_inicial > 0 else 0
 
-    # Precio promedio de venta
     total_cab_vendidas = sum(_fmt(v.get("cantidad", 0)) for v in ventas)
     precio_prom_venta  = _fmt(total_ventas / total_cab_vendidas) if total_cab_vendidas > 0 else 0
 
-    # Costo por kg ganado (conversión alimenticia simplificada)
     costo_por_kg = None
     try:
         pesajes_lote = sb_get("pesajes",
@@ -71,7 +67,6 @@ def dashboard():
     except Exception:
         pass
 
-    # Mes actual
     hoy     = datetime.date.today()
     mes_str = hoy.strftime("%Y-%m")
     ventas_mes = _fmt(sum(
@@ -83,7 +78,6 @@ def dashboard():
         if str(g.get("fecha", "")).startswith(mes_str)
     ))
 
-    # Insumos críticos
     insumos = sb_get("insumos", f"usuario_id=eq.{owner_id}")
     insumos_criticos = sum(
         1 for i in insumos
@@ -91,7 +85,6 @@ def dashboard():
            _fmt(i.get("cantidad", 0)) <= _fmt(i.get("stock_min", 0))
     )
 
-    # Desglose por especie
     detalle = {}
     for l in lotes_con_anim:
         tipo = l.get("tipo", "Desconocido")
@@ -124,7 +117,6 @@ def dashboard():
 def inventario():
     if "user_id" not in session:
         return redirect("/login")
-
     owner_id, mi_rol = get_granja_info(session["user_id"])
     lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}&activo=eq.true")
     return render_template("inventario.html", lotes=lotes, mi_rol=mi_rol)
@@ -143,7 +135,6 @@ def crear_lote():
         return redirect("/login")
 
     owner_id, _ = get_granja_info(session["user_id"])
-
     nombre   = request.form.get("nombre",   "").strip()
     tipo     = request.form.get("tipo",     "").strip()
     raza     = request.form.get("raza",     "").strip()
@@ -165,7 +156,7 @@ def crear_lote():
         return redirect("/inventario")
 
     backup_automatico(owner_id)
-    res = sb_post("lotes", {
+    sb_post("lotes", {
         "usuario_id":       owner_id,
         "nombre":           nombre,
         "tipo":             tipo,
@@ -176,11 +167,6 @@ def crear_lote():
         "fecha":            fecha,
         "activo":           True,
     })
-
-    if hasattr(res, "status_code") and res.status_code not in (200, 201):
-        flash(f"Error al guardar el lote (código {res.status_code}). Intenta de nuevo.", "error")
-        return redirect("/inventario")
-
     flash(f"✅ Lote '{nombre}' creado con {cantidad} animales.", "success")
     return redirect("/inventario")
 
@@ -201,32 +187,30 @@ def editar_lote(lote_id):
     if request.method == "GET":
         return render_template("editar_lote.html", lote=lote[0], mi_rol=mi_rol)
 
-    nombre   = request.form.get("nombre",   "").strip()
-    tipo     = request.form.get("tipo",     "").strip()
-    raza     = request.form.get("raza",     "").strip()
-    cantidad = request.form.get("cantidad", "").strip()
-    costo    = request.form.get("costo",    "").strip()
-    fecha    = request.form.get("fecha",    "").strip()
+    # Solo validar y guardar los campos editables.
+    # tipo, raza y cantidad_inicial son de solo lectura — no se envían con el form
+    # porque son inputs disabled, y no se modifican en la BD.
+    nombre = request.form.get("nombre", "").strip()
+    costo  = request.form.get("costo",  "").strip()
+    fecha  = request.form.get("fecha",  "").strip()
 
-    if not all([nombre, tipo, raza, cantidad, costo, fecha]):
-        flash("Completa todos los campos.", "error")
+    if not all([nombre, costo, fecha]):
+        flash("Nombre, costo y fecha son obligatorios.", "error")
         return redirect(f"/editar_lote/{lote_id}")
 
     try:
-        cantidad = int(cantidad)
-        costo    = round(float(costo), 2)
+        costo = round(float(costo), 2)
+        if costo < 0:
+            raise ValueError
     except ValueError:
-        flash("Valores inválidos.", "error")
+        flash("El costo debe ser un número válido.", "error")
         return redirect(f"/editar_lote/{lote_id}")
 
     backup_automatico(owner_id)
     sb_patch("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}", {
-        "nombre":          nombre,
-        "tipo":            tipo,
-        "raza":            raza,
-        "cantidad_actual": cantidad,
-        "costo_compra":    costo,
-        "fecha":           fecha,
+        "nombre":       nombre,
+        "costo_compra": costo,
+        "fecha":        fecha,
     })
     flash(f"✅ Lote '{nombre}' actualizado.", "success")
     return redirect("/inventario")
