@@ -15,104 +15,67 @@
                capture="environment" style="display:none;">
         {% endif %}
     </div>
- 
-    <!-- Galería -->
-    <div id="galeria-fotos"
-         style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:60px;">
+    <div id="galeria-fotos" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;min-height:60px;">
         <p id="msg-sin-fotos" style="color:gray;font-size:13px;">Cargando fotos...</p>
     </div>
-    <div id="upload-progress"
-         style="display:none;font-size:13px;color:#27ae60;margin-top:6px;">
-        ⏳ Subiendo foto...
-    </div>
+    <div id="upload-progress" style="display:none;font-size:13px;color:#27ae60;margin-top:6px;">⏳ Subiendo foto...</div>
 </div>
- 
+
 <script>
 (function () {
     const ANIMAL_ID = {{ animal.id }};
     const ES_ADMIN  = {{ 'true' if mi_rol == 'admin' else 'false' }};
- 
-    // ── Cargar fotos existentes ──────────────────────────────────────────────
+
     async function cargarFotos() {
         const galeria = document.getElementById("galeria-fotos");
         const msg     = document.getElementById("msg-sin-fotos");
         try {
             const res   = await fetch(`/api/fotos/animal/${ANIMAL_ID}`);
             const fotos = await res.json();
-            if (!fotos || fotos.length === 0) {
-                msg.textContent = "Sin fotos registradas.";
-                return;
-            }
+            if (!fotos || fotos.length === 0) { msg.textContent = "Sin fotos registradas."; return; }
             msg.style.display = "none";
             galeria.innerHTML = fotos.map(f => `
                 <div style="position:relative;width:90px;height:90px;" id="foto-${f.id}">
                     <img src="${f.url}" alt="Foto animal"
-                         style="width:90px;height:90px;object-fit:cover;
-                                border-radius:8px;cursor:pointer;"
+                         style="width:90px;height:90px;object-fit:cover;border-radius:8px;cursor:pointer;"
                          onclick="window.open('${f.url}','_blank')">
-                    ${ES_ADMIN ? `
-                    <button onclick="eliminarFoto(${f.id})"
-                            style="position:absolute;top:2px;right:2px;
-                                   background:rgba(231,76,60,0.9);color:white;
-                                   border:none;border-radius:50%;width:22px;height:22px;
-                                   font-size:12px;cursor:pointer;line-height:1;">✕</button>
-                    ` : ""}
+                    ${ES_ADMIN ? `<button onclick="eliminarFoto(${f.id})"
+                        style="position:absolute;top:2px;right:2px;background:rgba(231,76,60,0.9);
+                               color:white;border:none;border-radius:50%;width:22px;height:22px;
+                               font-size:12px;cursor:pointer;line-height:1;">✕</button>` : ""}
                 </div>
             `).join("");
-        } catch (e) {
-            msg.textContent = "Error al cargar fotos.";
-        }
+        } catch (e) { msg.textContent = "Error al cargar fotos."; }
     }
- 
-    // ── Subir foto al seleccionar archivo ───────────────────────────────────
+
     const inputFoto = document.getElementById("input-foto");
     if (inputFoto) {
         inputFoto.addEventListener("change", async function () {
             const archivo = this.files[0];
             if (!archivo) return;
- 
             const progress = document.getElementById("upload-progress");
             progress.style.display = "block";
- 
             const form = new FormData();
-            form.append("foto",         archivo);
+            form.append("foto", archivo);
             form.append("entidad_tipo", "animal");
             form.append("entidad_id",   ANIMAL_ID);
- 
             try {
-                const res  = await fetch("/api/fotos/subir", {
-                    method: "POST",
-                    body:   form,
-                });
+                const res  = await fetch("/api/fotos/subir", { method: "POST", body: form });
                 const data = await res.json();
-                if (data.ok) {
-                    await cargarFotos();
-                } else {
-                    alert("Error al subir: " + (data.error || "desconocido"));
-                }
-            } catch (e) {
-                alert("Error de red al subir la foto.");
-            } finally {
-                progress.style.display = "none";
-                this.value = "";
-            }
+                if (data.ok) { await cargarFotos(); } else { alert("Error al subir: " + (data.error || "desconocido")); }
+            } catch (e) { alert("Error de red al subir la foto."); }
+            finally { progress.style.display = "none"; this.value = ""; }
         });
     }
- 
-    // ── Eliminar foto ────────────────────────────────────────────────────────
+
     window.eliminarFoto = async function (fotoId) {
         if (!confirm("¿Eliminar esta foto?")) return;
         const res  = await fetch(`/api/fotos/eliminar/${fotoId}`, { method: "POST" });
         const data = await res.json();
-        if (data.ok) {
-            const el = document.getElementById(`foto-${fotoId}`);
-            if (el) el.remove();
-        } else {
-            alert("Error al eliminar.");
-        }
+        if (data.ok) { const el = document.getElementById(`foto-${fotoId}`); if (el) el.remove(); }
+        else { alert("Error al eliminar."); }
     };
- 
-    // Cargar al montar
+
     cargarFotos();
 })();
 </script>
@@ -149,7 +112,67 @@
         📝 {{ animal.notas }}
     </p>
     {% endif %}
+
+    <!-- Botón VENDER — solo si está activo y es admin -->
+    {% if mi_rol == 'admin' and animal.estado == 'activo' %}
+    <div style="margin-top:12px;">
+        <button class="btn-primary" style="background:#3498db;"
+                onclick="document.getElementById('modal-vender').classList.add('active')">
+            💰 Vender este animal
+        </button>
+    </div>
+    {% endif %}
 </div>
+
+<!-- ══ MODAL VENDER ANIMAL ═══════════════════════════════════════════ -->
+{% if mi_rol == 'admin' and animal.estado == 'activo' %}
+<div class="modal-overlay" id="modal-vender">
+    <div class="modal-box">
+        <h3>💰 Vender animal</h3>
+        <p style="font-size:14px;color:#555;margin:0 0 14px 0;">
+            <strong>{{ animal.nombre or ('#' + animal.arete) if animal.arete else 'Animal #' + animal.id|string }}</strong>
+            {% if animal.lote_nombre != 'Sin lote' %}
+            · {{ animal.lote_nombre }}
+            {% endif %}
+        </p>
+        <form method="POST" action="/vender_animal/{{ animal.id }}">
+            <div class="form-group">
+                <label>Precio de venta ($)</label>
+                <input class="form-control" type="number" step="0.01" name="total"
+                       placeholder="Ej: 850.00" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha de venta</label>
+                <input class="form-control" type="date" name="fecha" required
+                       value="{{ '' }}">
+            </div>
+            <div class="form-group">
+                <label>Comprador (opcional)</label>
+                <input class="form-control" type="text" name="concepto"
+                       placeholder="Nombre del comprador">
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="document.getElementById('modal-vender').classList.remove('active')"
+                        style="background:#ecf0f1;color:#2c3e50;">
+                    Cancelar
+                </button>
+                <button type="submit" style="background:#3498db;color:white;">
+                    💰 Confirmar venta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+// Poner fecha de hoy por defecto en el modal
+document.addEventListener('DOMContentLoaded', function() {
+    const hoy = new Date().toISOString().split('T')[0];
+    const fechaInput = document.querySelector('#modal-vender input[name="fecha"]');
+    if (fechaInput) fechaInput.value = hoy;
+});
+</script>
+{% endif %}
+<!-- ══ FIN MODAL VENDER ══════════════════════════════════════════════ -->
 
 {% if mi_rol == 'admin' %}
 <!-- Editar animal -->
@@ -230,10 +253,9 @@
         </span>
         {% endif %}
     </h3>
-
     <form method="POST" action="/registrar_pesaje" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
         <input type="hidden" name="tipo_ref" value="animal">
-        <input type="hidden" name="ref_id" value="{{ animal.id }}">
+        <input type="hidden" name="ref_id"   value="{{ animal.id }}">
         <div class="form-group" style="margin:0;">
             <label style="font-size:12px;">Peso (kg)</label>
             <input class="form-control" type="number" step="0.1" name="peso_kg" placeholder="0.0" required>
@@ -246,9 +268,7 @@
             <button class="btn-primary" style="padding:8px;">➕ Registrar pesaje</button>
         </div>
     </form>
-
     {% if pesajes %}
-        <!-- Mini gráfico de barras -->
         {% set max_peso = pesajes | map(attribute='peso_kg') | map('float') | max %}
         {% for p in pesajes %}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
@@ -269,7 +289,7 @@
     {% endif %}
 </div>
 
-<!-- Historial reproductivo (solo hembras y machos activos) -->
+<!-- Historial reproductivo -->
 {% if animal.sexo in ('hembra', 'macho') %}
 <div class="card">
     <h3>🐣 Historial reproductivo</h3>
@@ -318,7 +338,6 @@
 {% endif %}
 
 {% if mi_rol == 'admin' %}
-<!-- Eliminar -->
 <div class="card">
     <button class="btn-peligro" style="width:auto;"
         onclick="if(confirm('¿Eliminar este animal y todos sus registros?')) document.getElementById('form-eliminar').submit();">

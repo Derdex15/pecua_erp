@@ -3,10 +3,13 @@
 
 <h1>💰 Ventas</h1>
 
-<div class="card">
-    <h3>➕ Registrar Venta</h3>
+<!-- Venta por lote -->
+<details class="card">
+    <summary style="cursor:pointer;font-weight:bold;font-size:15px;">
+        ➕ Registrar venta por lote
+    </summary>
+    <br>
     <form method="POST" action="/registrar_venta">
-
         <div class="form-group">
             <label>Lote</label>
             <select class="form-control" name="lote_id" required>
@@ -16,37 +19,87 @@
                 {% endfor %}
             </select>
         </div>
-
         <div class="form-group">
             <label>Cantidad a vender</label>
             <input class="form-control" type="number" name="cantidad" placeholder="Ej: 5" min="1" required>
         </div>
-
         <div class="form-group">
-            <label>Total recibido (<span class="moneda-sym">$</span>)</label>
+            <label>Total recibido ($)</label>
             <input class="form-control" type="number" step="0.01" name="total" placeholder="Ej: 250.00" min="0" required>
         </div>
-
+        <div class="form-group">
+            <label>Comprador (opcional)</label>
+            <input class="form-control" type="text" name="concepto" placeholder="Nombre del comprador">
+        </div>
         <div class="form-group">
             <label>Fecha</label>
             <input class="form-control" type="date" name="fecha" required>
         </div>
-
-        <button class="btn-primary">💾 Registrar Venta</button>
+        <button class="btn-primary">💾 Registrar venta de lote</button>
     </form>
+</details>
+
+<div class="card" style="background:#e8f5e9;border:1px solid #a5d6a7;text-align:center;padding:14px;">
+    <p style="margin:0;font-size:14px;color:#2e7d32;">
+        🐾 Para vender un <strong>animal individual</strong>, ve a su ficha en
+        <a href="/animales" style="color:#1b5e20;font-weight:bold;">Animales individuales</a>
+        y toca el botón <strong>💰 Vender</strong>.
+    </p>
 </div>
 
-<h2>📋 Ventas registradas</h2>
+<h2 style="margin-top:16px;">📋 Ventas registradas</h2>
 
 {% if ventas %}
     {% for v in ventas %}
-    <div class="card">
-        <p style="margin:0 0 4px 0;"><strong>📅 {{ v.fecha }}</strong> &nbsp;|&nbsp; 📦 {{ v.lote_nombre }}</p>
-        <p style="margin:0;">🐾 {{ v.cantidad }} animales &nbsp;|&nbsp; 💵 <span class="moneda-sym">$</span>{{ "%.2f"|format(v.total) }}</p>
+    <div class="card" style="border-left:4px solid {% if v.tipo_venta == 'individual' %}#3498db{% else %}#27ae60{% endif %};">
+
+        {% if v.tipo_venta == 'individual' %}
+        <!-- Venta individual -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <p style="margin:0 0 3px 0;font-size:15px;font-weight:bold;">
+                    🐾 {{ v.animal_label }}
+                    <span style="font-size:11px;background:#e3f2fd;color:#1565c0;
+                                 padding:2px 7px;border-radius:10px;margin-left:4px;">
+                        Individual
+                    </span>
+                </p>
+                <p style="margin:0;font-size:13px;color:#555;">
+                    📅 {{ v.fecha }}
+                    {% if v.lote_nombre != '—' %} · 📦 {{ v.lote_nombre }}{% endif %}
+                    {% if v.concepto %} · {{ v.concepto }}{% endif %}
+                </p>
+            </div>
+            <p style="margin:0;font-size:18px;font-weight:bold;color:#3498db;">
+                ${{ "%.2f"|format(v.total) }}
+            </p>
+        </div>
+        {% else %}
+        <!-- Venta de lote -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <p style="margin:0 0 3px 0;font-size:15px;font-weight:bold;">
+                    📦 {{ v.lote_nombre }}
+                    <span style="font-size:11px;background:#e8f5e9;color:#2e7d32;
+                                 padding:2px 7px;border-radius:10px;margin-left:4px;">
+                        Lote
+                    </span>
+                </p>
+                <p style="margin:0;font-size:13px;color:#555;">
+                    📅 {{ v.fecha }} · 🐄 {{ v.cantidad }} animales
+                    {% if v.concepto %} · {{ v.concepto }}{% endif %}
+                </p>
+            </div>
+            <p style="margin:0;font-size:18px;font-weight:bold;color:#27ae60;">
+                ${{ "%.2f"|format(v.total) }}
+            </p>
+        </div>
+        {% endif %}
+
         {% if mi_rol == 'admin' %}
-        <div class="card-actions">
-            <button class="btn-peligro" style="width:auto;"
-                onclick="confirmarEliminar('{{ v.id }}', '{{ v.fecha }}', {{ v.cantidad }})">
+        <div class="card-actions" style="margin-top:8px;">
+            <button class="btn-peligro" style="width:auto;font-size:13px;padding:7px 12px;"
+                onclick="confirmarEliminar('{{ v.id }}', '{{ v.fecha }}', {{ v.cantidad or 1 }}, '{{ v.tipo_venta }}')">
                 🗑 Eliminar
             </button>
         </div>
@@ -57,35 +110,37 @@
     <div class="card"><p style="color:gray;">No hay ventas registradas aún.</p></div>
 {% endif %}
 
-<!-- Modal (solo se activa si admin) -->
+<!-- Modal eliminar -->
 <div class="modal-overlay" id="modalEliminar">
     <div class="modal-box">
         <h3>⚠️ Eliminar venta</h3>
         <p id="modalTexto"></p>
-        <p style="color:#27ae60; font-size:13px;">Los animales serán devueltos al lote.</p>
+        <p id="modalSubtexto" style="color:#27ae60;font-size:13px;"></p>
         <div class="modal-actions">
             <button onclick="cerrarModal()" style="background:#ecf0f1;">❌ Cancelar</button>
             <form id="formEliminar" method="POST" style="flex:1;">
-                <button type="submit" style="background:#e74c3c; color:white; width:100%;">🗑 Eliminar</button>
+                <button type="submit" style="background:#e74c3c;color:white;width:100%;">🗑 Eliminar</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-function confirmarEliminar(id, fecha, cantidad) {
-    document.getElementById("modalTexto").textContent =
-        `¿Eliminar la venta del ${fecha} (${cantidad} animales)?`;
+function confirmarEliminar(id, fecha, cantidad, tipo) {
+    const texto = tipo === 'individual'
+        ? `¿Eliminar la venta individual del ${fecha}?`
+        : `¿Eliminar la venta del ${fecha} (${cantidad} animales)?`;
+    const subtexto = tipo === 'individual'
+        ? 'El animal volverá a estado Activo.'
+        : 'Los animales serán devueltos al lote.';
+    document.getElementById("modalTexto").textContent    = texto;
+    document.getElementById("modalSubtexto").textContent = subtexto;
     document.getElementById("formEliminar").action = `/eliminar_venta/${id}`;
     document.getElementById("modalEliminar").classList.add("active");
 }
 function cerrarModal() {
     document.getElementById("modalEliminar").classList.remove("active");
 }
-window.addEventListener('DOMContentLoaded', () => {
-    const m = localStorage.getItem('erp_moneda') || '$';
-    document.querySelectorAll('.moneda-sym').forEach(el => el.textContent = m);
-});
 </script>
 
 {% endblock %}

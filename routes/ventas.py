@@ -11,7 +11,7 @@ def _fmt(valor):
     return round(float(valor or 0), 2)
 
 
-# ================= MOVIMIENTOS (vista) =================
+# ── MOVIMIENTOS (vista principal) ──────────────────────────────────────────────
 @bp.route("/movimientos")
 def movimientos():
     if "user_id" not in session:
@@ -22,32 +22,52 @@ def movimientos():
     lotes  = sb_get("lotes",  f"usuario_id=eq.{owner_id}&activo=eq.true")
     ventas = sb_get("ventas", f"usuario_id=eq.{owner_id}&order=fecha.desc")
 
-    todos_lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}")
-    lotes_idx   = {l["id"]: l["nombre"] for l in todos_lotes}
+    todos_lotes    = sb_get("lotes",   f"usuario_id=eq.{owner_id}")
+    todos_animales = sb_get("animales",f"usuario_id=eq.{owner_id}")
+    lotes_idx      = {l["id"]: l["nombre"] for l in todos_lotes}
+    animales_idx   = {a["id"]: a           for a in todos_animales}
+
     for v in ventas:
-        v["lote_nombre"] = lotes_idx.get(v.get("lote_id"), "Desconocido")
-        v["total"]       = _fmt(v.get("total", 0))
+        v["total"] = _fmt(v.get("total", 0))
 
-    return render_template("movimientos.html", lotes=lotes, ventas=ventas, mi_rol=mi_rol)
+        if v.get("animal_id"):
+            # Venta de animal individual
+            a = animales_idx.get(v["animal_id"], {})
+            label = a.get("nombre") or (f"#{a.get('arete')}" if a.get("arete") else f"Animal #{v['animal_id']}")
+            v["tipo_venta"]   = "individual"
+            v["animal_label"] = label
+            v["lote_nombre"]  = lotes_idx.get(v.get("lote_id"), "—")
+        else:
+            # Venta de lote
+            v["tipo_venta"]  = "lote"
+            v["lote_nombre"] = lotes_idx.get(v.get("lote_id"), "Desconocido")
+
+    return render_template(
+        "movimientos.html",
+        lotes   = lotes,
+        ventas  = ventas,
+        mi_rol  = mi_rol,
+    )
 
 
-# ================= REGISTRAR VENTA (operador y admin) =================
+# ── VENTA POR LOTE (flujo original) ───────────────────────────────────────────
 @bp.route("/registrar_venta", methods=["POST"])
 def registrar_venta():
     if "user_id" not in session:
         return redirect("/login")
 
-    # Usar owner_id para que los datos queden en la cuenta del dueño
     owner_id, _ = get_granja_info(session["user_id"])
 
     lote_id  = request.form.get("lote_id",  "").strip()
     cantidad = request.form.get("cantidad", "").strip()
     total    = request.form.get("total",    "").strip()
     fecha    = request.form.get("fecha",    "").strip()
+    concepto = request.form.get("concepto", "").strip() or None
 
     if not all([lote_id, cantidad, total, fecha]):
         flash("Completa todos los campos de la venta.", "error")
         return redirect("/movimientos")
+
     try:
         lote_id  = int(lote_id)
         cantidad = int(cantidad)
@@ -69,13 +89,14 @@ def registrar_venta():
         return redirect("/movimientos")
 
     backup_automatico(owner_id)
-
     sb_post("ventas", {
-        "usuario_id": owner_id,   # ← siempre del dueño
+        "usuario_id": owner_id,
         "lote_id":    lote_id,
+        "animal_id":  None,
         "cantidad":   cantidad,
         "total":      total,
         "fecha":      fecha,
+        "concepto":   concepto,
     })
 
     nueva = disponibles - cantidad
@@ -86,7 +107,78 @@ def registrar_venta():
     return redirect("/movimientos")
 
 
-# ================= ELIMINAR VENTA (solo admin) =================
+# ── VENTA DE ANIMAL INDIVIDUAL ─────────────────────────────────────────────────
+@bp.route("/vender_animal/<animal_id>", methods=["POST"])
+@solo_admin
+def vender_animal(animal_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    owner_id, _ = get_granja_info(session["user_id"])
+
+    # Verificar que el animal existe y pertenece al owner
+    animal_data = sb_get("animales", f"id=eq.{animal_id}&usuario_id=eq.{owner_id}")
+    if not animal_data:
+        flash("Animal no encontrado.", "error")
+        return redirect("/animales")
+
+    animal = animal_data[0]
+
+    if animal.get("estado") != "activo":
+        flash(f"Este animal no está activo (estado: {animal.get('estado')}).", "error")
+        return redirect(f"/animal/{animal_id}")
+
+    # Datos del formulario
+    total    = request.form.get("total",    "").strip()
+    fecha    = request.form.get("fecha",    "").strip()
+    concepto = request.form.get("concepto", "").strip() or None
+
+    if not total or not fecha:
+        flash("El precio y la fecha son obligatorios.", "error")
+        return redirect(f"/animal/{animal_id}")
+
+    try:
+        total = round(float(total), 2)
+        if total < 0:
+            raise ValueError
+    except ValueError:
+        flash("El precio debe ser un número válido.", "error")
+        return redirect(f"/animal/{animal_id}")
+
+    lote_id = animal.get("lote_id")
+    label   = animal.get("nombre") or (f"#{animal.get('arete')}" if animal.get("arete") else f"Animal #{animal_id}")
+
+    backup_automatico(owner_id)
+
+    # Crear registro de venta
+    sb_post("ventas", {
+        "usuario_id": owner_id,
+        "lote_id":    lote_id,       # puede ser None
+        "animal_id":  int(animal_id),
+        "cantidad":   1,
+        "total":      total,
+        "fecha":      fecha,
+        "concepto":   concepto or f"Venta individual — {label}",
+    })
+
+    # Marcar animal como vendido
+    sb_patch("animales", f"id=eq.{animal_id}&usuario_id=eq.{owner_id}",
+             {"estado": "vendido"})
+
+    # Descontar del lote si pertenece a uno
+    if lote_id:
+        lote = sb_get("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}")
+        if lote:
+            nueva_cantidad = max(0, lote[0].get("cantidad_actual", 1) - 1)
+            sb_patch("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}",
+                     {"cantidad_actual": nueva_cantidad,
+                      "activo": nueva_cantidad > 0})
+
+    flash(f"✅ {label} vendido por ${total:.2f}. Registro creado en ventas.", "success")
+    return redirect(f"/animal/{animal_id}")
+
+
+# ── ELIMINAR VENTA ─────────────────────────────────────────────────────────────
 @bp.route("/eliminar_venta/<venta_id>", methods=["POST"])
 @solo_admin
 def eliminar_venta(venta_id):
@@ -103,13 +195,28 @@ def eliminar_venta(venta_id):
     v = venta[0]
     backup_automatico(owner_id)
 
-    lote = sb_get("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}")
-    if lote:
-        nueva_cantidad = lote[0].get("cantidad_actual", 0) + v.get("cantidad", 0)
-        sb_patch("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}", {
-            "cantidad_actual": nueva_cantidad, "activo": True
-        })
+    if v.get("animal_id"):
+        # Venta individual — restaurar animal a activo
+        sb_patch("animales", f"id=eq.{v['animal_id']}&usuario_id=eq.{owner_id}",
+                 {"estado": "activo"})
+        # Restaurar cuenta del lote si aplica
+        if v.get("lote_id"):
+            lote = sb_get("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}")
+            if lote:
+                nueva_cantidad = lote[0].get("cantidad_actual", 0) + 1
+                sb_patch("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}",
+                         {"cantidad_actual": nueva_cantidad, "activo": True})
+        sb_delete("ventas", f"id=eq.{venta_id}&usuario_id=eq.{owner_id}")
+        flash("🗑 Venta eliminada. El animal volvió a estado Activo.", "success")
+    else:
+        # Venta de lote — restaurar cantidad
+        if v.get("lote_id"):
+            lote = sb_get("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}")
+            if lote:
+                nueva_cantidad = lote[0].get("cantidad_actual", 0) + v.get("cantidad", 0)
+                sb_patch("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}",
+                         {"cantidad_actual": nueva_cantidad, "activo": True})
+        sb_delete("ventas", f"id=eq.{venta_id}&usuario_id=eq.{owner_id}")
+        flash("🗑 Venta eliminada y animales devueltos al lote.", "success")
 
-    sb_delete("ventas", f"id=eq.{venta_id}&usuario_id=eq.{owner_id}")
-    flash("🗑 Venta eliminada y animales devueltos al lote.", "success")
     return redirect("/movimientos")
