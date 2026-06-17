@@ -173,10 +173,11 @@
 </div>
 
 <!-- Resumen del mes -->
-{% set total_eventos = eventos.values() | sum(attribute='__len__') if eventos else 0 %}
 {% if eventos %}
+{% set ns = namespace(total=0) %}
+{% for v in eventos.values() %}{% set ns.total = ns.total + v|length %}{% endfor %}
 <div class="card" style="margin-top:8px;">
-    <h3>📌 Eventos este mes ({{ eventos.values() | list | sum(start=[]) | length }})</h3>
+    <h3>📌 Eventos este mes ({{ ns.total }})</h3>
     {% for dia in eventos | sort %}
     {% set ev_dia = eventos[dia] %}
     <div style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
@@ -227,4 +228,4 @@ function mostrarDia(dia, eventos) {
 }
 </script>
 
-{% endblock %}
+{% endblock %}S
