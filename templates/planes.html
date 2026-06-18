@@ -5,24 +5,6 @@
 
 {% if es_premium %}
 <!-- ══ USUARIO CON PLAN ACTIVO ══════════════════════════════════ -->
-
-{% if suscripcion and suscripcion.metodo_pago == 'trial' %}
-<!-- Banner especial para usuarios en periodo de prueba -->
-<div class="card" style="background:linear-gradient(135deg,#f39c12,#e67e22);
-     color:white;text-align:center;padding:18px;">
-    <div style="font-size:32px;">⏳</div>
-    <h3 style="color:white;margin:6px 0;">Período de prueba activo</h3>
-    <p style="color:rgba(255,255,255,.9);margin:0 0 14px 0;">
-        Te quedan <strong>{{ dias_restantes }} días</strong> de prueba gratuita.
-        Activa un plan de pago para no perder el acceso.
-    </p>
-    <a href="#planes-pago" style="background:white;color:#e67e22;padding:10px 22px;
-       border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;
-       display:inline-block;">
-        💳 Activar plan de pago
-    </a>
-</div>
-{% else %}
 <div class="card" style="background:linear-gradient(135deg,#27ae60,#2ecc71);
      color:white;text-align:center;padding:20px;">
     <div style="font-size:40px;">🌟</div>
@@ -32,7 +14,6 @@
         {% if suscripcion %} — {{ suscripcion.fecha_fin }}{% endif %}
     </p>
 </div>
-{% endif %}
 
 <div class="card">
     <h3>✅ Tienes acceso a:</h3>
@@ -46,44 +27,25 @@
     </div>
 </div>
 
-<!-- Renovar / Activar plan de pago -->
-<div class="card" id="planes-pago" style="border:2px solid #003087;">
-    <h3 style="text-align:center;color:#003087;margin:0 0 4px 0;">
-        {% if suscripcion and suscripcion.metodo_pago == 'trial' %}
-        💳 Activar plan de pago
-        {% else %}
-        🔄 Renovar plan
-        {% endif %}
-    </h3>
-    <p style="text-align:center;font-size:13px;color:#555;margin:0 0 14px 0;">
-        Pago seguro con PayPal
-    </p>
+<div class="card">
+    <h3 style="margin:0 0 12px 0;">🔄 Renovar plan</h3>
     {% for key, plan in planes.items() %}
     <form method="POST" action="/paypal/checkout/{{ key }}" style="margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;
-                    background:{% if key == '3' %}#003087{% else %}white{% endif %};
-                    color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
-                    border:2px solid {% if key == '3' %}#003087{% else %}#ddd{% endif %};
-                    border-radius:12px;padding:12px 14px;">
+                    border:1px solid #eee;border-radius:10px;padding:10px 14px;">
             <div>
                 <strong style="font-size:14px;">{{ plan.label }}</strong>
                 {% if plan.descuento > 0 %}
-                <span style="font-size:11px;padding:2px 7px;border-radius:10px;margin-left:6px;
-                             background:{% if key == '3' %}rgba(255,255,255,.2){% else %}#e8eaf6{% endif %};
-                             color:{% if key == '3' %}white{% else %}#003087{% endif %};">
-                    Ahorra {{ plan.descuento }}%
+                <span style="background:#fff3cd;color:#856404;font-size:11px;
+                             padding:2px 7px;border-radius:10px;margin-left:6px;">
+                    -{{ plan.descuento }}%
                 </span>
                 {% endif %}
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <strong style="color:{% if key == '3' %}white{% else %}#27ae60{% endif %};">
-                    ${{ "%.2f"|format(plan.precio_usd) }}
-                </strong>
-                <button type="submit" class="btn-primary"
-                        style="padding:7px 14px;font-size:13px;width:auto;
-                               background:{% if key == '3' %}white{% else %}#003087{% endif %};
-                               color:{% if key == '3' %}#003087{% else %}white{% endif %};">
-                    Pagar
+                <strong style="color:#27ae60;">${{ plan.precio }}</strong>
+                <button class="btn-primary" style="padding:6px 14px;font-size:13px;">
+                    Renovar
                 </button>
             </div>
         </div>
@@ -91,7 +53,6 @@
     {% endfor %}
 </div>
 
-{% if not (suscripcion and suscripcion.metodo_pago == 'trial') %}
 <div class="card">
     <form action="/cancelar_premium" method="POST"
           onsubmit="return confirm('¿Marcar para cancelar al vencer?')">
@@ -101,7 +62,6 @@
         <button class="btn-peligro" style="width:auto;">Cancelar al vencer</button>
     </form>
 </div>
-{% endif %}
 
 <div style="text-align:center;margin-top:8px;">
     <a href="/mis_pagos" style="color:gray;font-size:12px;text-decoration:underline;">
@@ -137,6 +97,7 @@
 </div>
 {% endif %}
 
+<!-- Tabla comparativa -->
 <div class="card">
     <h3>¿Qué incluye cada plan?</h3>
     <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
@@ -161,11 +122,13 @@
                 ("⚖️ Pesajes + GDP", False, True),
                 ("🌽 Insumos con alertas", False, True),
                 ("📊 PDFs de reportes", False, True),
+                ("🧬 Genealogía (madre/padre)", False, True),
                 ("👥 Múltiples usuarios", False, True),
                 ("📅 Calendario de actividades", False, True),
                 ("📋 Presupuesto y proyecciones", False, True),
                 ("🏪 Proveedores", False, True),
                 ("📷 Fotos por animal/lote", False, True),
+                ("📈 KPIs avanzados (ROI, costo/kg)", False, True),
                 ("💾 Backups ilimitados", False, True),
             ] %}
             <tr style="border-bottom:1px solid #f5f5f5;">
@@ -178,51 +141,76 @@
     </table>
 </div>
 
-<div class="card" style="border:2px solid #003087;">
-    <h3 style="text-align:center;color:#003087;margin:0 0 4px 0;">
-        💳 Elige tu plan
-    </h3>
-    <p style="text-align:center;font-size:13px;color:#555;margin:0 0 16px 0;">
-        Pago seguro con PayPal — Visa, Mastercard y más
-    </p>
-
-    {% for key, plan in planes.items() %}
-    <form method="POST" action="/paypal/checkout/{{ key }}" style="margin-bottom:10px;">
-        <button type="submit"
-                style="width:100%;
-                       background:{% if key == '3' %}#003087{% else %}white{% endif %};
-                       color:{% if key == '3' %}white{% else %}#2c3e50{% endif %};
-                       border:2px solid {% if key == '3' %}#003087{% else %}#ddd{% endif %};
-                       border-radius:12px;padding:15px;font-size:14px;cursor:pointer;
-                       display:flex;justify-content:space-between;align-items:center;">
-            <span>
-                <strong>{{ plan.label }}</strong>
-                {% if plan.descuento > 0 %}
-                <span style="font-size:11px;padding:2px 7px;border-radius:10px;margin-left:6px;
-                             background:{% if key == '3' %}rgba(255,255,255,.2){% else %}#e8eaf6{% endif %};
-                             color:{% if key == '3' %}white{% else %}#003087{% endif %};">
-                    Ahorra {{ plan.descuento }}%
-                </span>
-                {% endif %}
-            </span>
-            <strong style="font-size:17px;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
-        </button>
-    </form>
-    {% endfor %}
-
-    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;
-                padding:10px;background:#f8f9fa;border-radius:10px;">
-        <span style="font-size:20px;">🔒</span>
-        <p style="margin:0;font-size:12px;color:#555;line-height:1.4;">
-            Pago 100% seguro con <strong>PayPal</strong>.
-            Acepta tarjetas de crédito y débito internacionales.
+<!-- ── Lemon Squeezy: suscripción mensual destacada ─────────────── -->
+<div class="card" style="border:2px solid #7c3aed;">
+    <div style="text-align:center;margin-bottom:14px;">
+        <span style="background:#7c3aed;color:white;font-size:11px;font-weight:bold;
+                     padding:3px 10px;border-radius:10px;letter-spacing:.04em;">
+            ⭐ RECOMENDADO
+        </span>
+        <h3 style="color:#7c3aed;margin:8px 0 2px 0;">Suscripción mensual</h3>
+        <p style="font-size:13px;color:#555;margin:0;">
+            Se renueva automáticamente · Cancela cuando quieras
+        </p>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:flex-end;
+                gap:4px;margin:10px 0 16px 0;">
+        <span style="font-size:36px;font-weight:900;color:#7c3aed;">$4.99</span>
+        <span style="font-size:15px;color:#888;padding-bottom:6px;">/mes</span>
+    </div>
+    <a href="/checkout/lemonsqueezy"
+       style="display:block;background:linear-gradient(135deg,#7c3aed,#5b21b6);
+              color:white;text-align:center;padding:14px;border-radius:10px;
+              text-decoration:none;font-size:16px;font-weight:bold;">
+        💳 Suscribirme ahora
+    </a>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;
+                padding:10px;background:#f5f3ff;border-radius:8px;">
+        <span style="font-size:18px;">🔒</span>
+        <p style="margin:0;font-size:12px;color:#6d28d9;line-height:1.4;">
+            Pago seguro con <strong>Lemon Squeezy</strong>.
+            Acepta tarjetas internacionales. Sin compromiso de permanencia.
         </p>
     </div>
 </div>
 
+<!-- ── PayPal: pagos únicos sin renovación automática ─────────── -->
+<details class="card" style="border:1px solid #ddd;">
+    <summary style="cursor:pointer;font-size:14px;font-weight:bold;
+                    color:#555;padding:2px 0;list-style:none;
+                    display:flex;align-items:center;gap:8px;">
+        <span style="font-size:16px;">💳</span>
+        Pago único con PayPal (sin renovación automática)
+    </summary>
+    <p style="font-size:13px;color:#888;margin:10px 0 14px 0;">
+        Paga por varios meses de una vez con descuento. No se renueva automáticamente.
+    </p>
+    {% for key, plan in planes.items() %}
+    <form method="POST" action="/paypal/checkout/{{ key }}" style="margin-bottom:8px;">
+        <button type="submit"
+                style="width:100%;background:white;color:#2c3e50;
+                       border:1.5px solid #ddd;border-radius:10px;padding:12px 14px;
+                       font-size:14px;cursor:pointer;
+                       display:flex;justify-content:space-between;align-items:center;">
+            <span>
+                <strong>{{ plan.label }}</strong>
+                {% if plan.descuento > 0 %}
+                <span style="font-size:11px;padding:2px 7px;border-radius:10px;
+                             margin-left:6px;background:#e8eaf6;color:#003087;">
+                    -{{ plan.descuento }}%
+                </span>
+                {% endif %}
+            </span>
+            <strong style="color:#003087;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+        </button>
+    </form>
+    {% endfor %}
+</details>
+
+<!-- WhatsApp alternativo -->
 <div class="card" style="background:#f0fdf4;border:1px solid #bbf7d0;">
     <p style="margin:0;font-size:13px;color:#166534;text-align:center;">
-        ¿Prefieres pagar por otro medio?
+        ¿Prefieres pagar por transferencia?
         <a href="https://wa.me/593980341380?text=Hola%2C%20quiero%20activar%20ERP%20Pecuario%20Premium"
            target="_blank" style="color:#15803d;font-weight:bold;">
             Escríbenos por WhatsApp

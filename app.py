@@ -88,6 +88,7 @@ def create_app():
     from routes.recuperar_password import bp as recuperar_password_bp
     from routes.admin              import bp as admin_bp
     from routes.paypal             import bp as paypal_bp
+    from routes.lemonsqueezy       import bp as lemonsqueezy_bp
 
     for blueprint in [
         auth_bp, inventario_bp, ventas_bp, gastos_bp,
@@ -96,7 +97,7 @@ def create_app():
         reproduccion_bp, pesajes_bp, onboarding_bp,
         notificaciones_bp, insumos_bp, calendario_bp,
         fotos_bp, proveedores_bp, presupuesto_bp, alertas_bp,
-        recuperar_password_bp, admin_bp, paypal_bp,
+        recuperar_password_bp, admin_bp, paypal_bp, lemonsqueezy_bp,
     ]:
         app.register_blueprint(blueprint)
 
@@ -104,6 +105,7 @@ def create_app():
     csrf.exempt(notificaciones_bp)
     csrf.exempt(fotos_bp)
     csrf.exempt(admin_bp)
+    csrf.exempt(lemonsqueezy_bp)   # webhook no tiene CSRF
 
     # ── PWA ─────────────────────────────────────────────────────────
     @app.route("/sw.js")
