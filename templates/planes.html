@@ -27,8 +27,28 @@
     </div>
 </div>
 
-<div class="card">
-    <h3 style="margin:0 0 12px 0;">🔄 Renovar plan</h3>
+<!-- Renovar con Lemon Squeezy (mensual, automático) -->
+<div class="card" style="border:2px solid #7c3aed;">
+    <p style="margin:0 0 6px 0;font-size:12px;font-weight:bold;color:#7c3aed;
+              text-transform:uppercase;letter-spacing:.04em;">⭐ Recomendado</p>
+    <h3 style="margin:0 0 4px 0;color:#7c3aed;">Renovar con suscripción mensual</h3>
+    <p style="font-size:13px;color:#555;margin:0 0 12px 0;">
+        $4.99/mes · Se renueva automáticamente · Cancela cuando quieras
+    </p>
+    <a href="/checkout/lemonsqueezy"
+       style="display:block;background:linear-gradient(135deg,#7c3aed,#5b21b6);
+              color:white;text-align:center;padding:12px;border-radius:10px;
+              text-decoration:none;font-size:15px;font-weight:bold;">
+        💳 Renovar con Lemon Squeezy
+    </a>
+</div>
+
+<!-- Renovar con PayPal (pago único) -->
+<details class="card" style="border:1px solid #ddd;">
+    <summary style="cursor:pointer;font-weight:bold;font-size:14px;color:#555;padding:2px 0;">
+        💳 Renovar con PayPal (pago único sin renovación automática)
+    </summary>
+    <br>
     {% for key, plan in planes.items() %}
     <form method="POST" action="/paypal/checkout/{{ key }}" style="margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;
@@ -43,15 +63,16 @@
                 {% endif %}
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <strong style="color:#27ae60;">${{ plan.precio }}</strong>
-                <button class="btn-primary" style="padding:6px 14px;font-size:13px;">
+                <strong style="color:#003087;">${{ "%.2f"|format(plan.precio_usd) }}</strong>
+                <button class="btn-primary" style="padding:6px 14px;font-size:13px;
+                                                   background:#003087;">
                     Renovar
                 </button>
             </div>
         </div>
     </form>
     {% endfor %}
-</div>
+</details>
 
 <div class="card">
     <form action="/cancelar_premium" method="POST"
