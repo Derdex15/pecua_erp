@@ -1,46 +1,61 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h1>🐄 Inventario</h1>
+<h1>📦 Lotes</h1>
 
+<!-- ── Crear lote (colapsable) ────────────────────────────────── -->
 {% if mi_rol == 'admin' %}
-<div class="card">
-    <h3>➕ Crear Lote</h3>
-    <p style="color:gray; font-size:13px;">💡 Un lote es un grupo de animales que manejas juntos</p>
-
+<details class="card">
+    <summary style="cursor:pointer;font-weight:bold;font-size:15px;padding:2px 0;
+                    display:flex;align-items:center;gap:8px;">
+        <span style="background:#27ae60;color:white;border-radius:50%;
+                     width:24px;height:24px;display:inline-flex;align-items:center;
+                     justify-content:center;font-size:14px;flex-shrink:0;">+</span>
+        Crear nuevo lote
+    </summary>
+    <p style="color:gray;font-size:13px;margin:10px 0 14px 0;">
+        💡 Un lote es un grupo de animales que manejas juntos
+    </p>
     <form method="POST" action="/crear_lote">
 
         <div class="form-group">
             <label>Nombre del lote</label>
-            <input class="form-control" name="nombre" placeholder="Ej: Cerdos marzo 2026" required>
+            <input class="form-control" name="nombre"
+                   placeholder="Ej: Cerdos marzo 2026" required>
         </div>
 
-        <div class="form-group">
-            <label>Tipo de animal</label>
-            <select class="form-control" name="tipo" id="tipo" onchange="cargarRazas()" required>
-                <option value="">Selecciona un tipo</option>
-                <option value="cerdo">Cerdo</option>
-                <option value="pollo">Pollo</option>
-                <option value="vaca">Vaca</option>
-                <option value="cabra">Cabra</option>
-            </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Tipo de animal</label>
+                <select class="form-control" name="tipo" id="tipo"
+                        onchange="cargarRazas()" required>
+                    <option value="">Selecciona un tipo</option>
+                    <option value="vaca">🐄 Vaca</option>
+                    <option value="cerdo">🐷 Cerdo</option>
+                    <option value="pollo">🐔 Pollo</option>
+                    <option value="cabra">🐐 Cabra</option>
+                    <option value="oveja">🐑 Oveja</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Raza</label>
+                <select class="form-control" name="raza" id="raza" required>
+                    <option value="">Primero elige tipo</option>
+                </select>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>Raza</label>
-            <select class="form-control" name="raza" id="raza" required>
-                <option value="">Primero selecciona un tipo</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Cantidad de animales</label>
-            <input class="form-control" type="number" name="cantidad" placeholder="Ej: 20" min="1" required>
-        </div>
-
-        <div class="form-group">
-            <label>Costo total del lote (<span id="lbl_moneda">$</span>)</label>
-            <input class="form-control" type="number" step="0.01" name="costo" placeholder="Ej: 500.00" min="0" required>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="form-group">
+                <label>Cantidad de animales</label>
+                <input class="form-control" type="number" name="cantidad"
+                       placeholder="Ej: 20" min="1" required>
+            </div>
+            <div class="form-group">
+                <label>Costo total ($)</label>
+                <input class="form-control" type="number" step="0.01"
+                       name="costo" placeholder="Ej: 500.00" min="0" required>
+            </div>
         </div>
 
         <div class="form-group">
@@ -50,43 +65,77 @@
 
         <button class="btn-primary">💾 Guardar Lote</button>
     </form>
-</div>
+</details>
+
 {% else %}
-<div class="card" style="background:#fff3cd; border-left:4px solid #f39c12;">
-    <p style="margin:0; font-size:13px; color:#856404;">
-        🔧 Modo operador — Puedes registrar ventas y gastos, pero solo el administrador puede crear o eliminar lotes.
+<div class="card" style="background:#fff3cd;border-left:4px solid #f39c12;">
+    <p style="margin:0;font-size:13px;color:#856404;">
+        🔧 Modo operador — Solo el administrador puede crear o eliminar lotes.
     </p>
 </div>
 {% endif %}
 
-<h2>📦 Tus Lotes Activos</h2>
-<a href="/lotes_historial" class="btn-secundario" style="margin-bottom:10px; display:inline-block;">
-    📜 Ver lotes inactivos
-</a>
+<!-- ── Lotes activos ──────────────────────────────────────────── -->
+<div style="display:flex;justify-content:space-between;align-items:center;
+            margin:16px 0 8px 0;">
+    <h2 style="margin:0;font-size:17px;">Tus Lotes Activos</h2>
+    <a href="/lotes_historial" style="font-size:13px;color:#3498db;text-decoration:none;">
+        Ver inactivos →
+    </a>
+</div>
 
 {% if lotes %}
     {% for l in lotes %}
-    <div class="card">
-        <h3 style="margin:0 0 8px 0;">📦 {{ l.nombre }}</h3>
-        <p style="margin:2px 0; color:gray; font-size:13px;">{{ l.tipo | capitalize }} — {{ l.raza }}</p>
-        <p style="margin:4px 0;">
-            <strong>Inicial:</strong> {{ l.cantidad_inicial }} &nbsp;|&nbsp;
-            <strong>Actual:</strong> {{ l.cantidad_actual }}
-        </p>
-        <p style="margin:4px 0;">
-            <strong>Inversión:</strong>
-            <span class="moneda-sym">$</span>{{ "%.2f"|format(l.costo_compra or 0) }}
-        </p>
-        <p style="margin:4px 0;"><strong>Fecha:</strong> {{ l.fecha }}</p>
+    <div class="card" style="border-left:4px solid #27ae60;">
 
+        <!-- Cabecera del lote -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <h3 style="margin:0 0 3px 0;font-size:16px;">{{ l.nombre }}</h3>
+                <p style="margin:0;color:#888;font-size:12px;">
+                    {{ l.tipo|capitalize }} — {{ l.raza }}
+                </p>
+            </div>
+            <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+                <p style="margin:0;font-size:18px;font-weight:bold;color:#27ae60;">
+                    {{ l.cantidad_actual }}
+                    <span style="font-size:12px;font-weight:normal;color:#aaa;">/ {{ l.cantidad_inicial }}</span>
+                </p>
+                <p style="margin:0;font-size:11px;color:#aaa;">animales</p>
+            </div>
+        </div>
+
+        <!-- Datos financieros -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;
+                    margin:10px 0 12px 0;background:#f8f9fa;
+                    border-radius:10px;padding:10px;">
+            <div>
+                <p style="margin:0;font-size:11px;color:#aaa;">Inversión</p>
+                <p style="margin:2px 0 0 0;font-size:14px;font-weight:bold;color:#e67e22;">
+                    ${{ "%.2f"|format(l.costo_compra or 0) }}
+                </p>
+            </div>
+            <div>
+                <p style="margin:0;font-size:11px;color:#aaa;">Fecha compra</p>
+                <p style="margin:2px 0 0 0;font-size:14px;color:#555;">{{ l.fecha }}</p>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
         <div class="card-actions">
             {% if mi_rol == 'admin' %}
-            <a href="/detalle_lote/{{ l.id }}" class="btn-secundario">📊 Detalle</a>
+            <a href="/detalle_lote/{{ l.id }}" class="btn-info" style="font-size:13px;padding:8px 12px;">
+                📊 Detalle
+            </a>
             {% endif %}
-            <a href="/movimientos" class="btn-secundario">💰 Vender</a>
+            <a href="/movimientos" class="btn-venta" style="font-size:13px;padding:8px 12px;">
+                💰 Vender
+            </a>
             {% if mi_rol == 'admin' %}
-            <a href="/editar_lote/{{ l.id }}" class="btn-warning">✏️ Editar</a>
-            <button class="btn-peligro" style="width:auto;"
+            <a href="/editar_lote/{{ l.id }}" class="btn-warning" style="font-size:13px;padding:8px 12px;">
+                ✏️ Editar
+            </a>
+            <button class="btn-peligro" style="width:auto;font-size:13px;padding:8px 12px;"
                 onclick="confirmarEliminar('{{ l.id }}', '{{ l.nombre }}')">
                 🗑 Eliminar
             </button>
@@ -95,8 +144,19 @@
     </div>
     {% endfor %}
 {% else %}
-    <div class="card">
-        <p style="color:gray;">No hay lotes activos.</p>
+    <div class="card" style="text-align:center;padding:30px 20px;">
+        <div style="font-size:48px;margin-bottom:8px;">📦</div>
+        <h3 style="color:#2c3e50;margin:0 0 8px 0;">Sin lotes activos</h3>
+        <p style="color:#aaa;margin:0 0 16px 0;font-size:14px;">
+            Crea tu primer lote para empezar a registrar animales.
+        </p>
+        {% if mi_rol == 'admin' %}
+        <button onclick="document.querySelector('details').open=true;
+                         document.querySelector('details').scrollIntoView();"
+                class="btn-primary" style="width:auto;padding:10px 20px;">
+            ➕ Crear primer lote
+        </button>
+        {% endif %}
     </div>
 {% endif %}
 
@@ -105,11 +165,16 @@
     <div class="modal-box">
         <h3>⚠️ Eliminar lote</h3>
         <p id="modalTexto"></p>
-        <p style="color:#e74c3c; font-size:13px;">Se eliminarán también todas sus ventas y gastos.</p>
+        <p style="color:#e74c3c;font-size:13px;">
+            Se eliminarán también todas sus ventas y gastos asociados.
+        </p>
         <div class="modal-actions">
             <button onclick="cerrarModal()" style="background:#ecf0f1;">❌ Cancelar</button>
             <form id="formEliminar" method="POST" style="flex:1;">
-                <button type="submit" style="background:#e74c3c; color:white; width:100%;">🗑 Eliminar</button>
+                <button type="submit"
+                        style="background:#e74c3c;color:white;width:100%;">
+                    🗑 Eliminar
+                </button>
             </form>
         </div>
     </div>
@@ -117,10 +182,11 @@
 
 <script>
 const razasPorTipo = {
-    cerdo: ["Landrace","Duroc","Pietrain","Criollo"],
+    cerdo: ["Landrace","Duroc","Pietrain","Yorkshire","Criollo"],
     pollo: ["Broiler","Criollo","Ponedora"],
-    vaca:  ["Holstein","Brahman","Jersey"],
-    cabra: ["Boer","Criolla","Saanen"]
+    vaca:  ["Holstein","Brahman","Jersey","Angus","Criolla"],
+    cabra: ["Boer","Criolla","Saanen","Nubia"],
+    oveja: ["Merino","Dorper","Pelibuey","Criolla"],
 };
 
 function cargarRazas() {
@@ -146,8 +212,6 @@ function cerrarModal() {
 
 window.addEventListener('DOMContentLoaded', () => {
     const m = localStorage.getItem('erp_moneda') || '$';
-    const lbl = document.getElementById('lbl_moneda');
-    if (lbl) lbl.textContent = m;
     document.querySelectorAll('.moneda-sym').forEach(el => el.textContent = m);
 });
 </script>

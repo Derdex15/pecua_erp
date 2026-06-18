@@ -70,6 +70,10 @@ body {
 .btn-peligro  { background:#e74c3c; color:white; padding:10px 14px; border-radius:6px; font-size:15px; border:none; cursor:pointer; }
 .btn-warning  { background:#f39c12; color:white; padding:10px 14px; border-radius:6px; font-size:15px; border:none; cursor:pointer; text-decoration:none; display:inline-block; }
 .btn-premium  { background:linear-gradient(135deg,#f39c12,#e67e22); color:white; padding:13px 16px; border:none; border-radius:8px; font-size:16px; width:100%; cursor:pointer; font-weight:bold; }
+.btn-info     { background:#3498db; color:white; padding:10px 14px; border-radius:6px; font-size:15px; border:none; cursor:pointer; text-decoration:none; display:inline-block; }
+.btn-info:active { background:#2176ae; }
+.btn-venta    { background:#1abc9c; color:white; padding:10px 14px; border-radius:6px; font-size:15px; border:none; cursor:pointer; text-decoration:none; display:inline-block; }
+.btn-venta:active { background:#16a085; }
 
 /* ── BADGES ───────────────────────────────────────────────────── */
 .badge { display:inline-block; padding:3px 9px; border-radius:12px; font-size:12px; font-weight:bold; }
@@ -255,9 +259,13 @@ body {
         <div style="min-width:0;">
             <div class="drawer-username">{{ g_username if g_username else "Mi cuenta" }}</div>
             {% if g_es_premium %}
-            <span class="drawer-plan premium"><i class="fas fa-star" style="font-size:10px;"></i> Premium</span>
+            <a href="/planes" class="drawer-plan premium" style="text-decoration:none;">
+                <i class="fas fa-star" style="font-size:10px;"></i> Premium
+            </a>
             {% else %}
-            <span class="drawer-plan free">Plan gratuito</span>
+            <a href="/planes" class="drawer-plan free" style="text-decoration:none;">
+                Actualizar plan →
+            </a>
             {% endif %}
         </div>
     </div>

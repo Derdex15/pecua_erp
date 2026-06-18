@@ -1,167 +1,267 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>🐖 Resumen</h2>
+<style>
+/* ── KPI cards de color ───────────────────────────────────────── */
+.kpi-card {
+    border-radius: 16px;
+    padding: 16px 14px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+}
+.kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.85;
+    margin: 0 0 4px 0;
+}
+.kpi-value {
+    font-size: 28px;
+    font-weight: 900;
+    margin: 0 0 2px 0;
+    line-height: 1.1;
+}
+.kpi-sub {
+    font-size: 11px;
+    opacity: 0.75;
+    margin: 0;
+}
 
-<!-- ── KPIs financieros principales ──────────────────────────────────────── -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+/* ── Indicadores mini ─────────────────────────────────────────── */
+.ind-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+}
+.ind-label { font-size: 11px; color: #999; margin: 0 0 4px 0; }
+.ind-value { font-size: 22px; font-weight: bold; margin: 0 0 2px 0; }
+.ind-sub   { font-size: 11px; color: #aaa; margin: 0; }
 
-    <div class="card" style="text-align:center;">
-        <p style="color:gray;margin:0;font-size:12px;">Animales activos</p>
-        <h1 style="margin:5px 0;color:#2c3e50;">{{ total_animales }}</h1>
+/* ── Acceso rápido ────────────────────────────────────────────── */
+.acceso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: white;
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-decoration: none;
+    color: #2c3e50;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-align: center;
+    border: 1.5px solid #f0f0f0;
+}
+.acceso:active { transform: scale(0.97); }
+.acceso .ico { font-size: 24px; line-height: 1; }
+</style>
+
+<!-- ── SALUDO ─────────────────────────────────────────────────── -->
+<div style="padding:4px 0 12px 0;">
+    <h2 style="margin:0;font-size:20px;color:#2c3e50;">
+        🐄 Mi granja
+    </h2>
+    <p style="margin:3px 0 0 0;font-size:13px;color:#aaa;">Resumen general</p>
+</div>
+
+<!-- ── KPIs PRINCIPALES ───────────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+
+    <div class="kpi-card" style="background:linear-gradient(135deg,#27ae60,#2ecc71);">
+        <p class="kpi-label">🐄 Animales activos</p>
+        <p class="kpi-value">{{ total_animales }}</p>
+        <p class="kpi-sub">
+            {% if detalle %}
+            {{ detalle|length }} especie(s)
+            {% else %}
+            sin lotes activos
+            {% endif %}
+        </p>
     </div>
 
-    <div class="card" style="text-align:center;">
-        <p style="color:gray;margin:0;font-size:12px;">💰 Ganancia total</p>
-        <h2 style="margin:5px 0;color:{% if ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
-            <span class="moneda-sym">$</span>{{ "%.2f"|format(ganancia) }}
-        </h2>
+    <div class="kpi-card"
+         style="background:{% if ganancia >= 0 %}linear-gradient(135deg,#27ae60,#1abc9c){% else %}linear-gradient(135deg,#e74c3c,#c0392b){% endif %};">
+        <p class="kpi-label">💰 Ganancia total</p>
+        <p class="kpi-value" style="font-size:{% if ganancia|abs > 9999 %}22px{% else %}28px{% endif %};">
+            ${{ "%.2f"|format(ganancia) }}
+        </p>
+        <p class="kpi-sub">inversión – ventas</p>
     </div>
 
-    <div class="card" style="text-align:center;">
-        <p style="color:gray;margin:0;font-size:12px;">💸 Inversión total</p>
-        <h2 style="margin:5px 0;color:#e67e22;">
-            <span class="moneda-sym">$</span>{{ "%.2f"|format(inversion) }}
-        </h2>
+    <div class="kpi-card" style="background:linear-gradient(135deg,#e67e22,#d35400);">
+        <p class="kpi-label">💸 Inversión total</p>
+        <p class="kpi-value" style="font-size:{% if inversion > 9999 %}22px{% else %}28px{% endif %};">
+            ${{ "%.2f"|format(inversion) }}
+        </p>
+        <p class="kpi-sub">compra + gastos</p>
     </div>
 
-    <div class="card" style="text-align:center;">
-        <p style="color:gray;margin:0;font-size:12px;">📈 Ventas totales</p>
-        <h2 style="margin:5px 0;color:#3498db;">
-            <span class="moneda-sym">$</span>{{ "%.2f"|format(total_ventas) }}
-        </h2>
+    <div class="kpi-card" style="background:linear-gradient(135deg,#3498db,#2176ae);">
+        <p class="kpi-label">📈 Ventas totales</p>
+        <p class="kpi-value" style="font-size:{% if total_ventas > 9999 %}22px{% else %}28px{% endif %};">
+            ${{ "%.2f"|format(total_ventas) }}
+        </p>
+        <p class="kpi-sub">todos los lotes</p>
     </div>
 
 </div>
 
-<!-- ── KPIs ganaderos ─────────────────────────────────────────────────────── -->
-<div class="card">
-    <h3>📊 Indicadores de la granja</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+<!-- ── ESTE MES ────────────────────────────────────────────────── -->
+<div style="background:white;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.07);
+            padding:14px;margin-bottom:14px;">
+    <p style="margin:0 0 10px 0;font-size:13px;font-weight:bold;color:#555;">
+        📅 Este mes
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="text-align:center;border-right:1px solid #f0f0f0;padding:4px;">
+            <p style="margin:0;font-size:11px;color:#aaa;">Ingresos</p>
+            <p style="margin:4px 0 0 0;font-size:22px;font-weight:bold;color:#27ae60;">
+                ${{ "%.2f"|format(ventas_mes) }}
+            </p>
+        </div>
+        <div style="text-align:center;padding:4px;">
+            <p style="margin:0;font-size:11px;color:#aaa;">Gastos</p>
+            <p style="margin:4px 0 0 0;font-size:22px;font-weight:bold;color:#e74c3c;">
+                ${{ "%.2f"|format(gastos_mes) }}
+            </p>
+        </div>
+    </div>
+</div>
 
-        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
-            <p style="margin:0;font-size:11px;color:gray;">ROI</p>
-            <p style="margin:4px 0;font-size:22px;font-weight:bold;
-                color:{% if roi >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+<!-- ── INDICADORES ────────────────────────────────────────────── -->
+<div style="background:white;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.07);
+            padding:14px;margin-bottom:14px;">
+    <p style="margin:0 0 12px 0;font-size:13px;font-weight:bold;color:#555;">
+        📊 Indicadores
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+
+        <div class="ind-card">
+            <p class="ind-label">ROI</p>
+            <p class="ind-value"
+               style="color:{% if roi >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
                 {{ roi }}%
             </p>
-            <p style="margin:0;font-size:11px;color:gray;">retorno inversión</p>
+            <p class="ind-sub">retorno inversión</p>
         </div>
 
-        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
-            <p style="margin:0;font-size:11px;color:gray;">Mortalidad</p>
-            <p style="margin:4px 0;font-size:22px;font-weight:bold;
-                color:{% if pct_mortalidad > 5 %}#e74c3c{% elif pct_mortalidad > 2 %}#e67e22{% else %}#27ae60{% endif %};">
+        <div class="ind-card">
+            <p class="ind-label">Mortalidad</p>
+            <p class="ind-value"
+               style="color:{% if pct_mortalidad > 5 %}#e74c3c{% elif pct_mortalidad > 2 %}#e67e22{% else %}#27ae60{% endif %};">
                 {{ pct_mortalidad }}%
             </p>
-            <p style="margin:0;font-size:11px;color:gray;">{{ total_muertes }} muertes</p>
+            <p class="ind-sub">{{ total_muertes }} muerte(s)</p>
         </div>
 
-        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
-            <p style="margin:0;font-size:11px;color:gray;">Precio prom. venta</p>
-            <p style="margin:4px 0;font-size:20px;font-weight:bold;color:#3498db;">
-                <span class="moneda-sym">$</span>{{ "%.2f"|format(precio_prom_venta) }}
+        <div class="ind-card">
+            <p class="ind-label">Precio prom. venta</p>
+            <p class="ind-value" style="color:#3498db;">
+                ${{ "%.2f"|format(precio_prom_venta) }}
             </p>
-            <p style="margin:0;font-size:11px;color:gray;">por animal</p>
+            <p class="ind-sub">por animal</p>
         </div>
 
-        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;">
-            <p style="margin:0;font-size:11px;color:gray;">Total bajas</p>
-            <p style="margin:4px 0;font-size:22px;font-weight:bold;
-                color:{% if total_bajas > 0 %}#e67e22{% else %}#27ae60{% endif %};">
+        <div class="ind-card">
+            <p class="ind-label">Bajas totales</p>
+            <p class="ind-value"
+               style="color:{% if total_bajas > 0 %}#e67e22{% else %}#27ae60{% endif %};">
                 {{ total_bajas }}
             </p>
-            <p style="margin:0;font-size:11px;color:gray;">animales dados de baja</p>
+            <p class="ind-sub">animales dados de baja</p>
         </div>
 
         {% if costo_por_kg is not none %}
-        <div style="background:#f8f9fa;border-radius:10px;padding:12px;text-align:center;grid-column:1/-1;">
-            <p style="margin:0;font-size:11px;color:gray;">💰 Costo por kg ganado</p>
-            <p style="margin:4px 0;font-size:22px;font-weight:bold;color:#8e44ad;">
-                <span class="moneda-sym">$</span>{{ "%.2f"|format(costo_por_kg) }}
+        <div class="ind-card" style="grid-column:1/-1;">
+            <p class="ind-label">Costo por kg ganado</p>
+            <p class="ind-value" style="color:#8e44ad;">
+                ${{ "%.2f"|format(costo_por_kg) }}
             </p>
-            <p style="margin:0;font-size:11px;color:gray;">gastos totales ÷ kg ganados en pesajes</p>
+            <p class="ind-sub">gastos ÷ kg ganados en pesajes</p>
         </div>
         {% endif %}
 
     </div>
 </div>
 
-<!-- ── Resumen del mes ────────────────────────────────────────────────────── -->
-<div class="card">
-    <h3>📅 Este mes</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div style="text-align:center;">
-            <p style="margin:0;font-size:12px;color:gray;">Ingresos</p>
-            <h3 style="margin:4px 0;color:#27ae60;">
-                <span class="moneda-sym">$</span>{{ "%.2f"|format(ventas_mes) }}
-            </h3>
-        </div>
-        <div style="text-align:center;">
-            <p style="margin:0;font-size:12px;color:gray;">Gastos</p>
-            <h3 style="margin:4px 0;color:#e74c3c;">
-                <span class="moneda-sym">$</span>{{ "%.2f"|format(gastos_mes) }}
-            </h3>
-        </div>
-    </div>
-</div>
-
-<!-- ── Alerta de insumos bajos ────────────────────────────────────────────── -->
+<!-- ── ALERTA INSUMOS BAJOS ───────────────────────────────────── -->
 {% if insumos_criticos > 0 %}
-<a href="/insumos" style="text-decoration:none;">
-    <div class="card" style="background:#fff3cd;border-left:4px solid #f39c12;">
+<a href="/insumos" style="text-decoration:none;display:block;margin-bottom:14px;">
+    <div style="background:#fff3cd;border-left:4px solid #f39c12;
+                border-radius:10px;padding:12px 14px;">
         <p style="margin:0;color:#856404;font-size:14px;">
-            ⚠️ <strong>{{ insumos_criticos }} insumo(s)</strong> con stock bajo en el almacén.
+            ⚠️ <strong>{{ insumos_criticos }} insumo(s)</strong> con stock bajo.
             Toca para ver cuáles.
         </p>
     </div>
 </a>
 {% endif %}
 
-<!-- ── Desglose por especie ───────────────────────────────────────────────── -->
+<!-- ── ANIMALES POR ESPECIE ───────────────────────────────────── -->
 {% if detalle %}
-<div class="card">
-    <h3>🐄 Animales activos por especie</h3>
+<div style="background:white;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.07);
+            padding:14px;margin-bottom:14px;">
+    <p style="margin:0 0 12px 0;font-size:13px;font-weight:bold;color:#555;">
+        🐾 Animales por especie
+    </p>
     {% set total_todos = total_animales if total_animales > 0 else 1 %}
     {% for tipo, razas in detalle.items() %}
-        <p style="margin:10px 0 4px 0;font-size:13px;font-weight:bold;color:#2c3e50;">
-            {{ tipo | capitalize }}
-        </p>
-        {% for raza, cantidad in razas.items() %}
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="font-size:13px;min-width:90px;color:#555;">{{ raza }}</span>
-            <div style="flex:1;background:#f0f0f0;border-radius:6px;height:18px;overflow:hidden;">
-                <div style="width:{{ [(cantidad / total_todos * 100)|round|int, 100]|min }}%;
-                            background:#27ae60;height:100%;border-radius:6px;"></div>
-            </div>
-            <span style="font-size:13px;font-weight:bold;min-width:30px;text-align:right;">
-                {{ cantidad }}
-            </span>
+    <p style="margin:10px 0 4px 0;font-size:12px;font-weight:bold;
+              color:#2c3e50;text-transform:capitalize;">{{ tipo }}</p>
+    {% for raza, cantidad in razas.items() %}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:12px;min-width:80px;color:#777;">{{ raza }}</span>
+        <div style="flex:1;background:#f0f0f0;border-radius:6px;height:14px;overflow:hidden;">
+            <div style="width:{{ [(cantidad / total_todos * 100)|round|int, 100]|min }}%;
+                        background:linear-gradient(90deg,#27ae60,#2ecc71);
+                        height:100%;border-radius:6px;"></div>
         </div>
-        {% endfor %}
+        <span style="font-size:12px;font-weight:bold;min-width:24px;text-align:right;
+                     color:#2c3e50;">{{ cantidad }}</span>
+    </div>
+    {% endfor %}
     {% endfor %}
 </div>
 {% else %}
-<div class="card">
-    <p style="color:gray;">No tienes animales activos.
-        <a href="/inventario" style="color:#27ae60;">Crea un lote</a>.
-    </p>
+<div style="background:white;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.07);
+            padding:20px;text-align:center;margin-bottom:14px;">
+    <p style="color:#aaa;margin:0;">Sin animales activos aún.</p>
+    <a href="/inventario" style="color:#27ae60;font-size:14px;">➕ Crear primer lote</a>
 </div>
 {% endif %}
 
-<!-- ── Accesos rápidos ────────────────────────────────────────────────────── -->
-<div class="card">
-    <h3>⚡ Accesos rápidos</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <a href="/bajas"        class="btn-secundario" style="text-align:center;">💀 Registrar baja</a>
-        <a href="/sanitario"    class="btn-secundario" style="text-align:center;">🏥 Sanidad</a>
-        <a href="/animales"     class="btn-secundario" style="text-align:center;">🐄 Animales</a>
-        <a href="/insumos"      class="btn-secundario" style="text-align:center;">🌽 Insumos</a>
-        <a href="/calendario"   class="btn-secundario" style="text-align:center;">📅 Calendario</a>
-        <a href="/presupuesto"  class="btn-secundario" style="text-align:center;">📋 Presupuesto</a>
+<!-- ── ACCESOS RÁPIDOS ────────────────────────────────────────── -->
+<div style="background:white;border-radius:14px;box-shadow:0 2px 6px rgba(0,0,0,.07);
+            padding:14px;margin-bottom:14px;">
+    <p style="margin:0 0 12px 0;font-size:13px;font-weight:bold;color:#555;">
+        ⚡ Accesos rápidos
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <a href="/bajas"       class="acceso"><span class="ico">📉</span>Bajas</a>
+        <a href="/sanitario"   class="acceso"><span class="ico">💉</span>Sanidad</a>
+        <a href="/animales"    class="acceso"><span class="ico">🐾</span>Animales</a>
+        <a href="/insumos"     class="acceso"><span class="ico">🌽</span>Insumos</a>
+        <a href="/calendario"  class="acceso"><span class="ico">📅</span>Agenda</a>
+        <a href="/presupuesto" class="acceso"><span class="ico">📋</span>Presupuesto</a>
         {% if mi_rol == 'admin' %}
-        <a href="/reportes"     class="btn-secundario" style="text-align:center;">📊 Reportes</a>
-        <a href="/reproduccion" class="btn-secundario" style="text-align:center;">🐣 Reproducción</a>
+        <a href="/reportes"    class="acceso"><span class="ico">📊</span>Reportes</a>
+        <a href="/reproduccion"class="acceso"><span class="ico">🐣</span>Partos</a>
         {% endif %}
     </div>
 </div>
