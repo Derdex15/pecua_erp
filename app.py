@@ -8,11 +8,13 @@ import datetime
 from datetime import timedelta
 from flask import Flask, render_template, send_from_directory, session
 from flask_wtf.csrf import CSRFProtect
+from flask_compress import Compress
 from dotenv import load_dotenv
 
 load_dotenv()
 
-csrf = CSRFProtect()
+csrf     = CSRFProtect()
+compress = Compress()
 
 
 def create_app():
@@ -34,6 +36,7 @@ def create_app():
         app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
     csrf.init_app(app)
+    compress.init_app(app)
 
     # ── Context processor ───────────────────────────────────────────
     @app.context_processor
