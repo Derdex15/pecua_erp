@@ -27,6 +27,7 @@ bp = Blueprint("lemonsqueezy", __name__)
 
 LS_VARIANT_ID    = os.getenv("LS_VARIANT_ID",    "1805965")
 LS_STORE_SLUG    = os.getenv("LS_STORE_SLUG",    "erpecuario")
+LS_CHECKOUT_UUID = os.getenv("LS_CHECKOUT_UUID", "2b6d6ce7-2aee-4b8d-ab2f-8f658cdff24e")
 LS_WEBHOOK_SECRET = os.getenv("LS_WEBHOOK_SECRET", "")
 APP_URL          = os.getenv("APP_URL", "https://erpecuario.com")
 
@@ -48,12 +49,13 @@ def checkout():
     usuario = sb_get("usuarios", f"id=eq.{owner_id}")
     email   = (usuario[0].get("email", "") if usuario else "") or ""
 
-    url = f"https://{LS_STORE_SLUG}.lemonsqueezy.com/buy/{LS_VARIANT_ID}"
+    # Build checkout URL con UUID correcto
+    base_url = f"https://{LS_STORE_SLUG}.lemonsqueezy.com/checkout/buy/{LS_CHECKOUT_UUID}"
     params = [f"checkout[custom][user_id]={owner_id}"]
     if email:
         params.append(f"checkout[email]={email}")
 
-    return redirect(f"{url}?{'&'.join(params)}", code=303)
+    return redirect(f"{base_url}?{'&'.join(params)}", code=303)
 
 
 # ── Webhook de Lemon Squeezy ──────────────────────────────────────────────────
