@@ -12,6 +12,67 @@
 
 {% if lotes %}
 
+    <!-- Indicadores avanzados (consistentes con el dashboard) -->
+    <style>
+        .ind-card { background:#fff; border-radius:12px; padding:14px 12px;
+                    text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.07); }
+        .ind-label { font-size:11px; color:#999; margin:0 0 4px 0; }
+        .ind-value { font-size:22px; font-weight:bold; margin:0 0 2px 0; }
+        .ind-sub   { font-size:11px; color:#aaa; margin:0; }
+    </style>
+
+    <div class="card">
+        <h3>📊 Indicadores</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+
+            <div class="ind-card">
+                <p class="ind-label">ROI</p>
+                <p class="ind-value"
+                   style="color:{% if roi >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+                    {{ roi }}%
+                </p>
+                <p class="ind-sub">retorno inversión</p>
+            </div>
+
+            <div class="ind-card">
+                <p class="ind-label">Mortalidad</p>
+                <p class="ind-value"
+                   style="color:{% if pct_mortalidad > 5 %}#e74c3c{% elif pct_mortalidad > 2 %}#e67e22{% else %}#27ae60{% endif %};">
+                    {{ pct_mortalidad }}%
+                </p>
+                <p class="ind-sub">{{ total_muertes }} muerte(s)</p>
+            </div>
+
+            <div class="ind-card">
+                <p class="ind-label">Precio prom. venta</p>
+                <p class="ind-value" style="color:#3498db;">
+                    ${{ "%.2f"|format(precio_prom_venta) }}
+                </p>
+                <p class="ind-sub">por animal</p>
+            </div>
+
+            <div class="ind-card">
+                <p class="ind-label">Ganancia neta</p>
+                <p class="ind-value"
+                   style="color:{% if ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
+                    ${{ "%.2f"|format(ganancia) }}
+                </p>
+                <p class="ind-sub">global</p>
+            </div>
+
+            {% if costo_por_kg is not none %}
+            <div class="ind-card" style="grid-column:1/-1;">
+                <p class="ind-label">Costo por kg ganado</p>
+                <p class="ind-value" style="color:#8e44ad;">
+                    ${{ "%.2f"|format(costo_por_kg) }}
+                </p>
+                <p class="ind-sub">gastos ÷ kg ganados en pesajes</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
     <!-- Gráfico resumen general — punto 16 -->
     {% set total_inv = lotes | sum(attribute='inversion') %}
     {% set total_gas = lotes | sum(attribute='gastos') %}
@@ -73,6 +134,9 @@
                   color:{% if l.ganancia >= 0 %}#27ae60{% else %}#e74c3c{% endif %};">
             {% if l.ganancia >= 0 %}✅ Ganancia:{% else %}❌ Pérdida:{% endif %}
             ${{ "%.2f"|format(l.ganancia) }}
+            <span style="font-size:13px; font-weight:normal; color:#999;">
+                · ROI {{ l.roi }}%
+            </span>
         </p>
 
         <div class="card-actions" style="margin-top:10px;">

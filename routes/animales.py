@@ -1,6 +1,6 @@
 # routes/animales.py
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_patch, sb_delete, enc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 import datetime
@@ -52,8 +52,8 @@ def animales():
     filtro_texto     = request.args.get("q",       "").strip().lower()
 
     q = f"usuario_id=eq.{owner_id}"
-    if filtro_lote:   q += f"&lote_id=eq.{filtro_lote}"
-    if filtro_estado: q += f"&estado=eq.{filtro_estado}"
+    if filtro_lote:   q += f"&lote_id=eq.{enc(filtro_lote)}"
+    if filtro_estado: q += f"&estado=eq.{enc(filtro_estado)}"
 
     todos        = sb_get("animales", q + "&order=created_at.desc")
     lotes        = sb_get("lotes",    f"usuario_id=eq.{owner_id}")

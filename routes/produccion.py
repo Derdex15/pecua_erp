@@ -1,6 +1,6 @@
 # routes/produccion.py
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
-from config import sb_get, sb_post, sb_delete
+from config import sb_get, sb_post, sb_delete, enc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 import datetime
@@ -40,7 +40,7 @@ def produccion():
     if lote_sel:
         datos_lote = sb_get("produccion",
                             f"usuario_id=eq.{owner_id}"
-                            f"&lote_id=eq.{lote_sel}"
+                            f"&lote_id=eq.{enc(lote_sel)}"
                             f"&order=fecha.asc")
         for d in datos_lote:
             t = d.get("tipo", "")

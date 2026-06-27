@@ -67,6 +67,7 @@ input:focus { outline: none; border-color: #27ae60; }
     {% endif %}
 
     <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label>Usuario</label>
             <input type="text" name="usuario" required

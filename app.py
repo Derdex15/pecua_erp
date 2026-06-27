@@ -3,10 +3,11 @@ ERP Pecuario — Punto de entrada principal
 Flask + Supabase + Firebase FCM + PayPal
 """
 import os
+import re
 import json
 import datetime
 from datetime import timedelta
-from flask import Flask, render_template, send_from_directory, session
+from flask import Flask, render_template, send_from_directory, session, request, abort
 from flask_wtf.csrf import CSRFProtect
 from flask_compress import Compress
 from dotenv import load_dotenv
@@ -15,6 +16,11 @@ load_dotenv()
 
 csrf     = CSRFProtect()
 compress = Compress()
+
+# Parámetros de ruta válidos: ids (int/uuid), tokens url-safe y palabras tipo
+# "lote"/"animal". Cualquier metacarácter de PostgREST (& = ( ) , * espacio)
+# queda fuera y la petición se rechaza antes de llegar al handler.
+_PATH_PARAM_OK = re.compile(r"^[\w.\-]+$")
 
 
 def create_app():
@@ -37,6 +43,17 @@ def create_app():
 
     csrf.init_app(app)
     compress.init_app(app)
+
+    # ── Guard anti-inyección en parámetros de la URL ────────────────
+    # Con RLS desactivado en Supabase, la seguridad de aislamiento entre
+    # granjas depende de que los filtros PostgREST no se puedan manipular.
+    # Si cualquier <param> de la ruta trae metacaracteres, se corta aquí
+    # con 404 antes de que llegue a interpolarse en una consulta.
+    @app.before_request
+    def _validar_path_params():
+        for valor in (request.view_args or {}).values():
+            if isinstance(valor, str) and not _PATH_PARAM_OK.match(valor):
+                abort(404)
 
     # ── Context processor ───────────────────────────────────────────
     @app.context_processor
@@ -107,8 +124,7 @@ def create_app():
     # ── Exenciones CSRF ─────────────────────────────────────────────
     csrf.exempt(notificaciones_bp)
     csrf.exempt(fotos_bp)
-    csrf.exempt(admin_bp)
-    csrf.exempt(lemonsqueezy_bp)   # webhook no tiene CSRF
+    csrf.exempt(lemonsqueezy_bp)   # webhook externo: no aplica CSRF (se valida por firma HMAC)
 
     # ── PWA ─────────────────────────────────────────────────────────
     @app.route("/sw.js")
@@ -137,12 +153,19 @@ def create_app():
     # ── TWA ──────────────────────────────────────────────────────────
     @app.route("/.well-known/assetlinks.json")
     def assetlinks():
+        # TWA_SHA256_CERT admite varias huellas separadas por coma:
+        # la clave de firma de Play (producción) y la upload key local (pruebas).
+        huellas = [
+            h.strip()
+            for h in os.getenv("TWA_SHA256_CERT", "REEMPLAZAR").split(",")
+            if h.strip()
+        ]
         links = [{
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
                 "namespace":               "android_app",
                 "package_name":            os.getenv("TWA_PACKAGE_NAME", "com.erpecuario.twa"),
-                "sha256_cert_fingerprints": [os.getenv("TWA_SHA256_CERT", "REEMPLAZAR")],
+                "sha256_cert_fingerprints": huellas,
             }
         }]
         r = app.response_class(

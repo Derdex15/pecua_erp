@@ -10,7 +10,7 @@ Cambios respecto a la versión anterior:
   - Corregido N+1: los usernames de miembros se obtienen en 1 sola query.
 """
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
-from config import sb_get, sb_post, sb_patch
+from config import sb_get, sb_post, sb_patch, enc
 from routes.permisos import get_granja_info, es_premium_owner
 
 bp = Blueprint("granja", __name__)
@@ -129,7 +129,7 @@ def invitar_usuario():
         flash("Ingresa el nombre de usuario a invitar.", "error")
         return redirect("/granja")
 
-    usuario_nuevo = sb_get("usuarios", f"username=eq.{username_nuevo}")
+    usuario_nuevo = sb_get("usuarios", f"username=eq.{enc(username_nuevo)}")
     if not usuario_nuevo:
         flash(f"El usuario '{username_nuevo}' no existe. "
               f"Debe crear una cuenta primero.", "error")

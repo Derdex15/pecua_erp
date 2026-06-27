@@ -56,8 +56,8 @@ def cambiar_password():
         flash("Las contraseñas nuevas no coinciden.", "error")
         return redirect("/cambiar_password")
 
-    if len(nueva) < 6:
-        flash("La contraseña debe tener al menos 6 caracteres.", "error")
+    if len(nueva) < 8:
+        flash("La contraseña debe tener al menos 8 caracteres.", "error")
         return redirect("/cambiar_password")
 
     usuario = sb_get("usuarios", f"id=eq.{user_id}")

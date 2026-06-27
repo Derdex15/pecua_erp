@@ -156,6 +156,7 @@ h3 { font-size: 16px; margin: 0 0 14px 0; color: #2c3e50; }
             <!-- Formulario de activación -->
             <div class="activar-form" id="form-{{ u.id }}">
                 <form method="POST" action="/admin/activar">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="user_id" value="{{ u.id }}">
                     <div class="form-row">
                         <div>
@@ -200,6 +201,7 @@ h3 { font-size: 16px; margin: 0 0 14px 0; color: #2c3e50; }
                 {% if u.es_premium %}
                 <form method="POST" action="/admin/desactivar" style="margin-top:8px;"
                       onsubmit="return confirm('¿Desactivar premium de {{ u.username }}?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="user_id" value="{{ u.id }}">
                     <button type="submit" class="btn-red" style="width:100%;">
                         Desactivar premium

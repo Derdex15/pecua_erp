@@ -1,6 +1,6 @@
 # routes/ventas.py
 from flask import Blueprint, render_template, redirect, session, request, flash
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_patch, sb_delete, sb_rpc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin
 
@@ -99,9 +99,9 @@ def registrar_venta():
         "concepto":   concepto,
     })
 
-    nueva = disponibles - cantidad
-    sb_patch("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}",
-             {"cantidad_actual": nueva, "activo": nueva > 0})
+    # Descuento atómico (evita lost-update si hay ventas simultáneas)
+    sb_rpc("descontar_lote",
+           {"p_lote_id": int(lote_id), "p_owner_id": owner_id, "p_cantidad": cantidad})
 
     flash(f"✅ Venta de {cantidad} animales por ${total:.2f} registrada.", "success")
     return redirect("/movimientos")
@@ -165,14 +165,10 @@ def vender_animal(animal_id):
     sb_patch("animales", f"id=eq.{animal_id}&usuario_id=eq.{owner_id}",
              {"estado": "vendido"})
 
-    # Descontar del lote si pertenece a uno
+    # Descontar del lote si pertenece a uno (descuento atómico)
     if lote_id:
-        lote = sb_get("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}")
-        if lote:
-            nueva_cantidad = max(0, lote[0].get("cantidad_actual", 1) - 1)
-            sb_patch("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}",
-                     {"cantidad_actual": nueva_cantidad,
-                      "activo": nueva_cantidad > 0})
+        sb_rpc("descontar_lote",
+               {"p_lote_id": int(lote_id), "p_owner_id": owner_id, "p_cantidad": 1})
 
     flash(f"✅ {label} vendido por ${total:.2f}. Registro creado en ventas.", "success")
     return redirect(f"/animal/{animal_id}")
@@ -199,23 +195,19 @@ def eliminar_venta(venta_id):
         # Venta individual — restaurar animal a activo
         sb_patch("animales", f"id=eq.{v['animal_id']}&usuario_id=eq.{owner_id}",
                  {"estado": "activo"})
-        # Restaurar cuenta del lote si aplica
+        # Restaurar cuenta del lote si aplica (reposición atómica: cantidad negativa)
         if v.get("lote_id"):
-            lote = sb_get("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}")
-            if lote:
-                nueva_cantidad = lote[0].get("cantidad_actual", 0) + 1
-                sb_patch("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}",
-                         {"cantidad_actual": nueva_cantidad, "activo": True})
+            sb_rpc("descontar_lote",
+                   {"p_lote_id": int(v["lote_id"]), "p_owner_id": owner_id, "p_cantidad": -1})
         sb_delete("ventas", f"id=eq.{venta_id}&usuario_id=eq.{owner_id}")
         flash("🗑 Venta eliminada. El animal volvió a estado Activo.", "success")
     else:
-        # Venta de lote — restaurar cantidad
+        # Venta de lote — restaurar cantidad (reposición atómica: cantidad negativa)
         if v.get("lote_id"):
-            lote = sb_get("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}")
-            if lote:
-                nueva_cantidad = lote[0].get("cantidad_actual", 0) + v.get("cantidad", 0)
-                sb_patch("lotes", f"id=eq.{v['lote_id']}&usuario_id=eq.{owner_id}",
-                         {"cantidad_actual": nueva_cantidad, "activo": True})
+            sb_rpc("descontar_lote",
+                   {"p_lote_id":  int(v["lote_id"]),
+                    "p_owner_id": owner_id,
+                    "p_cantidad": -int(v.get("cantidad", 0))})
         sb_delete("ventas", f"id=eq.{venta_id}&usuario_id=eq.{owner_id}")
         flash("🗑 Venta eliminada y animales devueltos al lote.", "success")
 

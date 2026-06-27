@@ -54,9 +54,38 @@ def hay_datos(user_id):
     )
 
 
-def backup_automatico(user_id):
-    """Hace backup silencioso antes de operaciones destructivas."""
+# Minutos dentro de los cuales NO se repite el backup automático.
+# Evita disparar ~16 round-trips a Supabase en cada operación cuando el usuario
+# hace varias ediciones seguidas. Un snapshot de hace pocos minutos sigue siendo
+# un punto de restauración válido (contiene los datos previos a la operación).
+_THROTTLE_MIN = 3
+
+
+def _backup_reciente(user_id) -> bool:
+    """True si ya existe un backup automático dentro de la ventana de throttle."""
     try:
+        ult = sb_get(
+            "respaldo",
+            f"usuario_id=eq.{user_id}&automatico=eq.true"
+            f"&order=fecha.desc&limit=1&select=fecha",   # solo fecha, no el JSON completo
+        )
+        if not ult:
+            return False
+        ult_dt = datetime.datetime.fromisoformat(ult[0].get("fecha", ""))
+        # Normaliza a naive para poder comparar con datetime.now()
+        if ult_dt.tzinfo is not None:
+            ult_dt = ult_dt.replace(tzinfo=None)
+        return (datetime.datetime.now() - ult_dt) < datetime.timedelta(minutes=_THROTTLE_MIN)
+    except Exception:
+        return False   # ante cualquier duda, no bloquear el backup
+
+
+def backup_automatico(user_id):
+    """Hace backup silencioso antes de operaciones destructivas (con throttle)."""
+    try:
+        if _backup_reciente(user_id):
+            print("⏭ Backup automático omitido (ya hay uno reciente)")
+            return
         if hay_datos(user_id):
             print("⚡ BACKUP AUTOMÁTICO")
             hacer_backup(user_id, automatico=True)

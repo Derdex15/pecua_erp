@@ -4,7 +4,7 @@ Registro de Proveedores — ERP Pecuario
 CRUD de proveedores de insumos, medicamentos y animales.
 """
 from flask import Blueprint, render_template, redirect, session, request, flash
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_patch, sb_delete, enc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 
@@ -34,7 +34,7 @@ def proveedores():
 
     q = f"usuario_id=eq.{owner_id}&activo=eq.true&order=nombre.asc"
     if filtro_cat:
-        q += f"&categoria=eq.{filtro_cat}"
+        q += f"&categoria=eq.{enc(filtro_cat)}"
 
     lista = sb_get("proveedores", q)
 

@@ -50,7 +50,7 @@ En el dashboard de Render, ve a **Environment** y agrega:
 | `SUPABASE_KEY` | Tu clave de Supabase |
 | `SECRET_KEY` | (Render la genera automáticamente) |
 | `ENV` | `production` |
-| `TWA_PACKAGE_NAME` | `app.erpecuario.twa` (o el que elijas) |
+| `TWA_PACKAGE_NAME` | `com.erpecuario.twa` |
 | `TWA_SHA256_CERT` | Lo obtienes en el Paso 3 |
 
 ### 2.3 Dominio
@@ -91,7 +91,7 @@ Bubblewrap te hará preguntas. Respuestas recomendadas:
 |---|---|
 | Application name | ERP Pecuario |
 | Short name | Pecuario |
-| Package ID | app.erpecuario.twa |
+| Package ID | com.erpecuario.twa |
 | Start URL | https://TU_DOMINIO.com/ |
 | Display mode | standalone |
 | Theme color | #27ae60 |

@@ -13,7 +13,7 @@ import datetime
 import requests as http_requests
 from flask import Blueprint, render_template, redirect, request, flash
 from werkzeug.security import generate_password_hash
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_patch, sb_delete, enc
 
 bp = Blueprint("recuperar_password", __name__)
 
@@ -78,7 +78,7 @@ def recuperar():
         flash("Ingresa un correo electrónico válido.", "error")
         return render_template("recuperar.html")
 
-    usuarios = sb_get("usuarios", f"email=eq.{email}")
+    usuarios = sb_get("usuarios", f"email=eq.{enc(email)}")
 
     if usuarios:
         user_id = usuarios[0]["id"]
@@ -148,8 +148,8 @@ def reset_password(token):
         flash("Completa ambos campos.", "error")
         return render_template("reset_password.html", token=token)
 
-    if len(nueva) < 6:
-        flash("La contraseña debe tener al menos 6 caracteres.", "error")
+    if len(nueva) < 8:
+        flash("La contraseña debe tener al menos 8 caracteres.", "error")
         return render_template("reset_password.html", token=token)
 
     if nueva != confirmar:

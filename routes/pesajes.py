@@ -1,6 +1,6 @@
 # routes/pesajes.py
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
-from config import sb_get, sb_post, sb_delete
+from config import sb_get, sb_post, sb_delete, enc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 import datetime
@@ -45,9 +45,9 @@ def pesajes():
     # Pesajes filtrados
     q = f"usuario_id=eq.{owner_id}&order=fecha.asc"
     if filtro_tipo == "animal" and filtro_id:
-        q_pesajes = f"usuario_id=eq.{owner_id}&animal_id=eq.{filtro_id}&order=fecha.asc"
+        q_pesajes = f"usuario_id=eq.{owner_id}&animal_id=eq.{enc(filtro_id)}&order=fecha.asc"
     elif filtro_tipo == "lote" and filtro_id:
-        q_pesajes = f"usuario_id=eq.{owner_id}&lote_id=eq.{filtro_id}&order=fecha.asc"
+        q_pesajes = f"usuario_id=eq.{owner_id}&lote_id=eq.{enc(filtro_id)}&order=fecha.asc"
     else:
         q_pesajes = f"usuario_id=eq.{owner_id}&order=fecha.desc"
 

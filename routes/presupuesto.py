@@ -6,7 +6,7 @@ Permite al ganadero planificar ingresos y gastos estimados por lote y mes,
 y comparar contra los valores reales registrados en ventas y gastos.
 """
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_patch, sb_delete, enc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner  # ← fix: agregar es_premium_owner
 import datetime
@@ -28,7 +28,7 @@ def _reales_del_mes(owner_id: int, lote_id: int | None,
 
     q_base = f"usuario_id=eq.{owner_id}"
     if lote_id:
-        q_base += f"&lote_id=eq.{lote_id}"
+        q_base += f"&lote_id=eq.{enc(lote_id)}"
 
     ventas = sb_get("ventas", q_base + f"&fecha=gte.{mes_str}-01&fecha=lte.{mes_str}-31")
     gastos = sb_get("gastos", q_base + f"&fecha=gte.{mes_str}-01&fecha=lte.{mes_str}-31")
@@ -62,7 +62,7 @@ def presupuesto():
     q = (f"usuario_id=eq.{owner_id}"
          f"&mes=eq.{mes}&anio=eq.{anio}&order=tipo.asc,concepto.asc")
     if lote_id:
-        q += f"&lote_id=eq.{lote_id}"
+        q += f"&lote_id=eq.{enc(lote_id)}"
 
     partidas  = sb_get("presupuesto", q)
     lotes_idx = {l["id"]: l["nombre"] for l in sb_get("lotes", f"usuario_id=eq.{owner_id}")}

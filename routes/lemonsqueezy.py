@@ -69,16 +69,21 @@ def webhook():
     body      = request.get_data()
     signature = request.headers.get("X-Signature", "")
 
-    # Verificar firma HMAC-SHA256
-    if LS_WEBHOOK_SECRET:
-        expected = hmac.new(
-            LS_WEBHOOK_SECRET.encode("utf-8"),
-            body,
-            hashlib.sha256,
-        ).hexdigest()
-        if not hmac.compare_digest(signature, expected):
-            print("[LS WEBHOOK] Firma inválida — rechazado")
-            return "Invalid signature", 403
+    # Verificar firma HMAC-SHA256 — el secreto es OBLIGATORIO.
+    # Sin él no se puede verificar el origen, así que se rechaza todo
+    # (evita que cualquiera active Premium con un POST falso).
+    if not LS_WEBHOOK_SECRET:
+        print("[LS WEBHOOK] LS_WEBHOOK_SECRET no configurado — rechazado")
+        return "Webhook secret not configured", 503
+
+    expected = hmac.new(
+        LS_WEBHOOK_SECRET.encode("utf-8"),
+        body,
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        print("[LS WEBHOOK] Firma inválida — rechazado")
+        return "Invalid signature", 403
 
     try:
         data = json.loads(body)

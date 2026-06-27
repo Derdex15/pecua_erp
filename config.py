@@ -1,8 +1,27 @@
 import os
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from urllib.parse import quote
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def enc(valor):
+    """
+    Percent-encodea un valor NO confiable (de la URL, query string o formulario)
+    antes de interpolarlo dentro de un filtro PostgREST.
+
+    Evita que caracteres como & = ( ) , * escapen del valor y añadan condiciones
+    a la consulta (inyección de filtros PostgREST). Con RLS desactivado en
+    Supabase, esto es crítico: un filtro manipulado podría saltarse el
+    `usuario_id=eq.{owner_id}` y tocar datos de otras granjas.
+
+    Uso:
+        sb_get("animales", f"usuario_id=eq.{owner_id}&lote_id=eq.{enc(filtro_lote)}")
+    """
+    return quote(str(valor), safe="")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -19,6 +38,26 @@ HEADERS = {
 }
 
 TIMEOUT = (5, 10)
+
+# ── Sesión HTTP con pool de conexiones + reintentos ───────────────────────────
+# Reutiliza conexiones keep-alive (clave para soportar muchos usuarios a la vez)
+# en lugar de abrir un socket nuevo en cada llamada. Los reintentos automáticos
+# se limitan a GET (idempotente) para no duplicar escrituras en POST/PATCH/DELETE.
+_retry = Retry(
+    total=3,
+    connect=3,
+    read=2,
+    backoff_factor=0.4,                       # espera 0.4s, 0.8s, 1.6s entre reintentos
+    status_forcelist=(502, 503, 504),
+    allowed_methods=frozenset(["GET"]),
+    raise_on_status=False,
+)
+_adapter = HTTPAdapter(pool_connections=20, pool_maxsize=50, max_retries=_retry)
+
+_session = requests.Session()
+_session.headers.update(HEADERS)
+_session.mount("https://", _adapter)
+_session.mount("http://",  _adapter)
 
 
 def _safe_json(res):
@@ -48,7 +87,7 @@ def sb_get(tabla, filtros=""):
     if filtros:
         url += f"?{filtros}"
     try:
-        res = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        res = _session.get(url, timeout=TIMEOUT)
         res.raise_for_status()
         return _safe_json(res)
     except requests.exceptions.Timeout:
@@ -66,11 +105,9 @@ def sb_get(tabla, filtros=""):
 
 
 def sb_post(tabla, data, prefer_representation=False):
-    h = {**HEADERS}
-    if prefer_representation:
-        h["Prefer"] = "return=representation"
+    h = {"Prefer": "return=representation"} if prefer_representation else None
     try:
-        res = requests.post(
+        res = _session.post(
             f"{SUPABASE_URL}/rest/v1/{tabla}",
             json=data,
             headers=h,
@@ -88,12 +125,20 @@ def sb_post(tabla, data, prefer_representation=False):
         return [] if prefer_representation else _FakeErrorResponse(500)
 
 
+def sb_rpc(funcion, params):
+    """
+    Llama a una función RPC de PostgREST (/rest/v1/rpc/<funcion>) de forma atómica.
+    Útil para evitar condiciones de carrera (p. ej. descontar stock).
+    Devuelve el objeto Response (o _FakeErrorResponse si falla la conexión).
+    """
+    return sb_post(f"rpc/{funcion}", params)
+
+
 def sb_patch(tabla, filtros, data):
     try:
-        return requests.patch(
+        return _session.patch(
             f"{SUPABASE_URL}/rest/v1/{tabla}?{filtros}",
             json=data,
-            headers=HEADERS,
             timeout=TIMEOUT,
         )
     except requests.exceptions.Timeout:
@@ -109,9 +154,8 @@ def sb_patch(tabla, filtros, data):
 
 def sb_delete(tabla, filtros):
     try:
-        return requests.delete(
+        return _session.delete(
             f"{SUPABASE_URL}/rest/v1/{tabla}?{filtros}",
-            headers=HEADERS,
             timeout=TIMEOUT,
         )
     except requests.exceptions.Timeout:

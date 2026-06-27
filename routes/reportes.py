@@ -72,6 +72,7 @@ def reportes():
     lotes      = sb_get("lotes",  f"usuario_id=eq.{owner_id}")
     all_gastos = sb_get("gastos", f"usuario_id=eq.{owner_id}")
     all_ventas = sb_get("ventas", f"usuario_id=eq.{owner_id}")
+    all_bajas  = sb_get("bajas",  f"usuario_id=eq.{owner_id}")
 
     gastos_por_lote = {}
     for g in all_gastos:
@@ -88,13 +89,63 @@ def reportes():
         inversion    = _fmt(l.get("costo_compra",0))
         total_gastos = gastos_por_lote.get(lid,0)
         total_ventas = ventas_por_lote.get(lid,0)
-        ganancia     = _fmt(total_ventas - _fmt(inversion + total_gastos))
+        base         = _fmt(inversion + total_gastos)
+        ganancia     = _fmt(total_ventas - base)
+        roi_lote     = round((ganancia / base * 100), 1) if base > 0 else 0
         resultado.append({"id": lid, "nombre": l.get("nombre","Sin nombre"),
             "tipo": l.get("tipo",""), "raza": l.get("raza",""),
             "activo": l.get("activo",False), "inversion": inversion,
-            "gastos": total_gastos, "ventas": total_ventas, "ganancia": ganancia})
+            "gastos": total_gastos, "ventas": total_ventas,
+            "ganancia": ganancia, "roi": roi_lote})
 
-    return render_template("reportes.html", lotes=resultado)
+    # ── KPIs globales (mismas fórmulas que el dashboard) ───────────
+    total_compra = _fmt(sum(_fmt(l.get("costo_compra",0)) for l in lotes))
+    total_gastos = _fmt(sum(_fmt(g.get("costo",0)) for g in all_gastos))
+    total_ventas = _fmt(sum(_fmt(v.get("total",0)) for v in all_ventas))
+    inversion    = _fmt(total_compra + total_gastos)
+    ganancia     = _fmt(total_ventas - inversion)
+    roi          = round((ganancia / inversion * 100), 1) if inversion > 0 else 0
+
+    total_inicial  = sum(l.get("cantidad_inicial",0) for l in lotes)
+    total_muertes  = sum(b.get("cantidad",0) for b in all_bajas if b.get("tipo") == "muerte")
+    pct_mortalidad = round((total_muertes / total_inicial * 100), 1) if total_inicial > 0 else 0
+
+    total_cab_vendidas = sum(_fmt(v.get("cantidad",0)) for v in all_ventas)
+    precio_prom_venta  = _fmt(total_ventas / total_cab_vendidas) if total_cab_vendidas > 0 else 0
+
+    # Costo por kg ganado (a partir de pesajes con lote asociado)
+    costo_por_kg = None
+    try:
+        pesajes_lote = sb_get("pesajes",
+                              f"usuario_id=eq.{owner_id}&lote_id=not.is.null&order=fecha.asc")
+        if pesajes_lote and total_gastos > 0:
+            lote_pesajes = {}
+            for p in pesajes_lote:
+                lid = p.get("lote_id")
+                if lid:
+                    lote_pesajes.setdefault(lid, []).append(_fmt(p.get("peso_kg",0)))
+            kg_ganados = sum(
+                max(pesos) - min(pesos)
+                for pesos in lote_pesajes.values()
+                if len(pesos) >= 2 and (max(pesos) - min(pesos)) > 0
+            )
+            if kg_ganados > 0:
+                costo_por_kg = round(total_gastos / kg_ganados, 2)
+    except Exception:
+        pass
+
+    return render_template(
+        "reportes.html",
+        lotes             = resultado,
+        roi               = roi,
+        ganancia          = ganancia,
+        inversion         = inversion,
+        total_ventas      = total_ventas,
+        pct_mortalidad    = pct_mortalidad,
+        total_muertes     = total_muertes,
+        precio_prom_venta = precio_prom_venta,
+        costo_por_kg      = costo_por_kg,
+    )
 
 
 # ── DETALLE DE LOTE ───────────────────────────────────────────

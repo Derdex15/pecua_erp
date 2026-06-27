@@ -8,14 +8,35 @@ Variables de entorno necesarias en Render:
   ADMIN_PASSWORD → contraseña admin
 """
 import os
+import hmac
+import time
+import threading
 import datetime
 from flask import Blueprint, render_template, redirect, session, request, flash
-from config import sb_get, sb_post, sb_patch
+from config import sb_get, sb_post, sb_patch, enc
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 ADMIN_USER     = os.getenv("ADMIN_USER", "")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+
+# ── Rate limiting del login admin (por IP, en memoria por worker) ──────────────
+_rl_store: dict[str, list[float]] = {}
+_rl_lock  = threading.Lock()
+
+def _rate_limit_ok(ip: str, max_intentos: int = 6, ventana_seg: int = 300) -> bool:
+    ahora = time.time()
+    with _rl_lock:
+        intentos = [t for t in _rl_store.get(ip, []) if ahora - t < ventana_seg]
+        if len(intentos) >= max_intentos:
+            _rl_store[ip] = intentos
+            return False
+        intentos.append(ahora)
+        _rl_store[ip] = intentos
+        return True
+
+def _get_ip() -> str:
+    return (request.headers.get("X-Forwarded-For", request.remote_addr) or "").split(",")[0].strip()
 
 PLANES = {
     "1":  {"label": "1 mes",    "precio_usd": 5.00},
@@ -41,14 +62,28 @@ def login():
 
     error = None
     if request.method == "POST":
-        usuario    = request.form.get("usuario",    "").strip()
-        contrasena = request.form.get("contrasena", "")
+        ip = _get_ip()
 
-        if usuario == ADMIN_USER and contrasena == ADMIN_PASSWORD:
-            session["admin_logged_in"] = True
-            return redirect("/admin/")
+        if not _rate_limit_ok(ip):
+            error = "Demasiados intentos. Espera 5 minutos antes de volver a intentarlo."
+        elif not ADMIN_USER or not ADMIN_PASSWORD:
+            # Sin credenciales configuradas no se permite el acceso (evita login con campos vacíos)
+            error = "Acceso administrativo no configurado."
         else:
-            error = "Credenciales incorrectas."
+            usuario    = request.form.get("usuario",    "").strip()
+            contrasena = request.form.get("contrasena", "")
+
+            # Comparación en tiempo constante para no filtrar info por timing
+            user_ok = hmac.compare_digest(usuario.encode("utf-8"),    ADMIN_USER.encode("utf-8"))
+            pass_ok = hmac.compare_digest(contrasena.encode("utf-8"), ADMIN_PASSWORD.encode("utf-8"))
+
+            if user_ok and pass_ok:
+                session["admin_logged_in"] = True
+                with _rl_lock:
+                    _rl_store.pop(ip, None)
+                return redirect("/admin/")
+            else:
+                error = "Credenciales incorrectas."
 
     return render_template("admin_login.html", error=error)
 
@@ -71,7 +106,7 @@ def dashboard():
 
     # Usuarios
     if buscar:
-        usuarios = sb_get("usuarios", f"username=ilike.*{buscar}*&order=id.desc&limit=30")
+        usuarios = sb_get("usuarios", f"username=ilike.*{enc(buscar)}*&order=id.desc&limit=30")
     else:
         usuarios = sb_get("usuarios", "order=id.desc&limit=50")
 
@@ -118,7 +153,7 @@ def activar():
     metodo   = request.form.get("metodo",   "transferencia").strip()
     notas    = request.form.get("notas",    "").strip()
 
-    if not user_id or meses not in PLANES:
+    if not user_id or not user_id.replace("-", "").isalnum() or meses not in PLANES:
         flash("Datos inválidos.", "error")
         return redirect("/admin/")
 
@@ -182,7 +217,7 @@ def desactivar():
         return redirect("/admin/login")
 
     user_id = request.form.get("user_id", "").strip()
-    if not user_id:
+    if not user_id or not user_id.replace("-", "").isalnum():
         flash("Usuario inválido.", "error")
         return redirect("/admin/")
 

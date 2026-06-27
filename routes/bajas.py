@@ -5,7 +5,7 @@ Registra muertes, robos, descartes y donaciones que reducen el inventario
 sin generar un ingreso de venta.
 """
 from flask import Blueprint, render_template, redirect, session, request, flash, jsonify
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_delete, sb_rpc
 from backup_utils import backup_automatico
 from routes.permisos import get_granja_info, solo_admin
 
@@ -124,13 +124,10 @@ def registrar_baja():
         "notas":      notas or None,
     })
 
-    # Actualizar cantidad del lote
-    nueva = disponibles - cantidad
-    sb_patch(
-        "lotes",
-        f"id=eq.{lote_id}&usuario_id=eq.{owner_id}",
-        {"cantidad_actual": nueva, "activo": nueva > 0},
-    )
+    # Actualizar cantidad del lote (descuento atómico)
+    sb_rpc("descontar_lote",
+           {"p_lote_id": int(lote_id), "p_owner_id": owner_id, "p_cantidad": cantidad})
+    nueva = max(0, disponibles - cantidad)
 
     tipo_label = TIPOS_BAJA[tipo]["label"]
     flash(
@@ -158,15 +155,12 @@ def eliminar_baja(baja_id):
     b = baja[0]
     backup_automatico(owner_id)
 
-    # Devolver animales al lote
-    lote = sb_get("lotes", f"id=eq.{b['lote_id']}&usuario_id=eq.{owner_id}")
-    if lote:
-        nueva_cantidad = lote[0].get("cantidad_actual", 0) + b.get("cantidad", 0)
-        sb_patch(
-            "lotes",
-            f"id=eq.{b['lote_id']}&usuario_id=eq.{owner_id}",
-            {"cantidad_actual": nueva_cantidad, "activo": True},
-        )
+    # Devolver animales al lote (reposición atómica: cantidad negativa)
+    if b.get("lote_id"):
+        sb_rpc("descontar_lote",
+               {"p_lote_id":  int(b["lote_id"]),
+                "p_owner_id": owner_id,
+                "p_cantidad": -int(b.get("cantidad", 0))})
 
     sb_delete("bajas", f"id=eq.{baja_id}&usuario_id=eq.{owner_id}")
     flash("🗑 Registro eliminado y animales devueltos al lote.", "success")

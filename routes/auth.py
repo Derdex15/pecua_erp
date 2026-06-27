@@ -99,8 +99,8 @@ def registro():
                 error = "Solo letras, números, guiones y guiones bajos (3-30 caracteres)."
             elif not _email_valido(email):
                 error = "Ingresa un correo electrónico válido."
-            elif len(password) < 6:
-                error = "La contraseña debe tener al menos 6 caracteres."
+            elif len(password) < 8:
+                error = "La contraseña debe tener al menos 8 caracteres."
             elif password != confirmar:
                 error = "Las contraseñas no coinciden."
             else:

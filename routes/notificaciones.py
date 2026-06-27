@@ -46,7 +46,7 @@ import json
 import time
 import requests as http
 from flask import Blueprint, request, session, jsonify
-from config import sb_get, sb_post, sb_patch
+from config import sb_get, sb_post, sb_patch, enc
 from routes.permisos import get_granja_info
 
 bp = Blueprint("notificaciones", __name__)
@@ -99,9 +99,9 @@ def _get_oauth_token() -> str | None:
 def _upsert_token(owner_id: int, token: str) -> bool:
     if not token:
         return False
-    existente = sb_get("push_tokens", f"token=eq.{token}")
+    existente = sb_get("push_tokens", f"token=eq.{enc(token)}")
     if existente:
-        sb_patch("push_tokens", f"token=eq.{token}", {
+        sb_patch("push_tokens", f"token=eq.{enc(token)}", {
             "usuario_id": owner_id,
             "activo":     True,
         })
@@ -145,7 +145,7 @@ def desactivar_token():
     data  = request.get_json(silent=True) or {}
     token = (data.get("token") or "").strip()
     if token:
-        sb_patch("push_tokens", f"token=eq.{token}", {"activo": False})
+        sb_patch("push_tokens", f"token=eq.{enc(token)}", {"activo": False})
     return jsonify({"ok": True})
 
 
@@ -234,7 +234,7 @@ def enviar_push(owner_id: int, titulo: str, cuerpo: str,
                 # Token inválido o expirado → desactivar para no volver a intentar
                 if error_code in ("UNREGISTERED", "INVALID_ARGUMENT"):
                     sb_patch("push_tokens",
-                             f"token=eq.{t['token']}", {"activo": False})
+                             f"token=eq.{enc(t['token'])}", {"activo": False})
                     print(f"🗑  Token inválido desactivado: {t['token'][:20]}…")
                 else:
                     print(f"⚠️  FCM {res.status_code}: {res.text[:200]}")

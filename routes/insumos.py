@@ -5,7 +5,7 @@ Controla el stock físico: alimento, medicamentos, vacunas, equipos.
 Genera alertas cuando el stock cae por debajo del mínimo configurado.
 """
 from flask import Blueprint, render_template, redirect, session, request, flash
-from config import sb_get, sb_post, sb_patch, sb_delete
+from config import sb_get, sb_post, sb_patch, sb_delete, enc
 from routes.permisos import get_granja_info, solo_admin, es_premium_owner
 import datetime
 
@@ -62,7 +62,7 @@ def insumos():
 
     q = f"usuario_id=eq.{owner_id}&order=nombre.asc"
     if filtro_cat:
-        q += f"&categoria=eq.{filtro_cat}"
+        q += f"&categoria=eq.{enc(filtro_cat)}"
 
     todos = sb_get("insumos", q)
 
