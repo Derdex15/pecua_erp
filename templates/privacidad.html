@@ -2,29 +2,39 @@
 {% block content %}
 
 <h2>🔒 Política de Privacidad</h2>
-<p style="color:gray; font-size:13px;">Última actualización: Mayo 2026</p>
+<p style="color:gray; font-size:13px;">Última actualización: Junio 2026</p>
 
 <div class="card">
     <h3>1. ¿Quiénes somos?</h3>
     <p style="font-size:14px; line-height:1.6;">
-        ERP Pecuario es una aplicación de gestión ganadera desarrollada para ayudar a productores
-        rurales a registrar y controlar su inventario animal, producción, gastos y sanidad.
-        El responsable del tratamiento de datos es el operador de la cuenta que crea y administra
-        la información dentro de la plataforma.
+        ERP Pecuario es una aplicación de gestión ganadera que ayuda a productores rurales a
+        registrar y controlar su inventario animal, producción, gastos y sanidad. El responsable
+        del tratamiento de los datos de cada granja es el titular de la cuenta que los crea y
+        administra. Para cualquier consulta sobre privacidad puedes escribirnos a
+        <strong>erpecuario.soporte@gmail.com</strong>.
     </p>
 </div>
 
 <div class="card">
     <h3>2. Datos que recopilamos</h3>
-    <p style="font-size:14px; line-height:1.6;">Recopilamos únicamente la información que tú ingresas:</p>
     <ul style="font-size:14px; line-height:1.8; padding-left:20px;">
-        <li><strong>Datos de cuenta:</strong> nombre de usuario y contraseña (almacenada con hash bcrypt, nunca en texto plano).</li>
-        <li><strong>Datos de producción:</strong> lotes de animales, ventas, gastos, registros sanitarios y de producción que registras manualmente.</li>
-        <li><strong>Datos de uso:</strong> fecha de último acceso (para gestión de sesión).</li>
+        <li><strong>Datos de cuenta:</strong> nombre de usuario, correo electrónico y contraseña
+            (almacenada con hashing criptográfico mediante Werkzeug, nunca en texto plano).</li>
+        <li><strong>Datos de producción:</strong> lotes, animales, ventas, gastos, registros
+            sanitarios, reproductivos, pesajes, insumos y demás información que registras manualmente.</li>
+        <li><strong>Fotos:</strong> si usas la función de fotos (Premium), las imágenes que subes
+            de tus animales o lotes.</li>
+        <li><strong>Notificaciones:</strong> si activas las alertas, un identificador (token) de tu
+            dispositivo provisto por Firebase Cloud Messaging para poder enviarte avisos.</li>
+        <li><strong>Datos de pago:</strong> registramos el estado y la referencia de tus pagos
+            (monto, fecha, plan). <strong>No almacenamos los datos de tu tarjeta</strong>: los
+            procesan pasarelas certificadas (ver sección 4).</li>
+        <li><strong>Datos técnicos:</strong> dirección IP (de forma temporal, para limitar intentos
+            de acceso y proteger contra abusos) y registros de errores del servidor.</li>
     </ul>
     <p style="font-size:14px; line-height:1.6;">
-        <strong>No recopilamos</strong> datos de ubicación GPS, contactos, cámara sin tu acción explícita,
-        ni información de pago (los pagos se procesan por terceros certificados).
+        <strong>No recopilamos</strong> ubicación GPS, contactos, ni accedemos a tu cámara o galería
+        salvo cuando tú eliges subir una foto.
     </p>
 </div>
 
@@ -33,88 +43,103 @@
     <ul style="font-size:14px; line-height:1.8; padding-left:20px;">
         <li>Para mostrarte tu propio inventario, reportes y alertas.</li>
         <li>Para enviarte notificaciones de vacunas y stock bajo (solo si activas las alertas).</li>
+        <li>Para enviarte correos transaccionales (recuperación de contraseña, confirmaciones).</li>
+        <li>Para procesar tus pagos y gestionar tu plan Premium.</li>
         <li>Para generar respaldos automáticos de tus datos.</li>
-        <li>Para mejorar la aplicación basándonos en errores técnicos (logs de servidor, sin datos personales).</li>
+        <li>Para mejorar la app a partir de errores técnicos (logs de servidor).</li>
     </ul>
 </div>
 
 <div class="card">
-    <h3>4. ¿Compartimos tus datos?</h3>
+    <h3>4. ¿Con quién compartimos tus datos?</h3>
     <p style="font-size:14px; line-height:1.6;">
-        Tus datos <strong>no se venden ni se comparten con terceros con fines publicitarios.</strong>
-        Solo los compartimos con:
+        Tus datos <strong>no se venden ni se comparten con fines publicitarios.</strong>
+        Solo recurrimos a proveedores necesarios para operar el Servicio (encargados del tratamiento):
     </p>
     <ul style="font-size:14px; line-height:1.8; padding-left:20px;">
-        <li>
-            <strong>Supabase (supabase.com):</strong> proveedor de base de datos en la nube donde se almacena
-            tu información de forma segura. Supabase opera bajo los estándares SOC 2 y cumple con el GDPR.
-        </li>
-        <li>
-            <strong>Miembros de tu granja:</strong> si agregas usuarios a tu granja, ellos verán los datos
-            de producción que tú defines según el rol asignado (operador o administrador).
-        </li>
+        <li><strong>Supabase</strong> — base de datos en la nube donde se almacena tu información
+            (servidores en EE. UU.). Opera bajo estándares SOC 2 y GDPR.</li>
+        <li><strong>Render</strong> — alojamiento de la aplicación.</li>
+        <li><strong>Google Firebase Cloud Messaging</strong> — envío de notificaciones push
+            (recibe el token de tu dispositivo).</li>
+        <li><strong>PayPal</strong> y <strong>Lemon Squeezy</strong> — procesamiento de pagos y
+            suscripciones. Reciben los datos necesarios para cobrar; nosotros no vemos tu tarjeta.</li>
+        <li><strong>Resend</strong> — envío de nuestros correos electrónicos.</li>
+        <li><strong>Miembros de tu granja</strong> — si agregas usuarios, verán los datos de
+            producción según el rol que les asignes (operador o administrador).</li>
     </ul>
 </div>
 
 <div class="card">
     <h3>5. Seguridad de tus datos</h3>
     <ul style="font-size:14px; line-height:1.8; padding-left:20px;">
-        <li>Las contraseñas se almacenan con hash bcrypt — nunca en texto plano.</li>
+        <li>Las contraseñas se almacenan con hashing criptográfico — nunca en texto plano.</li>
         <li>Toda la comunicación entre la app y el servidor usa HTTPS (TLS 1.2+).</li>
-        <li>El acceso a la base de datos requiere API key secreta almacenada en el servidor.</li>
-        <li>Las sesiones expiran automáticamente después de 30 días de inactividad.</li>
+        <li>El acceso a la base de datos usa una clave secreta guardada solo en el servidor.</li>
+        <li>Protección contra falsificación de solicitudes (CSRF) y limitación de intentos de acceso.</li>
+        <li>Las sesiones expiran automáticamente tras 30 días de inactividad.</li>
     </ul>
 </div>
 
 <div class="card">
     <h3>6. Retención de datos</h3>
     <p style="font-size:14px; line-height:1.6;">
-        Tus datos se conservan mientras tu cuenta esté activa.
-        Puedes eliminar todos tus datos desde <strong>Ajustes → Reiniciar todos los datos</strong>.
-        Para eliminar tu cuenta permanentemente, contáctanos al correo indicado al final de esta página.
+        Conservamos tus datos mientras tu cuenta esté activa. Puedes borrar todos tus datos de
+        producción en cualquier momento desde <strong>Ajustes → Reiniciar todos los datos</strong>.
+    </p>
+</div>
+
+<div class="card" style="border-left:4px solid #e74c3c;">
+    <h3>7. Eliminación de tu cuenta y tus datos</h3>
+    <p style="font-size:14px; line-height:1.6;">
+        Puedes solicitar la <strong>eliminación permanente de tu cuenta</strong> y de toda la
+        información asociada (datos de producción, fotos, registros de pago y respaldos) enviando
+        un correo a <strong>erpecuario.soporte@gmail.com</strong> desde el correo con el que te
+        registraste, indicando tu nombre de usuario.
+    </p>
+    <p style="font-size:14px; line-height:1.6;">
+        Procesaremos la eliminación en un plazo máximo de <strong>30 días</strong>. Tras ello, tus
+        datos se borran de nuestra base de datos y respaldos, salvo aquellos que debamos conservar
+        por obligaciones legales o contables (p. ej. comprobantes de pago, durante el plazo exigido
+        por la ley).
     </p>
 </div>
 
 <div class="card">
-    <h3>7. Tus derechos</h3>
-    <p style="font-size:14px; line-height:1.6;">Tienes derecho a:</p>
+    <h3>8. Tus derechos</h3>
     <ul style="font-size:14px; line-height:1.8; padding-left:20px;">
-        <li><strong>Acceder</strong> a todos tus datos (exporta desde Ajustes → Exportar CSV).</li>
-        <li><strong>Corregir</strong> cualquier dato incorrecto directamente en la app.</li>
-        <li><strong>Eliminar</strong> tus datos usando la función de reset o contactándonos.</li>
-        <li><strong>Portabilidad:</strong> exporta tus datos en formato CSV en cualquier momento.</li>
+        <li><strong>Acceder</strong> a tus datos (expórtalos desde Ajustes → Exportar CSV).</li>
+        <li><strong>Corregir</strong> cualquier dato directamente en la app.</li>
+        <li><strong>Eliminar</strong> tus datos (reset) o tu cuenta completa (ver sección 7).</li>
+        <li><strong>Portabilidad:</strong> exporta tus datos en CSV cuando quieras.</li>
     </ul>
 </div>
 
 <div class="card">
-    <h3>8. Menores de edad</h3>
+    <h3>9. Menores de edad</h3>
     <p style="font-size:14px; line-height:1.6;">
-        Esta aplicación no está dirigida a menores de 13 años.
-        No recopilamos conscientemente datos de menores. Si detectas que un menor ha registrado
-        una cuenta, contáctanos para eliminar su información.
+        Esta aplicación está dirigida a personas mayores de 18 años y no recopilamos
+        conscientemente datos de menores. Si detectas que un menor registró una cuenta,
+        contáctanos para eliminar su información.
     </p>
 </div>
 
 <div class="card">
-    <h3>9. Cambios a esta política</h3>
+    <h3>10. Cambios a esta política</h3>
     <p style="font-size:14px; line-height:1.6;">
-        Podemos actualizar esta política ocasionalmente. Te notificaremos dentro de la app
-        cuando haya cambios importantes. El uso continuado de la app después de los cambios
-        implica tu aceptación.
+        Podemos actualizar esta política ocasionalmente. Te avisaremos dentro de la app cuando haya
+        cambios importantes. El uso continuado tras los cambios implica tu aceptación.
     </p>
 </div>
 
 <div class="card">
-    <h3>10. Contacto</h3>
+    <h3>11. Contacto</h3>
     <p style="font-size:14px; line-height:1.6;">
-        Para cualquier consulta sobre tus datos o esta política, escríbenos a:
+        Para cualquier consulta sobre tus datos, esta política o para solicitar la eliminación de
+        tu cuenta, escríbenos a:
     </p>
-    <p style="font-size:14px;">
-        📧 <strong>privacidad@erpecuario.app</strong>
-    </p>
-    <p style="font-size:13px; color:gray;">
-        Responderemos en un máximo de 30 días hábiles.
-    </p>
+    <p style="font-size:14px;">📧 <strong>erpecuario.soporte@gmail.com</strong></p>
+    <p style="font-size:13px; color:gray;">Respondemos en un máximo de 30 días hábiles.</p>
 </div>
 
 <div style="text-align:center; margin: 20px 0;">

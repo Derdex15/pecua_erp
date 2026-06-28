@@ -97,8 +97,11 @@ def webhook():
 
     print(f"[LS WEBHOOK] Evento: {event} | user_id: {user_id}")
 
-    if not user_id:
-        print(f"[LS WEBHOOK] Sin user_id en custom_data: {custom_data}")
+    # user_id debe ser un id numérico. Aunque el webhook va firmado con HMAC,
+    # custom_data es influenciable por quien arma el checkout, así que se valida
+    # antes de interpolarlo en cualquier filtro (anti-inyección PostgREST).
+    if not user_id or not str(user_id).isdigit():
+        print(f"[LS WEBHOOK] user_id ausente o inválido en custom_data: {custom_data}")
         return "OK", 200
 
     attrs           = data.get("data", {}).get("attributes", {})

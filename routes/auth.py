@@ -4,7 +4,7 @@ import time
 import threading
 from flask import Blueprint, render_template, redirect, session, request, flash
 from werkzeug.security import check_password_hash, generate_password_hash
-from config import sb_get, sb_post
+from config import sb_get, sb_post, enc
 
 bp = Blueprint("auth", __name__)
 
@@ -106,7 +106,7 @@ def registro():
             else:
                 if sb_get("usuarios", f"username=eq.{username}"):
                     error = "Ese nombre de usuario ya está en uso."
-                elif sb_get("usuarios", f"email=eq.{email}"):
+                elif sb_get("usuarios", f"email=eq.{enc(email)}"):
                     error = "Ese correo ya está registrado."
                 else:
                     nuevo = sb_post(
