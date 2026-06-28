@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>⚠️ Eliminar mi cuenta</h2>
+
+<div class="card" style="border-left:4px solid #e74c3c;">
+    <p style="font-size:15px; line-height:1.7;">
+        Esta acción es <strong>permanente e irreversible</strong>. Se eliminarán para siempre:
+    </p>
+    <ul style="font-size:14px; line-height:1.8; padding-left:20px;">
+        <li>Tu cuenta y tu acceso.</li>
+        <li>Todos tus datos de producción (lotes, animales, ventas, gastos, sanidad, etc.).</li>
+        <li>Tus fotos, respaldos, registros de pago y suscripción.</li>
+        <li>Si eres dueño de una granja, también su configuración y los accesos de sus miembros.</li>
+    </ul>
+    <p style="font-size:14px; line-height:1.7; color:#c0392b;">
+        No podremos recuperar esta información después. Si solo quieres empezar de cero,
+        usa <a href="/confirmar_reset" style="color:#27ae60;">Reiniciar datos</a> en lugar de esto.
+    </p>
+</div>
+
+<div class="card">
+    <p style="font-size:14px;">Para confirmar, escribe tu contraseña:</p>
+    <form action="/eliminar_cuenta" method="POST"
+          onsubmit="return confirm('¿Eliminar tu cuenta de forma permanente? Esta acción no se puede deshacer.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <input type="password" name="password" required
+                   autocomplete="current-password"
+                   placeholder="Tu contraseña"
+                   style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;">
+        </div>
+        <button class="btn-peligro" style="width:100%; margin-top:10px;">
+            🗑 Eliminar mi cuenta permanentemente
+        </button>
+    </form>
+
+    <a href="/ajustes">
+        <button style="background:gray; color:white; padding:10px; border-radius:6px;
+                       border:none; width:100%; margin-top:10px;">
+            ❌ Cancelar
+        </button>
+    </a>
+</div>
+
+{% endblock %}

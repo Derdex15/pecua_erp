@@ -109,6 +109,62 @@ def reset():
     return redirect("/")
 
 
+# ── Eliminar cuenta permanentemente ───────────────────────────────────────────
+# Disponible para CUALQUIER usuario (no @solo_admin): borra SU cuenta y SUS datos.
+# Se usa session["user_id"] y NO owner_id: así un operador elimina únicamente su
+# propia cuenta y membresía, nunca los datos del dueño de la granja.
+
+# Tablas propias del usuario (clave usuario_id) a borrar al eliminar la cuenta.
+TABLAS_USUARIO = [
+    "reproduccion", "pesajes", "sanitario", "produccion", "bajas",
+    "ventas", "gastos", "animales", "insumos", "alertas", "lotes",
+    "proveedores", "presupuesto", "calendario", "fotos",
+    "suscripciones", "pagos", "respaldo", "push_tokens",
+    "password_reset_tokens",
+]
+
+
+@bp.route("/confirmar_eliminar_cuenta")
+def confirmar_eliminar_cuenta():
+    if "user_id" not in session:
+        return redirect("/login")
+    return render_template("eliminar_cuenta.html")
+
+
+@bp.route("/eliminar_cuenta", methods=["POST"])
+def eliminar_cuenta():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    from werkzeug.security import check_password_hash
+
+    user_id  = session["user_id"]
+    password = request.form.get("password", "")
+
+    # Verificar contraseña antes de una acción irreversible
+    usuario = sb_get("usuarios", f"id=eq.{user_id}")
+    if not usuario or not check_password_hash(usuario[0].get("password", ""), password):
+        flash("Contraseña incorrecta. Tu cuenta NO fue eliminada.", "error")
+        return redirect("/confirmar_eliminar_cuenta")
+
+    # 1) Datos propios (producción, fotos, pagos, respaldos, tokens push, etc.)
+    for tabla in TABLAS_USUARIO:
+        sb_delete(tabla, f"usuario_id=eq.{user_id}")
+
+    # 2) Membresías: la propia + (si es dueño) las de los miembros de su granja
+    sb_delete("granja_miembros", f"usuario_id=eq.{user_id}")
+    for g in sb_get("granjas", f"owner_id=eq.{user_id}"):
+        sb_delete("granja_miembros", f"granja_id=eq.{g['id']}")
+    sb_delete("granjas", f"owner_id=eq.{user_id}")
+
+    # 3) La cuenta en sí (al final)
+    sb_delete("usuarios", f"id=eq.{user_id}")
+
+    session.clear()
+    flash("Tu cuenta y todos tus datos fueron eliminados permanentemente.", "success")
+    return redirect("/login")
+
+
 # ── Ver backups ────────────────────────────────────────────────────────────────
 @bp.route("/backups")
 @solo_admin
