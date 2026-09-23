@@ -150,6 +150,13 @@ def create_app():
             os.path.join(app.root_path, "static"), "manifest.json",
             mimetype="application/manifest+json")
 
+    # ── Archivos estáticos (iconos PWA) ─────────────────────────────
+    @app.route("/static/icons/<path:filename>")
+    def static_icons(filename):
+        return send_from_directory(
+            os.path.join(app.root_path, "static", "icons"), filename
+        )
+
     # ── TWA ──────────────────────────────────────────────────────────
     @app.route("/.well-known/assetlinks.json")
     def assetlinks():
