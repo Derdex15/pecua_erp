@@ -109,8 +109,11 @@ def sanitario():
         r["lote_nombre"] = lotes_idx.get(r.get("lote_id"), "Desconocido")
         r["costo"]       = _fmt(r.get("costo", 0))
         if r.get("proxima_dosis"):
-            dias = (datetime.date.fromisoformat(r["proxima_dosis"]) - datetime.date.today()).days
-            r["dias_proxima"] = dias
+            try:
+                dias = (datetime.date.fromisoformat(r["proxima_dosis"]) - datetime.date.today()).days
+                r["dias_proxima"] = dias
+            except Exception:
+                r["dias_proxima"] = None
         else:
             r["dias_proxima"] = None
 
@@ -171,6 +174,7 @@ def agregar_sanitario():
 
 # ── Editar registro (solo admin) ──────────────────────────────────────────────
 @bp.route("/editar_sanitario/<registro_id>", methods=["GET", "POST"])
+@bp.route("/guardar_sanitario/<registro_id>", methods=["POST"])
 @solo_admin
 def editar_sanitario(registro_id):
     if "user_id" not in session:
@@ -187,8 +191,8 @@ def editar_sanitario(registro_id):
         return render_template("editar_sanitario.html",
                                registro=registro[0], lotes=lotes, mi_rol=mi_rol)
 
-    lote_id       = request.form.get("lote_id",       "").strip()
-    tipo          = request.form.get("tipo",           "").strip()
+    lote_id       = request.form.get("lote_id",       "").strip() or str(registro[0].get("lote_id") or "")
+    tipo          = request.form.get("tipo",           "").strip() or registro[0].get("tipo", "")
     nombre        = request.form.get("nombre",         "").strip()
     fecha         = request.form.get("fecha",          "").strip()
     proxima_dosis = request.form.get("proxima_dosis",  "").strip() or None

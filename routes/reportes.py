@@ -5,6 +5,8 @@ from routes.permisos import get_granja_info, solo_admin
 import csv
 import io
 import datetime
+import re
+import unicodedata
 
 bp = Blueprint("reportes", __name__)
 
@@ -357,9 +359,12 @@ def pdf_lote(lote_id):
 
     doc.build(story)
     buf.seek(0)
-    nombre_archivo = f"reporte_{l.get('nombre','lote').replace(' ','_')}.pdf"
+    nombre_raw = l.get('nombre', 'lote')
+    nombre_limpio = unicodedata.normalize("NFKD", nombre_raw).encode("ascii", "ignore").decode("ascii")
+    nombre_seguro = re.sub(r"[^\w\-.]", "_", nombre_limpio).strip("_") or "lote"
+    nombre_archivo = f"reporte_{nombre_seguro}.pdf"
     return Response(buf.read(), mimetype="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={nombre_archivo}"})
+        headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'})
 
 
 # ── PDF SANITARIO GLOBAL — ítem 11 ───────────────────────────

@@ -249,7 +249,14 @@ def eliminar_lote(lote_id):
         return redirect("/inventario")
 
     backup_automatico(owner_id)
-    for tabla in ("ventas", "gastos", "sanitario", "produccion", "bajas", "pesajes"):
+    # Desvincular animales del lote para evitar huérfanos o fallos de FK
+    sb_patch("animales", f"lote_id=eq.{lote_id}&usuario_id=eq.{owner_id}", {"lote_id": None})
+
+    # Eliminar fotos del lote
+    sb_delete("fotos", f"entidad_tipo=eq.lote&entidad_id=eq.{lote_id}&usuario_id=eq.{owner_id}")
+
+    # Eliminar registros dependientes del lote
+    for tabla in ("ventas", "gastos", "sanitario", "produccion", "bajas", "pesajes", "reproduccion", "alertas", "presupuesto"):
         sb_delete(tabla, f"lote_id=eq.{lote_id}&usuario_id=eq.{owner_id}")
     sb_delete("lotes", f"id=eq.{lote_id}&usuario_id=eq.{owner_id}")
     flash(f"🗑 Lote '{lote[0]['nombre']}' eliminado.", "success")

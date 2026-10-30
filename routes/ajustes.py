@@ -187,6 +187,7 @@ def ver_backups():
 
 
 # ── Crear backup manual ────────────────────────────────────────────────────────
+@bp.route("/backup", methods=["POST"])
 @bp.route("/crear_backup", methods=["POST"])
 @solo_admin
 def crear_backup():
@@ -219,7 +220,7 @@ def eliminar_backup(backup_id):
 
 
 # ── Restaurar backup ───────────────────────────────────────────────────────────
-@bp.route("/restaurar/<backup_id>")
+@bp.route("/restaurar/<backup_id>", methods=["GET", "POST"])
 @solo_admin
 def restaurar(backup_id):
     if "user_id" not in session:
@@ -247,20 +248,61 @@ def restaurar(backup_id):
     ]:
         sb_delete(tabla, f"usuario_id=eq.{owner_id}")
 
-    # Restaurar cada tabla del backup (si existe en el JSON)
+    # Restaurar datos del backup con remapeo de claves foráneas
     tablas_ok   = 0
     tablas_err  = []
-    for tabla in TABLAS_DATOS:
+    lote_map    = {}
+    animal_map  = {}
+
+    # 1. Lotes primero
+    for r in datos.get("lotes", []):
+        old_id = r.get("id")
+        r_data = dict(r)
+        r_data["usuario_id"] = owner_id
+        r_data.pop("id", None)
+        res = sb_post("lotes", r_data, prefer_representation=True)
+        if res and isinstance(res, list) and len(res) > 0 and "id" in res[0]:
+            if old_id is not None:
+                lote_map[old_id] = res[0]["id"]
+            tablas_ok += 1
+        else:
+            tablas_err.append("lotes")
+
+    # 2. Animales segundo (pueden referenciar lote_id)
+    for r in datos.get("animales", []):
+        old_id = r.get("id")
+        r_data = dict(r)
+        r_data["usuario_id"] = owner_id
+        r_data.pop("id", None)
+        if r_data.get("lote_id") in lote_map:
+            r_data["lote_id"] = lote_map[r_data["lote_id"]]
+        res = sb_post("animales", r_data, prefer_representation=True)
+        if res and isinstance(res, list) and len(res) > 0 and "id" in res[0]:
+            if old_id is not None:
+                animal_map[old_id] = res[0]["id"]
+            tablas_ok += 1
+        else:
+            tablas_err.append("animales")
+
+    # 3. Resto de tablas secundarias
+    resto_tablas = [
+        "ventas", "gastos", "sanitario", "produccion",
+        "reproduccion", "pesajes", "bajas", "insumos"
+    ]
+    for tabla in resto_tablas:
         registros = datos.get(tabla, [])
-        if not registros:
-            continue
         for r in registros:
-            r["usuario_id"] = owner_id  # garantizar que el owner es correcto
-            r.pop("id", None)           # dejar que Supabase asigne nuevo ID
-            try:
-                sb_post(tabla, r)
+            r_data = dict(r)
+            r_data["usuario_id"] = owner_id
+            r_data.pop("id", None)
+            if "lote_id" in r_data and r_data["lote_id"] in lote_map:
+                r_data["lote_id"] = lote_map[r_data["lote_id"]]
+            if "animal_id" in r_data and r_data["animal_id"] in animal_map:
+                r_data["animal_id"] = animal_map[r_data["animal_id"]]
+            res = sb_post(tabla, r_data)
+            if getattr(res, "status_code", 0) in (200, 201) or getattr(res, "ok", False):
                 tablas_ok += 1
-            except Exception:
+            else:
                 tablas_err.append(tabla)
 
     if tablas_err:

@@ -18,7 +18,7 @@ import datetime
 import requests as http
 from flask import Blueprint, request, session, jsonify
 from config import sb_get, sb_post, sb_delete, SUPABASE_URL, SUPABASE_KEY
-from routes.permisos import get_granja_info
+from routes.permisos import get_granja_info, es_premium_owner
 
 bp = Blueprint("fotos", __name__)
 
@@ -89,7 +89,7 @@ def subir_foto():
 
     owner_id, _ = get_granja_info(session["user_id"])
     if not es_premium_owner(session["user_id"]):
-       return render_template("premium_requerido.html", funcion="Calendario de Actividades")
+        return jsonify({"ok": False, "error": "Esta función requiere Plan Premium."}), 403
 
     entidad_tipo = request.form.get("entidad_tipo", "").strip()
     entidad_id   = request.form.get("entidad_id",   "").strip()

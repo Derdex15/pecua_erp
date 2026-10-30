@@ -4,7 +4,9 @@
 <h2>✏️ Editar registro sanitario</h2>
 
 <div class="card">
-    <form method="POST" action="/guardar_sanitario/{{ registro.id }}">
+    <form method="POST" action="/editar_sanitario/{{ registro.id }}">
+        <input type="hidden" name="lote_id" value="{{ registro.lote_id }}">
+        <input type="hidden" name="tipo" value="{{ registro.tipo }}">
 
         <div class="form-group">
             <label>Lote</label>

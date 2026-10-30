@@ -123,8 +123,14 @@ def calendario():
         return render_template("premium_requerido.html", funcion="Calendario de Actividades")
 
     hoy  = datetime.date.today()
-    anio = int(request.args.get("anio", hoy.year))
-    mes  = int(request.args.get("mes",  hoy.month))
+    try:
+        anio = int(request.args.get("anio", hoy.year))
+    except (ValueError, TypeError):
+        anio = hoy.year
+    try:
+        mes  = int(request.args.get("mes",  hoy.month))
+    except (ValueError, TypeError):
+        mes = hoy.month
 
     # Limitar navegación
     mes  = max(1, min(12, mes))
@@ -176,8 +182,15 @@ def api_eventos():
         return jsonify([])
     owner_id, _ = get_granja_info(session["user_id"])
     hoy  = datetime.date.today()
-    anio = int(request.args.get("anio", hoy.year))
-    mes  = int(request.args.get("mes",  hoy.month))
+    try:
+        anio = int(request.args.get("anio", hoy.year))
+    except (ValueError, TypeError):
+        anio = hoy.year
+    try:
+        mes  = int(request.args.get("mes",  hoy.month))
+    except (ValueError, TypeError):
+        mes = hoy.month
+    mes = max(1, min(12, mes))
     eventos = _eventos_del_mes(owner_id, anio, mes)
     resultado = []
     for dia, lista in eventos.items():

@@ -24,14 +24,18 @@ def _fmt(v):
 def _reales_del_mes(owner_id: int, lote_id: int | None,
                     anio: int, mes: int) -> dict:
     """Calcula ingresos y gastos reales del mes desde ventas y gastos."""
-    mes_str = f"{anio}-{mes:02d}"
+    desde = datetime.date(anio, mes, 1)
+    if mes == 12:
+        hasta = datetime.date(anio + 1, 1, 1) - datetime.timedelta(days=1)
+    else:
+        hasta = datetime.date(anio, mes + 1, 1) - datetime.timedelta(days=1)
 
     q_base = f"usuario_id=eq.{owner_id}"
     if lote_id:
         q_base += f"&lote_id=eq.{enc(lote_id)}"
 
-    ventas = sb_get("ventas", q_base + f"&fecha=gte.{mes_str}-01&fecha=lte.{mes_str}-31")
-    gastos = sb_get("gastos", q_base + f"&fecha=gte.{mes_str}-01&fecha=lte.{mes_str}-31")
+    ventas = sb_get("ventas", q_base + f"&fecha=gte.{desde}&fecha=lte.{hasta}")
+    gastos = sb_get("gastos", q_base + f"&fecha=gte.{desde}&fecha=lte.{hasta}")
 
     return {
         "ingresos": _fmt(sum(_fmt(v.get("total", 0)) for v in ventas)),
@@ -50,9 +54,17 @@ def presupuesto():
         return render_template("premium_requerido.html", funcion="Presupuesto y Proyecciones")
 
     hoy      = datetime.date.today()
-    anio     = int(request.args.get("anio",    hoy.year))
-    mes      = int(request.args.get("mes",     hoy.month))
-    lote_id  = request.args.get("lote_id", "")
+    try:
+        anio = int(request.args.get("anio", hoy.year))
+    except (ValueError, TypeError):
+        anio = hoy.year
+
+    try:
+        mes = int(request.args.get("mes", hoy.month))
+    except (ValueError, TypeError):
+        mes = hoy.month
+
+    lote_id  = request.args.get("lote_id", "").strip()
 
     mes  = max(1, min(12, mes))
     anio = max(hoy.year - 2, min(hoy.year + 2, anio))
@@ -76,7 +88,11 @@ def presupuesto():
     gas_est = _fmt(sum(p["monto_estimado"] for p in partidas if p["tipo"] == "gasto"))
     res_est = _fmt(ing_est - gas_est)
 
-    lid = int(lote_id) if lote_id else None
+    try:
+        lid = int(lote_id) if lote_id else None
+    except (ValueError, TypeError):
+        lid = None
+        lote_id = ""
     reales    = _reales_del_mes(owner_id, lid, anio, mes)
     res_real  = _fmt(reales["ingresos"] - reales["gastos"])
 

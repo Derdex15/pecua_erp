@@ -26,11 +26,13 @@
             </div>
 
             <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
-                <a href="/restaurar/{{ b.id }}" class="btn-secundario"
-                   style="font-size:12px; padding:5px 10px;"
-                   onclick="return confirm('¿Restaurar este backup? Se perderán los datos actuales.');">
-                    ↩️ Restaurar
-                </a>
+                <form method="POST" action="/restaurar/{{ b.id }}"
+                      onsubmit="return confirm('¿Restaurar este backup? Se perderán los datos actuales.');">
+                    <button type="submit" class="btn-secundario"
+                            style="font-size:12px; padding:5px 10px; cursor:pointer;">
+                        ↩️ Restaurar
+                    </button>
+                </form>
                 {% if es_premium %}
                 <form method="POST" action="/eliminar_backup/{{ b.id }}"
                       onsubmit="return confirm('¿Eliminar este backup permanentemente?')">
@@ -51,7 +53,7 @@
 
 <div class="card">
     <h3>📦 Crear respaldo ahora</h3>
-    <form action="/backup" method="POST">
+    <form action="/crear_backup" method="POST">
         <div class="form-group">
             <label>Etiqueta <span style="color:gray; font-weight:normal;">(opcional)</span></label>
             <input class="form-control" name="etiqueta"
