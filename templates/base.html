@@ -385,6 +385,9 @@ body {
             <a href="/ajustes" class="drawer-item {% if request.path == '/ajustes' %}active{% endif %}" onclick="cerrarDrawer()">
                 <i class="fas fa-cog"></i> Ajustes
             </a>
+            <a href="/onboarding?guia=1" class="drawer-item" onclick="cerrarDrawer()">
+                <i class="fas fa-book-open"></i> Guía rápida
+            </a>
             <a href="/logout" class="drawer-item" onclick="cerrarDrawer()" style="color:#e74c3c;">
                 <i class="fas fa-sign-out-alt" style="color:#e74c3c;"></i> Cerrar sesión
             </a>

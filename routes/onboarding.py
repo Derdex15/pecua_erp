@@ -11,8 +11,20 @@ def onboarding():
     if "user_id" not in session:
         return redirect("/login")
 
-    owner_id, _ = get_granja_info(session["user_id"])
-    paso = int(request.args.get("paso", 1))
+    owner_id, rol = get_granja_info(session["user_id"])
+
+    try:
+        paso = int(request.args.get("paso", 1))
+    except (ValueError, TypeError):
+        paso = 1
+
+    if paso not in (1, 2, 3):
+        paso = 1
+
+    # Operadores no pueden crear lotes en paso 2
+    if rol != "admin" and paso == 2:
+        flash("Solo el administrador puede crear lotes.", "info")
+        return redirect("/")
 
     # CORRECCIÓN: el paso=3 es la pantalla de éxito DESPUÉS de crear el lote.
     # Si llegamos aquí con paso=3, siempre mostrarlo aunque ya haya lotes.
@@ -21,9 +33,9 @@ def onboarding():
                                paso=3,
                                username=session.get("username", ""))
 
-    # Pasos 1 y 2: solo si el usuario aún no tiene lotes
+    # Pasos 1 y 2: si el usuario ya tiene lotes y no solicita revisar la guía, ir al dashboard
     lotes = sb_get("lotes", f"usuario_id=eq.{owner_id}")
-    if lotes:
+    if lotes and not request.args.get("guia"):
         return redirect("/")
 
     return render_template("onboarding.html",
@@ -36,7 +48,10 @@ def onboarding_crear_lote():
     if "user_id" not in session:
         return redirect("/login")
 
-    owner_id, _ = get_granja_info(session["user_id"])
+    owner_id, rol = get_granja_info(session["user_id"])
+    if rol != "admin":
+        flash("Solo el administrador puede crear lotes.", "error")
+        return redirect("/")
 
     nombre   = request.form.get("nombre",   "").strip()
     tipo     = request.form.get("tipo",     "").strip()
@@ -46,29 +61,44 @@ def onboarding_crear_lote():
     fecha    = request.form.get("fecha",    "").strip()
 
     if not all([nombre, tipo, raza, cantidad, fecha]):
-        flash("Completa todos los campos para continuar.", "error")
-        return redirect("/onboarding?paso=2")
+        flash("Completa todos los campos obligatorios para continuar.", "error")
+        return render_template("onboarding.html",
+                               paso=2,
+                               username=session.get("username", ""),
+                               form_data=request.form)
 
     try:
-        cantidad = int(cantidad)
-        costo    = round(float(costo or 0), 2)
-        if cantidad <= 0 or costo < 0:
+        cant_num  = int(cantidad)
+        costo_num = round(float(costo or 0), 2)
+        if cant_num <= 0 or costo_num < 0:
             raise ValueError
     except ValueError:
         flash("Cantidad debe ser entero positivo y el costo un número válido.", "error")
-        return redirect("/onboarding?paso=2")
+        return render_template("onboarding.html",
+                               paso=2,
+                               username=session.get("username", ""),
+                               form_data=request.form)
 
-    sb_post("lotes", {
+    res = sb_post("lotes", {
         "usuario_id":       owner_id,
         "nombre":           nombre,
         "tipo":             tipo,
         "raza":             raza,
-        "cantidad_inicial": cantidad,
-        "cantidad_actual":  cantidad,
-        "costo_compra":     costo,
+        "cantidad_inicial": cant_num,
+        "cantidad_actual":  cant_num,
+        "costo_compra":     costo_num,
         "fecha":            fecha,
         "activo":           True,
     })
+
+    # Verificar si la inserción fue exitosa
+    es_ok = getattr(res, "ok", False) or getattr(res, "status_code", 0) in (200, 201)
+    if not es_ok:
+        flash("Error de conexión al guardar el lote. Por favor intenta de nuevo.", "error")
+        return render_template("onboarding.html",
+                               paso=2,
+                               username=session.get("username", ""),
+                               form_data=request.form)
 
     # Redirige a paso=3 — la ruta ahora siempre lo muestra sin importar si hay lotes
     return redirect("/onboarding?paso=3")
