@@ -11,6 +11,30 @@ def _fmt(valor):
     return round(float(valor or 0), 2)
 
 
+ANIMAL_META = {
+    "cerdo": {"icono": "🐷", "singular": "cerdo", "plural": "cerdos"},
+    "vaca":  {"icono": "🐄", "singular": "vaca",  "plural": "vacas"},
+    "pollo": {"icono": "🐔", "singular": "pollo", "plural": "pollos"},
+    "cabra": {"icono": "🐐", "singular": "cabra", "plural": "cabras"},
+    "oveja": {"icono": "🐑", "singular": "oveja", "plural": "ovejas"},
+}
+
+
+def _info_animal(tipo_raw, cantidad=1):
+    tipo = (tipo_raw or "").strip().lower()
+    meta = ANIMAL_META.get(tipo)
+    if meta:
+        icono = meta["icono"]
+        texto = meta["singular"] if cantidad == 1 else meta["plural"]
+    elif tipo:
+        icono = "🐾"
+        texto = tipo if cantidad == 1 else f"{tipo}s"
+    else:
+        icono = "🐾"
+        texto = "animal" if cantidad == 1 else "animales"
+    return icono, tipo.capitalize(), texto
+
+
 # ── MOVIMIENTOS (vista principal) ──────────────────────────────────────────────
 @bp.route("/movimientos")
 def movimientos():
@@ -24,23 +48,43 @@ def movimientos():
 
     todos_lotes    = sb_get("lotes",   f"usuario_id=eq.{owner_id}")
     todos_animales = sb_get("animales",f"usuario_id=eq.{owner_id}")
-    lotes_idx      = {l["id"]: l["nombre"] for l in todos_lotes}
-    animales_idx   = {a["id"]: a           for a in todos_animales}
+    lotes_idx      = {l["id"]: l for l in todos_lotes}
+    animales_idx   = {a["id"]: a for a in todos_animales}
 
     for v in ventas:
         v["total"] = _fmt(v.get("total", 0))
+        cantidad = int(v.get("cantidad") or 1)
+        v["cantidad"] = cantidad
 
         if v.get("animal_id"):
             # Venta de animal individual
             a = animales_idx.get(v["animal_id"], {})
+            l = lotes_idx.get(v.get("lote_id"), {})
             label = a.get("nombre") or (f"#{a.get('arete')}" if a.get("arete") else f"Animal #{v['animal_id']}")
-            v["tipo_venta"]   = "individual"
-            v["animal_label"] = label
-            v["lote_nombre"]  = lotes_idx.get(v.get("lote_id"), "—")
+            tipo_raw = a.get("tipo") or l.get("tipo") or ""
+            raza     = a.get("raza") or l.get("raza") or ""
+            icono, tipo_cap, texto_animal = _info_animal(tipo_raw, 1)
+
+            v["tipo_venta"]     = "individual"
+            v["animal_label"]   = label
+            v["animal_icono"]   = icono
+            v["animal_tipo"]    = tipo_cap
+            v["animal_raza"]    = raza
+            v["texto_animales"] = f"1 {texto_animal}"
+            v["lote_nombre"]    = l.get("nombre", "—")
         else:
             # Venta de lote
-            v["tipo_venta"]  = "lote"
-            v["lote_nombre"] = lotes_idx.get(v.get("lote_id"), "Desconocido")
+            l = lotes_idx.get(v.get("lote_id"), {})
+            tipo_raw = l.get("tipo") or ""
+            raza     = l.get("raza") or ""
+            icono, tipo_cap, texto_animal = _info_animal(tipo_raw, cantidad)
+
+            v["tipo_venta"]     = "lote"
+            v["lote_nombre"]    = l.get("nombre", "Desconocido")
+            v["animal_icono"]   = icono
+            v["animal_tipo"]    = tipo_cap
+            v["animal_raza"]    = raza
+            v["texto_animales"] = f"{cantidad} {texto_animal}"
 
     return render_template(
         "movimientos.html",
@@ -103,7 +147,9 @@ def registrar_venta():
     sb_rpc("descontar_lote",
            {"p_lote_id": int(lote_id), "p_owner_id": owner_id, "p_cantidad": cantidad})
 
-    flash(f"✅ Venta de {cantidad} animales por ${total:.2f} registrada.", "success")
+    tipo_lote = lote_data[0].get("tipo", "")
+    _, _, nombre_plural = _info_animal(tipo_lote, cantidad)
+    flash(f"✅ Venta de {cantidad} {nombre_plural} por ${total:.2f} registrada.", "success")
     return redirect("/movimientos")
 
 

@@ -44,7 +44,14 @@
     {% if ventas %}
         {% for v in ventas %}
         <div style="border-bottom:1px solid #eee; padding:8px 0;">
-            <p style="margin:0;">📅 {{ v.fecha }} &nbsp;|&nbsp; 🐾 {{ v.cantidad }} animales &nbsp;|&nbsp; 💵 ${{ "%.2f"|format(v.total or 0) }}</p>
+            <p style="margin:0;">📅 {{ v.fecha }} &nbsp;|&nbsp; 
+                {% if lote.tipo == 'cerdo' %}🐷 {{ v.cantidad }} {% if v.cantidad == 1 %}cerdo{% else %}cerdos{% endif %}
+                {% elif lote.tipo == 'vaca' %}🐄 {{ v.cantidad }} {% if v.cantidad == 1 %}vaca{% else %}vacas{% endif %}
+                {% elif lote.tipo == 'pollo' %}🐔 {{ v.cantidad }} {% if v.cantidad == 1 %}pollo{% else %}pollos{% endif %}
+                {% elif lote.tipo == 'cabra' %}🐐 {{ v.cantidad }} {% if v.cantidad == 1 %}cabra{% else %}cabras{% endif %}
+                {% elif lote.tipo == 'oveja' %}🐑 {{ v.cantidad }} {% if v.cantidad == 1 %}oveja{% else %}ovejas{% endif %}
+                {% else %}🐾 {{ v.cantidad }} animales{% endif %} 
+                &nbsp;|&nbsp; 💵 ${{ "%.2f"|format(v.total or 0) }}</p>
         </div>
         {% endfor %}
     {% else %}

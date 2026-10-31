@@ -15,7 +15,9 @@
             <select class="form-control" name="lote_id" required>
                 <option value="">Selecciona un lote</option>
                 {% for l in lotes %}
-                <option value="{{ l.id }}">{{ l.nombre }} ({{ l.cantidad_actual }} disponibles)</option>
+                <option value="{{ l.id }}">
+                    {{ l.nombre }} ({{ l.tipo|capitalize }}{% if l.raza %} · {{ l.raza }}{% endif %}) — {{ l.cantidad_actual }} disponibles
+                </option>
                 {% endfor %}
             </select>
         </div>
@@ -58,16 +60,23 @@
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
                 <p style="margin:0 0 3px 0;font-size:15px;font-weight:bold;">
-                    🐾 {{ v.animal_label }}
+                    {{ v.animal_icono }} {{ v.animal_label }}
                     <span style="font-size:11px;background:#e3f2fd;color:#1565c0;
                                  padding:2px 7px;border-radius:10px;margin-left:4px;">
                         Individual
                     </span>
+                    {% if v.animal_tipo %}
+                    <span style="font-size:11px;background:#f4f6f9;color:#2c3e50;font-weight:normal;
+                                 padding:2px 7px;border-radius:10px;margin-left:4px;border:1px solid #e2e8f0;">
+                        {{ v.animal_icono }} {{ v.animal_tipo }}
+                    </span>
+                    {% endif %}
                 </p>
                 <p style="margin:0;font-size:13px;color:#555;">
-                    📅 {{ v.fecha }}
-                    {% if v.lote_nombre != '—' %} · 📦 {{ v.lote_nombre }}{% endif %}
-                    {% if v.concepto %} · {{ v.concepto }}{% endif %}
+                    📅 {{ v.fecha }} · <strong>{{ v.texto_animales }}</strong>
+                    {%- if v.animal_raza %} ({{ v.animal_raza }}){% endif %}
+                    {%- if v.lote_nombre != '—' %} · 📦 {{ v.lote_nombre }}{% endif %}
+                    {%- if v.concepto %} · 👤 {{ v.concepto }}{% endif %}
                 </p>
             </div>
             <p style="margin:0;font-size:18px;font-weight:bold;color:#3498db;">
@@ -84,10 +93,17 @@
                                  padding:2px 7px;border-radius:10px;margin-left:4px;">
                         Lote
                     </span>
+                    {% if v.animal_tipo %}
+                    <span style="font-size:11px;background:#f4f6f9;color:#2c3e50;font-weight:normal;
+                                 padding:2px 7px;border-radius:10px;margin-left:4px;border:1px solid #e2e8f0;">
+                        {{ v.animal_icono }} {{ v.animal_tipo }}
+                    </span>
+                    {% endif %}
                 </p>
                 <p style="margin:0;font-size:13px;color:#555;">
-                    📅 {{ v.fecha }} · 🐄 {{ v.cantidad }} animales
-                    {% if v.concepto %} · {{ v.concepto }}{% endif %}
+                    📅 {{ v.fecha }} · {{ v.animal_icono }} <strong>{{ v.texto_animales }}</strong>
+                    {%- if v.animal_raza %} ({{ v.animal_raza }}){% endif %}
+                    {%- if v.concepto %} · 👤 {{ v.concepto }}{% endif %}
                 </p>
             </div>
             <p style="margin:0;font-size:18px;font-weight:bold;color:#27ae60;">
@@ -99,7 +115,7 @@
         {% if mi_rol == 'admin' %}
         <div class="card-actions" style="margin-top:8px;">
             <button class="btn-peligro" style="width:auto;font-size:13px;padding:7px 12px;"
-                onclick="confirmarEliminar('{{ v.id }}', '{{ v.fecha }}', {{ v.cantidad or 1 }}, '{{ v.tipo_venta }}')">
+                onclick="confirmarEliminar('{{ v.id }}', '{{ v.fecha }}', '{{ v.texto_animales }}', '{{ v.tipo_venta }}')">
                 🗑 Eliminar
             </button>
         </div>
@@ -126,10 +142,10 @@
 </div>
 
 <script>
-function confirmarEliminar(id, fecha, cantidad, tipo) {
+function confirmarEliminar(id, fecha, textoAnimales, tipo) {
     const texto = tipo === 'individual'
-        ? `¿Eliminar la venta individual del ${fecha}?`
-        : `¿Eliminar la venta del ${fecha} (${cantidad} animales)?`;
+        ? `¿Eliminar la venta individual del ${fecha} (${textoAnimales})?`
+        : `¿Eliminar la venta del ${fecha} (${textoAnimales})?`;
     const subtexto = tipo === 'individual'
         ? 'El animal volverá a estado Activo.'
         : 'Los animales serán devueltos al lote.';

@@ -164,7 +164,7 @@ p  { color: #7f8c8d; margin: 0 0 20px 0; font-size: 14px; line-height: 1.5; }
             </div>
             <div class="form-group">
                 <label>Costo total ($)</label>
-                <input class="form-control" type="number" step="0.01" name="costo" value="{{ form_data.costo if form_data else '' }}" placeholder="0.00" min="0">
+                <input class="form-control" type="number" step="1" name="costo" id="costo_lote_onb" value="{{ form_data.costo if form_data else '' }}" placeholder="0" min="0">
             </div>
         </div>
         <div class="form-group">
@@ -258,6 +258,29 @@ window.addEventListener("DOMContentLoaded", () => {
         cargarRazas("{{ form_data.raza if form_data else '' }}");
     }
 });
+    // Costo total de dólar en dólar
+    const inputCostoOnb = document.getElementById('costo_lote_onb');
+    if (inputCostoOnb) {
+        inputCostoOnb.addEventListener('pointerdown', () => { inputCostoOnb.step = '1'; });
+        inputCostoOnb.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') inputCostoOnb.step = '1';
+        });
+        inputCostoOnb.addEventListener('input', () => {
+            if (inputCostoOnb.value && (inputCostoOnb.value.includes('.') || inputCostoOnb.value.includes(','))) {
+                inputCostoOnb.step = 'any';
+            }
+        });
+        inputCostoOnb.addEventListener('invalid', () => {
+            if (inputCostoOnb.validity.stepMismatch) {
+                inputCostoOnb.step = 'any';
+            }
+        });
+        if (inputCostoOnb.form) {
+            inputCostoOnb.form.addEventListener('submit', () => {
+                inputCostoOnb.step = 'any';
+            });
+        }
+    }
 </script>
 </body>
 </html>

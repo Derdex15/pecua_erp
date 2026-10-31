@@ -30,7 +30,7 @@
 
         <div class="form-group">
             <label>Costo total del lote ($)</label>
-            <input class="form-control" type="number" step="0.01" name="costo"
+            <input class="form-control" type="number" step="1" name="costo" id="costo_lote"
                    value="{{ lote.costo_compra }}" min="0" required>
         </div>
 
@@ -43,4 +43,30 @@
     </form>
 </div>
 
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const inputCosto = document.getElementById('costo_lote');
+    if (inputCosto) {
+        inputCosto.addEventListener('pointerdown', () => { inputCosto.step = '1'; });
+        inputCosto.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') inputCosto.step = '1';
+        });
+        inputCosto.addEventListener('input', () => {
+            if (inputCosto.value && (inputCosto.value.includes('.') || inputCosto.value.includes(','))) {
+                inputCosto.step = 'any';
+            }
+        });
+        inputCosto.addEventListener('invalid', () => {
+            if (inputCosto.validity.stepMismatch) {
+                inputCosto.step = 'any';
+            }
+        });
+        if (inputCosto.form) {
+            inputCosto.form.addEventListener('submit', () => {
+                inputCosto.step = 'any';
+            });
+        }
+    }
+});
+</script>
 {% endblock %}

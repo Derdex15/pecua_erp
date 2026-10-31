@@ -53,8 +53,8 @@
             </div>
             <div class="form-group">
                 <label>Costo total ($)</label>
-                <input class="form-control" type="number" step="0.01"
-                       name="costo" placeholder="Ej: 500.00" min="0" required>
+                <input class="form-control" type="number" step="1"
+                       name="costo" id="costo_lote" placeholder="Ej: 500" min="0" required>
             </div>
         </div>
 
@@ -213,6 +213,30 @@ function cerrarModal() {
 window.addEventListener('DOMContentLoaded', () => {
     const m = localStorage.getItem('erp_moneda') || '$';
     document.querySelectorAll('.moneda-sym').forEach(el => el.textContent = m);
+
+    // Las flechas incrementan/decrementan de dólar en dólar (step=1)
+    const inputCosto = document.getElementById('costo_lote');
+    if (inputCosto) {
+        inputCosto.addEventListener('pointerdown', () => { inputCosto.step = '1'; });
+        inputCosto.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') inputCosto.step = '1';
+        });
+        inputCosto.addEventListener('input', () => {
+            if (inputCosto.value && (inputCosto.value.includes('.') || inputCosto.value.includes(','))) {
+                inputCosto.step = 'any';
+            }
+        });
+        inputCosto.addEventListener('invalid', () => {
+            if (inputCosto.validity.stepMismatch) {
+                inputCosto.step = 'any';
+            }
+        });
+        if (inputCosto.form) {
+            inputCosto.form.addEventListener('submit', () => {
+                inputCosto.step = 'any';
+            });
+        }
+    }
 });
 </script>
 
